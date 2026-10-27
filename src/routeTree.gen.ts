@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as CrimeIndexRouteImport } from './routes/crime.index'
+import { Route as CrimeIdRouteImport } from './routes/crime.$id'
 import { Route as ModelsIndexRouteImport } from './routes/models.index'
 import { Route as ModelsIdRouteImport } from './routes/models.$id'
 
@@ -19,9 +22,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreditRoute = CreditRouteImport.update({
+  id: '/credit',
+  path: '/credit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DataRoute = DataRouteImport.update({
   id: '/data',
   path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrimeIndexRoute = CrimeIndexRouteImport.update({
+  id: '/crime/',
+  path: '/crime/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrimeIdRoute = CrimeIdRouteImport.update({
+  id: '/crime/$id',
+  path: '/crime/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModelsIndexRoute = ModelsIndexRouteImport.update({
@@ -37,35 +55,69 @@ const ModelsIdRoute = ModelsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/crime/$id': typeof CrimeIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/crime/': typeof CrimeIndexRoute
   '/models/': typeof ModelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/crime/$id': typeof CrimeIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/crime': typeof CrimeIndexRoute
   '/models': typeof ModelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/crime/$id': typeof CrimeIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/crime/': typeof CrimeIndexRoute
   '/models/': typeof ModelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/data' | '/models/$id' | '/models/'
+  fullPaths:
+    | '/'
+    | '/credit'
+    | '/data'
+    | '/crime/$id'
+    | '/models/$id'
+    | '/crime/'
+    | '/models/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/data' | '/models/$id' | '/models'
-  id: '__root__' | '/' | '/data' | '/models/$id' | '/models/'
+  to:
+    | '/'
+    | '/credit'
+    | '/data'
+    | '/crime/$id'
+    | '/models/$id'
+    | '/crime'
+    | '/models'
+  id:
+    | '__root__'
+    | '/'
+    | '/credit'
+    | '/data'
+    | '/crime/$id'
+    | '/models/$id'
+    | '/crime/'
+    | '/models/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreditRoute: typeof CreditRoute
   DataRoute: typeof DataRoute
+  CrimeIdRoute: typeof CrimeIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
+  CrimeIndexRoute: typeof CrimeIndexRoute
   ModelsIndexRoute: typeof ModelsIndexRoute
 }
 
@@ -78,11 +130,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/credit': {
+      id: '/credit'
+      path: '/credit'
+      fullPath: '/credit'
+      preLoaderRoute: typeof CreditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/data': {
       id: '/data'
       path: '/data'
       fullPath: '/data'
       preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crime/': {
+      id: '/crime/'
+      path: '/crime'
+      fullPath: '/crime/'
+      preLoaderRoute: typeof CrimeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crime/$id': {
+      id: '/crime/$id'
+      path: '/crime/$id'
+      fullPath: '/crime/$id'
+      preLoaderRoute: typeof CrimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/models/': {
@@ -104,8 +177,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreditRoute: CreditRoute,
   DataRoute: DataRoute,
+  CrimeIdRoute: CrimeIdRoute,
   ModelsIdRoute: ModelsIdRoute,
+  CrimeIndexRoute: CrimeIndexRoute,
   ModelsIndexRoute: ModelsIndexRoute,
 }
 export const routeTree = rootRouteImport
