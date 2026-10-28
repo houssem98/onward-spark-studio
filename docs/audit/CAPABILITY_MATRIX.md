@@ -17,7 +17,7 @@ A route row rates the data the page shows; its controls and exports have their o
 
 ## Counts
 
-32 rows: 13 routes, 14 controls, 5 exports. implemented 0, partial 18, mocked 14, broken 0, absent 0, not verified 0. (L0 T4 had partial 17, mocked 13, broken 1, absent 1; L0 T3 replaced the absent report route with a placeholder.)
+32 rows: 13 routes, 14 controls, 5 exports. implemented 0, partial 18, mocked 12, broken 2, absent 0, not verified 0. (L0 T4 had partial 17, mocked 13, broken 1, absent 1; L0 T3 replaced the absent report route with a placeholder; L0 T6 ran every page and found the two detail pages broken. Controls on those pages are rated from reading and cannot be exercised until L0 T10.)
 
 ## Routes
 
@@ -28,10 +28,10 @@ A route row rates the data the page shows; its controls and exports have their o
 | route | `src/routes/performance.tsx` | mocked | Scorecard, peers and bridge from fixtures: `src/routes/performance.tsx#} from "@/data/finance";` | read |
 | route | `src/routes/credit.tsx` | mocked | Portfolio slices from fixtures: `src/routes/credit.tsx#from "@/data/credit";` | read |
 | route | `src/routes/crime.index.tsx` | mocked | Alert queue seeded from fixtures: `src/routes/crime.index.tsx#import { CRIME_TREND, INVESTIGATORS_LIST, type CrimeAlert } from "@/data/crime";` | read |
-| route | `src/routes/crime.$id.tsx` | mocked | Case workspace over fixture cases: `src/routes/crime.$id.tsx#import { CASES, INVESTIGATORS_LIST, type AlertStatus } from "@/data/crime";` | read |
+| route | `src/routes/crime.$id.tsx` | broken | Never renders: infinite update loop from a selector that returns a new array each call (`src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`); rated mocked in L0 T4 from reading, broken once run | run: `docs/audit/VISUAL_BASELINE.md#Two detail pages never render.` |
 | route | `src/routes/data.tsx` | mocked | Catalog, quality and lineage from fixtures; lineage is illustrative: `src/routes/data.tsx#} from "@/data/datasets";`, `src/lib/copilot.ts#Lineage is illustrative, not harvested from live systems` | read |
 | route | `src/routes/models.index.tsx` | mocked | Inventory from fixtures: `src/routes/models.index.tsx#import { MODELS, type Model } from "@/data/models";` | read |
-| route | `src/routes/models.$id.tsx` | mocked | Monitoring, drift and validation from fixtures: `src/routes/models.$id.tsx#} from "@/data/models";` | read |
+| route | `src/routes/models.$id.tsx` | broken | Never renders, same loop (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`); its fixtures (`src/routes/models.$id.tsx#} from "@/data/models";`) are never shown | run: `docs/audit/VISUAL_BASELINE.md#Two detail pages never render.` |
 | route | `src/routes/investigations.index.tsx` | mocked | Registers seeded from fixtures: `src/routes/investigations.index.tsx#import { REPORTS, type Action, type Investigation } from "@/data/investigations";` | read |
 | route | `src/routes/investigations.$id.tsx` | mocked | Detail over the store's fixture copy: `src/store/app-store.ts#investigations: INVESTIGATIONS.map((i) => ({ ...i })),` | read |
 | route | `src/routes/audit.tsx` | partial | Seeded events plus this session's, labeled honestly: `src/routes/audit.tsx#Session-only; not persisted.` | read |

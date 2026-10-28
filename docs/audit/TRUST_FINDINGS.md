@@ -93,8 +93,8 @@ No finding is critical today only because there is no real data, no backend and 
 - Fix: L1 T6
 - Status: open
 
-### F17 · medium · The synthetic-data notice disappears when the sidebar collapses
-- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`
+### F17 · low · The sidebar's synthetic-data notice disappears when the sidebar collapses
+- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), seen on every page in `docs/audit/VISUAL_BASELINE.md`.
 - Fix: L1 T2
 - Status: open
 
@@ -122,3 +122,18 @@ No finding is critical today only because there is no real data, no backend and 
 - Evidence: now refused: `src/lib/calc.ts#psi: bin counts differ`
 - Fix: L0 T1
 - Status: fixed in commit 2c3d9ef
+
+### F23 · high · The model detail and case workspace pages never render
+- Evidence: selectors return a new array on every call (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`, `src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`) and the store passes the selector's result to React as the snapshot (`src/store/app-store.ts#() => selector(state),`), so React loops until "Maximum update depth exceeded". Found by running the pages in L0 T6 (`docs/audit/VISUAL_BASELINE.md#Two detail pages never render.`); present since commit 331ac73. Model approval, drift disposition, case notes and case status live on these two pages, so none of those controls can be used.
+- Fix: L0 T10
+- Status: open
+
+### F24 · medium · Every page scrolls sideways at phone width
+- Evidence: 53 to 356 px of horizontal overflow at 390 px on every page that renders; the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported.`).
+- Fix: L1 T2
+- Status: open
+
+### F25 · medium · Server and client render different content
+- Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown.
+- Fix: L1 T2, L2 T6
+- Status: open
