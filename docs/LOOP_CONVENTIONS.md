@@ -5,7 +5,7 @@ Read every tick together with the active ledger. The global rules in `~/.claude/
 ## Invariants
 
 - I1 No fake completion. Tick a task only when its Evidence command exited 0 this tick and the output is quoted in the Journal. Code that looks right is not evidence.
-- I2 The maker does not grade itself. Independent-check tasks run on a different model than the maker (Agent tool `model` override), at least 3 independent runs, and a finding counts only as a reproducible failing test or a corrected row.
+- I2 The maker does not grade itself. Independent-check tasks run as a council of models other than the maker (Agent tool `model` override), as the Council protocol below sets out, and a finding counts only as a reproducible failing test or a corrected row.
 - I3 No test, no claim. Any status, evidence state, score or success message the product shows is computed by code a test covers, or it is labeled synthetic/demo on screen and in exports, or it is removed. `BankIntelli_Elite_Premium_Design_Roadmap.md#A model cannot set a claim to Verified simply by generating confident`.
 - I4 A gate may grow and never shrinks in the change that claims it green. `node scripts/gate-guard.mjs` runs inside the gate. Removing or weakening an assertion is an escalation that names the assertion and why it no longer grades anything real.
 - I5 Cite what you claim. Every statement about current code in a doc or ledger cites `path#literal` copied from a file read this tick, or a whole `path`. Never write a citation you did not just read. graph-lint must pass. Mark files a task will create with ` (new)`.
@@ -60,7 +60,18 @@ The prompt restates the goal every tick and each Journal entry ends with a Direc
 
 ## Judged steps
 
-Prefer checks with exit codes. Where a model must judge (independent checks, L7 graders), state the judge model, which differs from the maker, and n ≥ 3 trials. One judge call is not a stop condition. Cases the checker invents beyond the attack list are the holdout. Visual quality is judged by the human at each signoff, at 1440 px and 390 px widths.
+Prefer checks with exit codes. Where a model must judge (independent checks, L7 graders), state the judge model, which differs from the maker, and n ≥ 3 trials; the Council protocol below satisfies this for independent checks. One judge call is not a stop condition. Cases the checker invents beyond the attack list are the holdout. Visual quality is judged by the human at each signoff, at 1440 px and 390 px widths.
+
+## Council protocol
+
+Every independent-check task runs as a council, after karpathy/llm-council (first answers, anonymous peer review, a chairman's synthesis), adopted on the human's choice in L1 T9. It runs on Claude models through the Agent tool, so it needs no outside API key.
+
+1. Members. Three models, none of them the maker, ideally three different ones (the maker on Opus: Sonnet, Haiku and Fable), each a fresh read-only agent with the identical prompt: the task's scope, the attack list below, and the instruction to report only disagreements, each with a `path:line` and a verbatim code quote.
+2. Peer review. Each member then receives the other two reports, labeled Report A and Report B in a shuffled order, with the model names removed. It ranks them by accuracy and evidence and marks each item confirmed, refuted or unsure, quoting code for every confirmation or refutation.
+3. Chairman. One more fresh agent on a model other than the maker reads all three reports and all three reviews and writes one deduplicated list, ordered by severity, with each item's agreement count (how many members raised or confirmed it) and any refutation.
+4. Maker. The maker reproduces each item on the chairman's list before acting, as before: a failing test or a corrected row, or a rejection with its reason in the Journal. The chairman's ranking orders the work; it never replaces the reproduction.
+
+The Journal records the member and chairman models, the item counts after each stage, and every rejected item with its reason. A council costs about seven agent runs, which count against the loop's budget.
 
 ## Reporting
 
