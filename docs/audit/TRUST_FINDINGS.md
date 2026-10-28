@@ -135,7 +135,7 @@ No finding is critical today only because there is no real data, no backend and 
 
 ### F25 · medium · Server and client render different content
 - Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown. Candidate cause, not verified: numbers formatted with `toLocaleString()` and no locale, which can differ between server and browser.
-- Fix: L1 T2, L2 T6
+- Fix: L2 T6 (L1 T2 was named too but did not fix it; recorded by the L1 T7 council)
 - Status: open
 
 ### F26 · high · A VERIFIED drift claim contradicts the app's own calculation
@@ -185,7 +185,7 @@ No finding is critical today only because there is no real data, no backend and 
 
 ### F35 · medium · The audit trail claims more than it records
 - Evidence: the page says `src/routes/audit.tsx#Every simulated change made in this session is recorded here`, but version changes (F8) and exports (F15) are not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).
-- Fix: L3 T5
+- Fix: L1 T11, L3 T5
 - Status: open
 
 ### F36 · medium · The model card can describe a version that is not in production
@@ -206,4 +206,19 @@ No finding is critical today only because there is no real data, no backend and 
 ### F37 · low · Small truth gaps
 - Evidence: a frozen date drives "overdue" (`src/routes/models.index.tsx#const TODAY = "2026-01-14";`) while audit times use the real clock; the copilot's `src/lib/copilot.ts#/margin|nim/` also matches "minimum"; the table CSV writes amounts without their currency while alerts mix EUR and USD.
 - Fix: L2 T6, L2 T7
+- Status: open
+
+### F40 · medium · The crime trend is not derived from the queue it cites
+- Evidence: the trend chart names its source `src/routes/crime.index.tsx#source="Synthetic alert queue (demo data)"`, but that queue is `src/data/crime.ts#export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }` alerts dated 1 to 14 Jan 2026, while the plotted series starts at `src/data/crime.ts#{ week: "W49", fraud: 412, aml: 96 },`; found by the L1 T7 council.
+- Fix: L1 T11, L2 T4
+- Status: open
+
+### F41 · low · Two data-quality scores for the same week disagree
+- Evidence: the KPI `src/routes/data.tsx#label="Avg quality score"` averages the dimension scores to 96.1 for Week 02, while the trend chart on the same page ends at `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; two definitions share one name. Found by the L1 T7 council.
+- Fix: L2 T6
+- Status: open
+
+### F42 · low · A KPI shows its period only on hover and names no source
+- Evidence: `src/components/kit.tsx#Period: {period} · Synthetic` sits inside the KPI's tooltip, and the KPI takes no source; charts gained unit, period and source in L1 T9, KPIs did not. Found by the L1 T7 council.
+- Fix: L4 T5
 - Status: open
