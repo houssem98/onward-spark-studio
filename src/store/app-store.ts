@@ -188,18 +188,18 @@ function set(fn: (s: State) => Partial<State>, audit?: Omit<AuditEvent, "id" | "
   listeners.forEach((l) => l());
 }
 
-export function useStore<T>(selector: (s: State) => T): T {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    () => selector(state),
-    () => selector(state),
-  );
-}
+const subscribe = (l: () => void) => {
+  listeners.add(l);
+  return () => listeners.delete(l);
+};
 
 export const getState = () => state;
+
+// The snapshot must be the stable state object: a selector that builds a new array
+// would hand React a "changed" snapshot on every read and loop until it aborts.
+export function useStore<T>(selector: (s: State) => T): T {
+  return selector(useSyncExternalStore(subscribe, getState, getState));
+}
 
 export const actions = {
   setModelVersion(model: string, version: string) {

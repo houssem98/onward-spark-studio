@@ -124,9 +124,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in commit 2c3d9ef
 
 ### F23 · high · The model detail and case workspace pages never render
-- Evidence: selectors return a new array on every call (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`, `src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`) and the store passes the selector's result to React as the snapshot (`src/store/app-store.ts#() => selector(state),`), so React loops until "Maximum update depth exceeded". Found by running the pages in L0 T6 (`docs/audit/VISUAL_BASELINE.md#Two detail pages never render.`); present since commit 331ac73. Model approval, drift disposition, case notes and case status live on these two pages, so none of those controls can be used.
+- Evidence: selectors return a new array on every call (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`, `src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`) and the store passed the selector's result to React as the snapshot, so React looped until "Maximum update depth exceeded". Found by running the pages in L0 T6 (`docs/audit/VISUAL_BASELINE.md#Two detail pages never render`); present since commit 331ac73. Model approval, drift disposition, case notes and case status live on these two pages, so none of those controls could be used. Fixed by making the stable state the snapshot (`src/store/app-store.ts#return selector(useSyncExternalStore(subscribe, getState, getState));`), guarded by `src/test/store-selector.test.tsx#renders a selector that builds a new array without looping`.
 - Fix: L0 T10
-- Status: open
+- Status: fixed in L0 T10
 
 ### F24 · medium · Every page scrolls sideways at phone width
 - Evidence: 53 to 356 px of horizontal overflow at 390 px on every page that renders; the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported.`).
