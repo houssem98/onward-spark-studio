@@ -27,6 +27,7 @@ import { useStore } from "@/store/app-store";
 import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
+import { CommandPalette } from "@/components/CommandPalette";
 
 export const NAV_GROUPS = [
   {
@@ -114,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
   const [open, setOpen] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
+  const [palette, setPalette] = useState(false);
   const [q, setQ] = useState("");
   const [history, setHistory] = useState<{ q: string; a: CopilotAnswer }[]>([]);
   const navigate = useNavigate();
@@ -211,6 +213,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 Northstar Bank (fictional) · FY2025
               </span>
               <button
+                className="flex items-center gap-1.5 rounded-md border px-2 py-1 text-muted-foreground hover:bg-muted"
+                aria-label="Search (Ctrl+K)"
+                onClick={() => setPalette(true)}
+              >
+                <Search className="h-3.5 w-3.5" />
+                <kbd className="hidden font-mono text-micro sm:inline">Ctrl K</kbd>
+              </button>
+              <button
                 className="relative rounded-md p-1.5 hover:bg-muted"
                 aria-label={`${openCount} critical notifications`}
                 onClick={() => navigate({ to: "/audit" })}
@@ -240,6 +250,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <main className="mx-auto w-full min-w-0 max-w-[1500px] flex-1 p-3 sm:p-5">{children}</main>
       </div>
+
+      <CommandPalette
+        open={palette}
+        onOpenChange={setPalette}
+        pages={NAV_GROUPS.flatMap((g) => [...g.items])}
+        onAsk={ask}
+      />
 
       <Sheet open={mobileNav} onOpenChange={setMobileNav}>
         <SheetContent
