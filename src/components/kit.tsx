@@ -14,6 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { EvidenceState } from "@/data/investigations";
+import { StateBoundary, type DataState } from "@/components/states";
 
 type Tone = "success" | "warning" | "critical" | "info" | "neutral";
 
@@ -136,24 +137,34 @@ const EV: Record<
   },
 };
 
-export function EvidenceBadge({ state }: { state: EvidenceState }) {
+export function EvidenceBadge({
+  state,
+  dataState,
+  stateNote,
+}: {
+  state: EvidenceState;
+  dataState?: DataState;
+  stateNote?: string;
+}) {
   const e = EV[state];
   const Icon = e.icon;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className={cn(
-            "inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption font-semibold uppercase leading-none tracking-wide",
-            toneCls[e.tone],
-          )}
-        >
-          <Icon className="h-3 w-3" aria-hidden />
-          {e.label}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs">{e.desc}</TooltipContent>
-    </Tooltip>
+    <StateBoundary state={dataState} label="evidence state" note={stateNote} inline>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={cn(
+              "inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption font-semibold uppercase leading-none tracking-wide",
+              toneCls[e.tone],
+            )}
+          >
+            <Icon className="h-3 w-3" aria-hidden />
+            {e.label}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs">{e.desc}</TooltipContent>
+      </Tooltip>
+    </StateBoundary>
   );
 }
 
@@ -254,6 +265,8 @@ export function Kpi({
   definition,
   period = "FY2025",
   status,
+  state,
+  stateNote,
 }: {
   label: string;
   value: string;
@@ -263,6 +276,8 @@ export function Kpi({
   definition: string;
   period?: string;
   status?: ReactNode;
+  state?: DataState;
+  stateNote?: string;
 }) {
   return (
     <div className="rounded-md border bg-card p-3.5">
@@ -282,21 +297,23 @@ export function Kpi({
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="mt-1.5 num text-2xl font-semibold">{value}</div>
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        {delta && (
-          <span
-            className={cn(
-              "num font-medium",
-              deltaGood === undefined ? "" : deltaGood ? "text-success" : "text-critical",
-            )}
-          >
-            {delta}
-          </span>
-        )}
-        {sub && <span>{sub}</span>}
-        {status}
-      </div>
+      <StateBoundary state={state} label={label} note={stateNote}>
+        <div className="mt-1.5 num text-2xl font-semibold">{value}</div>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {delta && (
+            <span
+              className={cn(
+                "num font-medium",
+                deltaGood === undefined ? "" : deltaGood ? "text-success" : "text-critical",
+              )}
+            >
+              {delta}
+            </span>
+          )}
+          {sub && <span>{sub}</span>}
+          {status}
+        </div>
+      </StateBoundary>
     </div>
   );
 }

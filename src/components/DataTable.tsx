@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { downloadFile, toCSV } from "@/lib/calc";
 import { toast } from "sonner";
+import { StateBoundary, type DataState } from "@/components/states";
 
 export interface Column<T> {
   key: string;
@@ -25,6 +26,8 @@ export function DataTable<T extends object>({
   toolbar,
   rowKey,
   selectedKey,
+  state,
+  stateNote,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -35,6 +38,8 @@ export function DataTable<T extends object>({
   toolbar?: ReactNode;
   rowKey: (row: T) => string;
   selectedKey?: string | undefined;
+  state?: DataState;
+  stateNote?: string;
 }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
@@ -106,92 +111,94 @@ export function DataTable<T extends object>({
           )}
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              {columns.map((c) => {
-                const active = sort?.key === c.key;
-                return (
-                  <th
-                    key={c.key}
-                    className={cn(
-                      "whitespace-nowrap px-3 py-2 text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
-                      c.align === "right" && "text-right",
-                    )}
-                  >
-                    <button
-                      className={cn(
-                        "inline-flex items-center gap-1 hover:text-foreground",
-                        c.align === "right" && "flex-row-reverse",
-                      )}
-                      onClick={() =>
-                        setSort(
-                          active
-                            ? sort!.dir === 1
-                              ? { key: c.key, dir: -1 }
-                              : null
-                            : { key: c.key, dir: 1 },
-                        )
-                      }
-                    >
-                      {c.header}
-                      {active ? (
-                        sort!.dir === 1 ? (
-                          <ArrowUp className="h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="h-3 w-3" />
-                        )
-                      ) : (
-                        <ArrowUpDown className="h-3 w-3 opacity-40" />
-                      )}
-                    </button>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {visible.length === 0 && (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-3 py-8 text-center text-muted-foreground"
-                >
-                  No records match the current filters.
-                </td>
-              </tr>
-            )}
-            {visible.map((r) => {
-              const k = rowKey(r);
-              return (
-                <tr
-                  key={k}
-                  onClick={onRowClick ? () => onRowClick(r) : undefined}
-                  className={cn(
-                    "border-b last:border-0",
-                    onRowClick && "cursor-pointer hover:bg-accent/50",
-                    selectedKey === k && "bg-accent",
-                  )}
-                >
-                  {columns.map((c) => (
-                    <td
+      <StateBoundary state={state} label="records" note={stateNote}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                {columns.map((c) => {
+                  const active = sort?.key === c.key;
+                  return (
+                    <th
                       key={c.key}
                       className={cn(
-                        "px-3 py-2 align-middle",
-                        c.align === "right" && "num text-right",
-                        c.className,
+                        "whitespace-nowrap px-3 py-2 text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
+                        c.align === "right" && "text-right",
                       )}
                     >
-                      {c.cell ? c.cell(r) : String(val(r, c) ?? "—")}
-                    </td>
-                  ))}
+                      <button
+                        className={cn(
+                          "inline-flex items-center gap-1 hover:text-foreground",
+                          c.align === "right" && "flex-row-reverse",
+                        )}
+                        onClick={() =>
+                          setSort(
+                            active
+                              ? sort!.dir === 1
+                                ? { key: c.key, dir: -1 }
+                                : null
+                              : { key: c.key, dir: 1 },
+                          )
+                        }
+                      >
+                        {c.header}
+                        {active ? (
+                          sort!.dir === 1 ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        )}
+                      </button>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {visible.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-3 py-8 text-center text-muted-foreground"
+                  >
+                    No records match the current filters.
+                  </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              )}
+              {visible.map((r) => {
+                const k = rowKey(r);
+                return (
+                  <tr
+                    key={k}
+                    onClick={onRowClick ? () => onRowClick(r) : undefined}
+                    className={cn(
+                      "border-b last:border-0",
+                      onRowClick && "cursor-pointer hover:bg-accent/50",
+                      selectedKey === k && "bg-accent",
+                    )}
+                  >
+                    {columns.map((c) => (
+                      <td
+                        key={c.key}
+                        className={cn(
+                          "px-3 py-2 align-middle",
+                          c.align === "right" && "num text-right",
+                          c.className,
+                        )}
+                      >
+                        {c.cell ? c.cell(r) : String(val(r, c) ?? "—")}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </StateBoundary>
       {pages > 1 && (
         <div className="flex items-center justify-end gap-2 border-t p-2 text-xs">
           <span className="text-muted-foreground">

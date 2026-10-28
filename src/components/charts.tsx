@@ -9,8 +9,77 @@ import {
   YAxis,
   ReferenceLine,
 } from "recharts";
+import type { ReactNode } from "react";
 import { waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle } from "@/components/kit";
+import { StateBoundary, type DataState } from "@/components/states";
+
+/** A chart always states its unit, period and source, and offers its data as a table. */
+export function ChartFrame({
+  title,
+  unit,
+  period,
+  source,
+  rows,
+  columns,
+  state,
+  stateNote,
+  children,
+}: {
+  title: string;
+  unit: string;
+  period: string;
+  source: string;
+  rows: Record<string, string | number | null>[];
+  columns?: { key: string; header: string }[];
+  state?: DataState;
+  stateNote?: string;
+  children: ReactNode;
+}) {
+  const cols = columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }));
+  return (
+    <figure className="min-w-0 rounded-md border bg-card">
+      <figcaption className="border-b px-4 py-2.5">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        <p className="text-xs text-muted-foreground">
+          {unit} · {period} · Source: {source}
+        </p>
+      </figcaption>
+      <div className="p-4">
+        <StateBoundary state={state} label={title} note={stateNote}>
+          {children}
+          <details className="mt-2 text-xs">
+            <summary className="cursor-pointer text-muted-foreground">Show data as a table</summary>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    {cols.map((c) => (
+                      <th key={c.key} className="px-2 py-1 text-left font-semibold">
+                        {c.header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={i} className="border-b last:border-0">
+                      {cols.map((c) => (
+                        <td key={c.key} className="num px-2 py-1">
+                          {r[c.key] ?? "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </StateBoundary>
+      </div>
+    </figure>
+  );
+}
 
 export function Waterfall({ bridge, height = 280 }: { bridge: Bridge; height?: number }) {
   const rows = waterfallRows(bridge);
