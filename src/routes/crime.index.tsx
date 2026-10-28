@@ -21,6 +21,7 @@ import {
   StatusBadge,
   tooltipStyle,
 } from "@/components/kit";
+import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { CRIME_TREND, INVESTIGATORS_LIST, type CrimeAlert } from "@/data/crime";
@@ -146,7 +147,20 @@ function CrimePage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Alert volume trend" subtitle="Weekly · synthetic" className="xl:col-span-2">
+        <ChartFrame
+          title="Alert volume trend"
+          description="Fraud and AML alerts raised per week"
+          unit="Alerts per week"
+          period="W49 2025 to W02 2026"
+          source="Synthetic alert queue (demo data)"
+          rows={CRIME_TREND}
+          columns={[
+            { key: "week", header: "Week" },
+            { key: "fraud", header: "Fraud alerts" },
+            { key: "aml", header: "AML alerts" },
+          ]}
+          className="xl:col-span-2"
+        >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={CRIME_TREND}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
@@ -158,7 +172,7 @@ function CrimePage() {
               <Bar dataKey="aml" stackId="a" fill={CHART.c2} />
             </BarChart>
           </ResponsiveContainer>
-        </Panel>
+        </ChartFrame>
         <Panel title="Open cases">
           <ul className="divide-y">
             {cases.map((c) => (

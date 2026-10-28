@@ -34,10 +34,19 @@ import {
   StatusBadge,
   tooltipStyle,
 } from "@/components/kit";
-import { Waterfall } from "@/components/charts";
+import { ChartFrame, Waterfall } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { costToIncome, fmtM, fmtPct, growth, pct, reconcileBridge, sum } from "@/lib/calc";
+import {
+  costToIncome,
+  fmtM,
+  fmtPct,
+  growth,
+  pct,
+  reconcileBridge,
+  sum,
+  type Bridge,
+} from "@/lib/calc";
 import { actions, useStore } from "@/store/app-store";
 import { INVESTIGATIONS } from "@/data/investigations";
 import { cn } from "@/lib/utils";
@@ -71,6 +80,19 @@ const METRICS = [
   { key: "depositGrowth", label: "Deposit growth (%)" },
   { key: "creditRevenue", label: "Credit revenue (USD M)" },
 ] as const;
+
+const unitOf = (label: string) => label.match(/\(([^)]+)\)$/)?.[1] ?? "as labeled";
+
+/** A bridge as table rows: start, each step, end. */
+const bridgeRows = (b: Bridge) => [
+  { step: b.baseLabel, value: b.base },
+  ...b.steps.map((s) => ({ step: s.label, value: s.value })),
+  { step: b.actualLabel, value: b.actual },
+];
+const BRIDGE_COLUMNS = [
+  { key: "step", header: "Step" },
+  { key: "value", header: "USD M" },
+];
 
 const STEPS = [
   "Select question",
@@ -238,7 +260,25 @@ function PerformancePage() {
         </TabsContent>
 
         <TabsContent value="departments" className="mt-4 space-y-4">
-          <Panel title="Revenue vs target vs prior year" subtitle="USD M">
+          <ChartFrame
+            title="Revenue vs target vs prior year"
+            description="Revenue-generating departments; cost centres excluded"
+            unit="USD M"
+            period="FY2024 and FY2025"
+            source="Synthetic finance data and budget targets (demo data)"
+            rows={DEPARTMENTS.filter((d) => !d.costCenter).map((d) => ({
+              name: d.name,
+              prior: d.prior,
+              revenue: d.revenue,
+              target: d.target,
+            }))}
+            columns={[
+              { key: "name", header: "Department" },
+              { key: "prior", header: "FY2024" },
+              { key: "revenue", header: "FY2025" },
+              { key: "target", header: "Target" },
+            ]}
+          >
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}>
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
@@ -256,7 +296,7 @@ function PerformancePage() {
                 <Bar dataKey="target" name="Target" fill={CHART.c2} />
               </BarChart>
             </ResponsiveContainer>
-          </Panel>
+          </ChartFrame>
           <Panel title="Business-unit table" bodyClass="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -341,9 +381,18 @@ function PerformancePage() {
             </span>
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
-            <Panel
+            <ChartFrame
               title={METRICS.find((m) => m.key === metric)!.label}
-              subtitle="Peers without permitted data are excluded"
+              description="Peers without permitted data are excluded"
+              unit={unitOf(METRICS.find((m) => m.key === metric)!.label)}
+              period="FY2025"
+              source="Internal figures and peer disclosures (synthetic demo data)"
+              rows={peerChart}
+              columns={[
+                { key: "name", header: "Bank" },
+                { key: "value", header: "Value" },
+                { key: "src", header: "Source" },
+              ]}
             >
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={peerChart}>
@@ -354,8 +403,22 @@ function PerformancePage() {
                   <Bar dataKey="value" fill={CHART.c1} />
                 </BarChart>
               </ResponsiveContainer>
-            </Panel>
-            <Panel title="NIM history" subtitle="% · FY2021–FY2025">
+            </ChartFrame>
+            <ChartFrame
+              title="NIM history"
+              description="Northstar against three peers"
+              unit="Net interest margin, %"
+              period="FY2021 to FY2025"
+              source="Internal figures and peer disclosures (synthetic demo data)"
+              rows={PEER_HISTORY}
+              columns={[
+                { key: "year", header: "Year" },
+                { key: "northstar", header: "Northstar" },
+                { key: "harborline", header: "Harborline" },
+                { key: "meridian", header: "Meridian" },
+                { key: "cascade", header: "Cascade" },
+              ]}
+            >
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={PEER_HISTORY}>
                   <CartesianGrid vertical={false} stroke={CHART.grid} />
@@ -369,7 +432,7 @@ function PerformancePage() {
                   <Line dataKey="cascade" stroke={CHART.c3} />
                 </LineChart>
               </ResponsiveContainer>
-            </Panel>
+            </ChartFrame>
           </div>
           <Panel title="Source register & comparability" bodyClass="p-0">
             <div className="overflow-x-auto">
@@ -426,9 +489,14 @@ function PerformancePage() {
         </TabsContent>
 
         <TabsContent value="bridge" className="mt-4 grid gap-4 xl:grid-cols-3">
-          <Panel
+          <ChartFrame
             title="Credit revenue bridge"
-            subtitle={bridge.method}
+            description={bridge.method}
+            unit="USD M"
+            period="FY2025"
+            source="Synthetic finance data (demo data)"
+            rows={bridgeRows(bridge)}
+            columns={BRIDGE_COLUMNS}
             className="xl:col-span-2"
             actions={
               <select
@@ -450,7 +518,7 @@ function PerformancePage() {
               Synthetic figures · illustrative calculation.{" "}
               {method === "peer" && PEER_BENCHMARK_NOTE}
             </p>
-          </Panel>
+          </ChartFrame>
           <Panel title="Reconciliation">
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between">
@@ -628,7 +696,17 @@ function PerformancePage() {
               )}
               {step === 5 && (
                 <>
-                  <Waterfall bridge={wb} height={200} />
+                  <ChartFrame
+                    title="Revenue gap bridge"
+                    description={wb.method}
+                    unit="USD M"
+                    period="FY2025"
+                    source="Synthetic finance data (demo data)"
+                    rows={bridgeRows(wb)}
+                    columns={BRIDGE_COLUMNS}
+                  >
+                    <Waterfall bridge={wb} height={200} />
+                  </ChartFrame>
                   <p className="num text-xs">
                     Gap {fmtM(wr.gap)} · Σ {fmtM(wr.explained)} ·{" "}
                     {wr.reconciles ? "reconciles" : "does not reconcile"}

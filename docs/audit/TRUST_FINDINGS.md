@@ -198,6 +198,11 @@ No finding is critical today only because there is no real data, no backend and 
 - Fix: L4 T2
 - Status: open
 
+### F39 · low · Charts still animate when the user asks for reduced motion
+- Evidence: the reduced-motion rule in `src/styles.css#@media (prefers-reduced-motion: reduce)` stops CSS transitions, but recharts animates its series in JavaScript and the series set no animation option (for example `src/routes/credit.tsx#dataKey="balance"`), so bars and lines still animate; found in L1 T5 and left open by L1 T9, which framed the charts without touching their series.
+- Fix: L8 T5
+- Status: open
+
 ### F37 · low · Small truth gaps
 - Evidence: a frozen date drives "overdue" (`src/routes/models.index.tsx#const TODAY = "2026-01-14";`) while audit times use the real clock; the copilot's `src/lib/copilot.ts#/margin|nim/` also matches "minimum"; the table CSV writes amounts without their currency while alerts mix EUR and USD.
 - Fix: L2 T6, L2 T7

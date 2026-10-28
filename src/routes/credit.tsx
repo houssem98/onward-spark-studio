@@ -38,6 +38,7 @@ import {
   StatusBadge,
   tooltipStyle,
 } from "@/components/kit";
+import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { downloadFile, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
 
@@ -257,9 +258,18 @@ function CreditPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel
+        <ChartFrame
           title="Breakdown"
-          subtitle="Balance (USD M) and NPL ratio"
+          description="Balance and NPL ratio by the chosen dimension"
+          unit="Balance USD M · NPL %"
+          period="Balances at 31 Dec 2025"
+          source="Synthetic credit portfolio (demo data)"
+          rows={breakdown}
+          columns={[
+            { key: "key", header: "Group" },
+            { key: "balance", header: "Balance (USD M)" },
+            { key: "nplRatio", header: "NPL %" },
+          ]}
           className="xl:col-span-2"
           actions={
             <select
@@ -287,8 +297,19 @@ function CreditPage() {
               <Bar yAxisId="r" dataKey="nplRatio" name="NPL %" fill={CHART.c4} />
             </BarChart>
           </ResponsiveContainer>
-        </Panel>
-        <Panel title="Credit revenue trend" subtitle="Quarterly, bank-wide · USD M">
+        </ChartFrame>
+        <ChartFrame
+          title="Credit revenue trend"
+          description="Bank-wide, quarterly"
+          unit="USD M"
+          period="Q1-24 to Q4-25"
+          source="Synthetic finance data (demo data)"
+          rows={CREDIT_TREND}
+          columns={[
+            { key: "q", header: "Quarter" },
+            { key: "revenue", header: "Revenue (USD M)" },
+          ]}
+        >
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={CREDIT_TREND}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
@@ -298,7 +319,7 @@ function CreditPage() {
               <Line dataKey="revenue" stroke={CHART.c1} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-        </Panel>
+        </ChartFrame>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">

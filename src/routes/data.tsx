@@ -32,6 +32,7 @@ import {
   StatusBadge,
   tooltipStyle,
 } from "@/components/kit";
+import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -341,7 +342,19 @@ function DataPage() {
                 Accuracy requires an independent reference source not available in this POC.
               </p>
             </Panel>
-            <Panel title="Quality score trend" className="lg:col-span-2">
+            <ChartFrame
+              title="Quality score trend"
+              description="Average data-quality score across catalogued datasets"
+              unit="Score out of 100 (simulated)"
+              period={`${DQ_TREND[0]?.week ?? "?"} to ${DQ_TREND.at(-1)?.week ?? "?"}`}
+              source="Simulated quality checks (demo data)"
+              rows={DQ_TREND}
+              columns={[
+                { key: "week", header: "Week" },
+                { key: "score", header: "Score" },
+              ]}
+              className="lg:col-span-2"
+            >
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={DQ_TREND}>
                   <CartesianGrid vertical={false} stroke={CHART.grid} />
@@ -351,7 +364,7 @@ function DataPage() {
                   <Line dataKey="score" stroke={CHART.c1} strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
-            </Panel>
+            </ChartFrame>
           </div>
           <Panel title="Failed rules & issues" bodyClass="p-0">
             <div className="overflow-x-auto">

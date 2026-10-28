@@ -28,6 +28,7 @@ import {
   StatusBadge,
   tooltipStyle,
 } from "@/components/kit";
+import { ChartFrame } from "@/components/charts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/app-store";
@@ -174,9 +175,19 @@ function Overview() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel
+        <ChartFrame
           title="Revenue and profit trend"
-          subtitle="Quarterly · USD M · derived from department annuals"
+          description="Quarterly, derived from department annual figures"
+          unit="USD M"
+          period="Q1-24 to Q4-25"
+          source="Synthetic finance data (demo data)"
+          rows={q4}
+          columns={[
+            { key: "quarter", header: "Quarter" },
+            { key: "total", header: "Operating income" },
+            { key: "expenses", header: "Expenses" },
+            { key: "profit", header: "Pre-provision profit" },
+          ]}
           className="xl:col-span-2"
         >
           <ResponsiveContainer width="100%" height={240}>
@@ -209,7 +220,7 @@ function Overview() {
               />
             </AreaChart>
           </ResponsiveContainer>
-        </Panel>
+        </ChartFrame>
         <Panel title="Latest executive report">
           {REPORTS.map((r) => (
             <Link
@@ -235,9 +246,22 @@ function Overview() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel
+        <ChartFrame
           title="Department performance vs target"
-          subtitle="FY2025 · USD M"
+          description="Revenue-generating departments; cost centres excluded"
+          unit="USD M"
+          period="FY2025"
+          source="Synthetic finance data and budget targets (demo data)"
+          rows={DEPARTMENTS.filter((d) => !d.costCenter).map((d) => ({
+            name: d.name,
+            revenue: d.revenue,
+            target: d.target,
+          }))}
+          columns={[
+            { key: "name", header: "Department" },
+            { key: "revenue", header: "Actual" },
+            { key: "target", header: "Target" },
+          ]}
           className="xl:col-span-2"
         >
           <ResponsiveContainer width="100%" height={240}>
@@ -262,7 +286,7 @@ function Overview() {
               />
             </BarChart>
           </ResponsiveContainer>
-        </Panel>
+        </ChartFrame>
         <Panel title="Risk & control overview">
           <ul className="space-y-2 text-sm">
             {issues
