@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="text-sm font-semibold text-sidebar-accent-foreground">
                 BankIntelli
               </div>
-              <div className="text-[10px] text-ink-muted">Verified intelligence</div>
+              <div className="text-micro text-ink-muted">Verified intelligence</div>
             </div>
           )}
         </div>
@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={n.to}
                 title={n.label}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-ui transition-colors",
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="border-t border-sidebar-border p-2">
           {!collapsed && (
-            <p className="mb-2 px-1 text-[10px] leading-snug text-ink-muted">
+            <p className="mb-2 px-1 text-micro leading-snug text-ink-muted">
               Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.
             </p>
           )}
@@ -168,7 +168,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell className="h-4 w-4" />
               {openCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-[10px] font-semibold text-primary-foreground">
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-micro font-semibold text-primary-foreground">
                   {openCount}
                 </span>
               )}

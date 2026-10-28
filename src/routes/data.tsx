@@ -346,7 +346,7 @@ function DataPage() {
           <Panel title="Failed rules & issues" bodyClass="p-0">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
                   <th className="px-3 py-2">ID</th>
                   <th className="px-3 py-2">Issue</th>
                   <th className="px-3 py-2">Dimension</th>

@@ -380,7 +380,7 @@ function CreditPage() {
       <Panel title="Watchlist — highest NPL ratio slices" bodyClass="p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-muted/50 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
               <th className="px-3 py-2">Slice</th>
               <th className="px-3 py-2">Segment / product</th>
               <th className="px-3 py-2">Region</th>

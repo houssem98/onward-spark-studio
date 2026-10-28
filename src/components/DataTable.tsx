@@ -116,7 +116,7 @@ export function DataTable<T extends object>({
                   <th
                     key={c.key}
                     className={cn(
-                      "whitespace-nowrap px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+                      "whitespace-nowrap px-3 py-2 text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
                       c.align === "right" && "text-right",
                     )}
                   >
