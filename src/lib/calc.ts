@@ -58,10 +58,11 @@ export function waterfallRows(b: Bridge) {
 
 /** Population Stability Index across matching bins. */
 export function psi(expected: number[], actual: number[]) {
+  if (expected.length !== actual.length) throw new Error("psi: bin counts differ");
   let total = 0;
   for (let i = 0; i < expected.length; i++) {
-    const e = Math.max(expected[i], 1e-6);
-    const a = Math.max(actual[i], 1e-6);
+    const e = Math.max(expected[i]!, 1e-6);
+    const a = Math.max(actual[i]!, 1e-6);
     total += (a - e) * Math.log(a / e);
   }
   return total;
@@ -83,8 +84,9 @@ export const fmtNum = (v: number) => v.toLocaleString("en-US");
 export const fmtSigned = (v: number, dp = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp)}`;
 
 export function toCSV(rows: Record<string, unknown>[]) {
-  if (!rows.length) return "";
-  const keys = Object.keys(rows[0]);
+  const [first] = rows;
+  if (!first) return "";
+  const keys = Object.keys(first);
   const esc = (v: unknown) => {
     const s = v == null ? "" : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

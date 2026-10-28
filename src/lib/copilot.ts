@@ -69,7 +69,10 @@ export function answer(q: string): CopilotAnswer {
     return {
       intent: "Datasets feeding executive reports",
       scope: "Lineage (illustrative) · RPT-FY25-PERF, RPT-RISK-Q4",
-      metrics: ds.map((d) => ({ label: `${d.id} ${d.name}`, value: s.certification[d.id] })),
+      metrics: ds.map((d) => ({
+        label: `${d.id} ${d.name}`,
+        value: s.certification[d.id] ?? "Unavailable",
+      })),
       summary: [`${ds.length} datasets feed executive reports; ${ds.filter((d) => s.certification[d.id] !== "Certified").length} are not certified.`],
       state: "VERIFIED", missing: ["Lineage is illustrative, not harvested from live systems"], links: [{ label: "Lineage explorer", to: "/data" }],
     };

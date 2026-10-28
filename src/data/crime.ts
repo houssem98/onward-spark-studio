@@ -45,8 +45,8 @@ function s(n: number) {
 export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }, (_, i) => {
   const aml = i % 3 === 0;
   const cats = aml ? AML_CATS : FRAUD_CATS;
-  const category = cats[Math.floor(s(i + 1) * cats.length)];
-  const status = STATUSES[Math.floor(s(i + 2) * STATUSES.length)];
+  const category = cats[Math.floor(s(i + 1) * cats.length)]!;
+  const status = STATUSES[Math.floor(s(i + 2) * STATUSES.length)]!;
   const day = 14 - Math.floor(s(i + 3) * 28);
   const date = new Date(Date.UTC(2026, 0, 14 + Math.min(day, 0)));
   const ageDays = Math.max(0, -Math.min(day, 0));
@@ -57,18 +57,18 @@ export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }, (_, i) => {
     timestamp: `${date.toISOString().slice(0, 10)} ${String(Math.floor(s(i + 4) * 24)).padStart(2, "0")}:${String(Math.floor(s(i + 5) * 60)).padStart(2, "0")}`,
     amount: Math.round((aml ? 9_000 + s(i + 6) * 240_000 : 80 + s(i + 6) * 12_000) * 100) / 100,
     currency: s(i + 8) > 0.85 ? "EUR" : "USD",
-    channel: aml ? (s(i + 9) > 0.5 ? "Wire" : "Branch") : CHANNELS[Math.floor(s(i + 9) * 4)],
+    channel: aml ? (s(i + 9) > 0.5 ? "Wire" : "Branch") : CHANNELS[Math.floor(s(i + 9) * 4)]!,
     score: Math.round((0.55 + s(i + 7) * 0.44) * 100) / 100,
-    signal: SIGNALS[category],
+    signal: SIGNALS[category]!,
     status: status === "New" ? "New" : status,
-    investigator: status === "New" ? "Unassigned" : INVESTIGATORS[1 + Math.floor(s(i + 10) * 4)],
+    investigator: status === "New" ? "Unassigned" : INVESTIGATORS[1 + Math.floor(s(i + 10) * 4)]!,
     customer: `CUST-${String(10_000 + Math.floor(s(i + 11) * 89_999))}`,
     ageDays,
   };
 });
 
-ALERTS[0] = { ...ALERTS[0], id: "AML-4200", type: "AML", category: "Structuring indicator", signal: SIGNALS["Structuring indicator"], status: "Investigation", investigator: "F. Leclerc", customer: "CUST-48213", amount: 118_400, currency: "USD", channel: "Branch", score: 0.91, ageDays: 9, caseId: "CASE-0917" };
-ALERTS[1] = { ...ALERTS[1], id: "FRD-4201", type: "Fraud", category: "Account takeover", signal: SIGNALS["Account takeover"], status: "Triage", investigator: "O. Bangura", customer: "CUST-20417", amount: 7_850, currency: "USD", channel: "Mobile", score: 0.88, ageDays: 2, caseId: "CASE-0921" };
+ALERTS[0] = { ...ALERTS[0]!, id: "AML-4200", type: "AML", category: "Structuring indicator", signal: SIGNALS["Structuring indicator"]!, status: "Investigation", investigator: "F. Leclerc", customer: "CUST-48213", amount: 118_400, currency: "USD", channel: "Branch", score: 0.91, ageDays: 9, caseId: "CASE-0917" };
+ALERTS[1] = { ...ALERTS[1]!, id: "FRD-4201", type: "Fraud", category: "Account takeover", signal: SIGNALS["Account takeover"]!, status: "Triage", investigator: "O. Bangura", customer: "CUST-20417", amount: 7_850, currency: "USD", channel: "Mobile", score: 0.88, ageDays: 2, caseId: "CASE-0921" };
 
 export interface CaseRecord {
   id: string;

@@ -26,7 +26,7 @@ export function DataTable<T extends object>({
   exportName?: string;
   toolbar?: ReactNode;
   rowKey: (row: T) => string;
-  selectedKey?: string;
+  selectedKey?: string | undefined;
 }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);

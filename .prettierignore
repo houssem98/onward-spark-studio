@@ -6,3 +6,5 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+# vendored byte-for-byte from ~/.claude/scripts; reformatting trips its own self-scan
+scripts/gate-guard.mjs

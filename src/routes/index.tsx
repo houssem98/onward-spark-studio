@@ -103,7 +103,7 @@ function Overview() {
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
-              <XAxis dataKey="name" {...axisProps} interval={0} tickFormatter={(v: string) => v.split(" ")[0]} />
+              <XAxis dataKey="name" {...axisProps} interval={0} tickFormatter={(v: string) => v.split(" ")[0] ?? v} />
               <YAxis {...axisProps} width={40} />
               <Tooltip {...tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 11 }} />

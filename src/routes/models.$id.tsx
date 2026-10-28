@@ -12,7 +12,8 @@ import { actions, useStore } from "@/store/app-store";
 import { classificationMetrics, downloadFile, psi, psiBand } from "@/lib/calc";
 
 export const Route = createFileRoute("/models/$id")({
-  validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s.tab === "string" ? s.tab : "overview" }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] } : {},
   loader: ({ params }) => {
     const m = MODELS.find((x) => x.id === params.id);
     if (!m) throw notFound();
@@ -33,7 +34,7 @@ const OWNERS = ["T. Ibrahim", "E. Varga", "N. Petrov", "H. Kim", "Model Validati
 
 function ModelDetail() {
   const { id } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const { tab = "overview" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const m = MODELS.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
@@ -44,7 +45,7 @@ function ModelDetail() {
   const audit = useStore((s) => s.audit.filter((a) => a.entity === id || a.entity === alert?.id || m.findings.some((f) => f.id === a.entity)));
   const [comment, setComment] = useState("");
   const [assessment, setAssessment] = useState(alert?.assessment ?? "");
-  const v = m.versions.find((x) => x.version === version) ?? m.versions[0];
+  const v = m.versions.find((x) => x.version === version) ?? m.versions[0]!;
 
   const cm = m.confusion ? classificationMetrics(m.confusion.tp, m.confusion.fp, m.confusion.fn, m.confusion.tn) : null;
   const driftRows = DRIFT_FEATURES.map((f) => ({ feature: f.feature, psi: psi(f.ref, f.cur) }));
@@ -86,7 +87,7 @@ function ModelDetail() {
               <Field label="Department">{m.department}</Field>
               <Field label="Type">{m.kind} · {m.algorithm}</Field>
               <Field label="Environment">{m.environment}</Field>
-              <Field label="Lifecycle"><StatusBadge value={lifecycle} /></Field>
+              <Field label="Lifecycle"><StatusBadge value={lifecycle ?? "Unavailable"} /></Field>
               <Field label="Risk tier">{m.riskTier}</Field>
               <Field label="Criticality">{m.criticality}</Field>
               <Field label="Health"><StatusBadge value={m.health} /></Field>
@@ -165,7 +166,7 @@ function ModelDetail() {
                 </Panel>
                 <Panel title="debt_service_coverage distribution" subtitle="Share of population by bin">
                   <ResponsiveContainer width="100%" height={230}>
-                    <BarChart data={DRIFT_FEATURES[0].ref.map((r, i) => ({ bin: `B${i + 1}`, reference: r, current: DRIFT_FEATURES[0].cur[i] }))}><CartesianGrid vertical={false} stroke={CHART.grid} /><XAxis dataKey="bin" {...axisProps} /><YAxis {...axisProps} width={35} /><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="reference" fill={CHART.c3} /><Bar dataKey="current" fill={CHART.c1} /></BarChart>
+                    <BarChart data={DRIFT_FEATURES[0]!.ref.map((r, i) => ({ bin: `B${i + 1}`, reference: r, current: DRIFT_FEATURES[0]!.cur[i] }))}><CartesianGrid vertical={false} stroke={CHART.grid} /><XAxis dataKey="bin" {...axisProps} /><YAxis {...axisProps} width={35} /><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="reference" fill={CHART.c3} /><Bar dataKey="current" fill={CHART.c1} /></BarChart>
                   </ResponsiveContainer>
                 </Panel>
               </div>

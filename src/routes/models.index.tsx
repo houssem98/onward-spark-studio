@@ -41,7 +41,7 @@ function ModelsPage() {
     { key: "kind", header: "Type" },
     { key: "version", header: "Version", cell: (m) => <span className="num text-xs">{m.version}</span> },
     { key: "environment", header: "Env", cell: (m) => <StatusBadge value={m.environment} icon={false} /> },
-    { key: "lifecycle", header: "Lifecycle", value: (m) => lifecycle[m.id], cell: (m) => <StatusBadge value={lifecycle[m.id]} /> },
+    { key: "lifecycle", header: "Lifecycle", value: (m) => lifecycle[m.id] ?? "Unavailable", cell: (m) => <StatusBadge value={lifecycle[m.id] ?? "Unavailable"} /> },
     { key: "riskTier", header: "Risk tier" },
     { key: "nextReview", header: "Next review", cell: (m) => <span className={m.nextReview < TODAY ? "num font-medium text-critical" : "num"}>{m.nextReview}{m.nextReview < TODAY && " · overdue"}</span> },
     { key: "health", header: "Health", cell: (m) => <StatusBadge value={m.health} /> },

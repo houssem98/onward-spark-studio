@@ -35,7 +35,7 @@ const PHASE_25 = [0.24, 0.246, 0.254, 0.26];
 export function quarterlyRevenue() {
   return QUARTERS.map((q, i) => {
     const y25 = i >= 4;
-    const ph = y25 ? PHASE_25[i - 4] : PHASE_24[i];
+    const ph = (y25 ? PHASE_25[i - 4] : PHASE_24[i])!;
     const row: Record<string, number | string> = { quarter: q };
     let total = 0;
     let exp = 0;
@@ -45,9 +45,9 @@ export function quarterlyRevenue() {
       total += v;
       exp += (y25 ? d.expenses : d.priorExpenses) * ph;
     }
-    row.total = Math.round(total * 10) / 10;
-    row.expenses = Math.round(exp * 10) / 10;
-    row.profit = Math.round((total - exp) * 10) / 10;
+    row["total"] = Math.round(total * 10) / 10;
+    row["expenses"] = Math.round(exp * 10) / 10;
+    row["profit"] = Math.round((total - exp) * 10) / 10;
     return row;
   });
 }

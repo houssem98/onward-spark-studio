@@ -66,7 +66,7 @@ function PerformancePage() {
 
   const finish = () => {
     const id = `INV-2026-${String(10 + invs.length).padStart(3, "0")}`;
-    const base = INVESTIGATIONS[0];
+    const base = INVESTIGATIONS[0]!;
     actions.createInvestigation({ ...base, id, title: wq, question: wq, created: "2026-01-14", status: "Draft", department: DEPARTMENTS.find((d) => d.id === wDept)!.name, owner: "J. Avery", findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })) });
     setCreatedId(id);
     toast.success(`${id} created`);
@@ -96,7 +96,7 @@ function PerformancePage() {
 
         <TabsContent value="departments" className="mt-4 space-y-4">
           <Panel title="Revenue vs target vs prior year" subtitle="USD M">
-            <ResponsiveContainer width="100%" height={260}><BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}><CartesianGrid vertical={false} stroke={CHART.grid} /><XAxis dataKey="name" {...axisProps} interval={0} tickFormatter={(v: string) => v.split(" ")[0]} /><YAxis {...axisProps} width={40} /><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="prior" name="FY2024" fill={CHART.c3} fillOpacity={0.4} /><Bar dataKey="revenue" name="FY2025" fill={CHART.c1} /><Bar dataKey="target" name="Target" fill={CHART.c2} /></BarChart></ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={260}><BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}><CartesianGrid vertical={false} stroke={CHART.grid} /><XAxis dataKey="name" {...axisProps} interval={0} tickFormatter={(v: string) => v.split(" ")[0] ?? v} /><YAxis {...axisProps} width={40} /><Tooltip {...tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="prior" name="FY2024" fill={CHART.c3} fillOpacity={0.4} /><Bar dataKey="revenue" name="FY2025" fill={CHART.c1} /><Bar dataKey="target" name="Target" fill={CHART.c2} /></BarChart></ResponsiveContainer>
           </Panel>
           <Panel title="Business-unit table" bodyClass="p-0">
             <table className="w-full text-sm">
@@ -177,8 +177,8 @@ function PerformancePage() {
               {step === 4 && <ul className="space-y-1.5">{[["Source identity & provenance", true], ["Access permissions", true], ["Period / currency / units aligned", wBench !== "peer"], ["Completeness & freshness", true], ["Reconciled to GL controls", false]].map(([l, ok]) => <li key={String(l)} className="flex items-center gap-2">{ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-warning" />}{l as string}{!ok && <span className="text-xs text-muted-foreground">— {l === "Reconciled to GL controls" ? "DQ-101 open" : "Ironwood 9M annualized; Cascade includes leasing"}</span>}</li>)}</ul>}
               {step === 5 && <><Waterfall bridge={wb} height={200} /><p className="num text-xs">Gap {fmtM(wr.gap)} · Σ {fmtM(wr.explained)} · {wr.reconciles ? "reconciles" : "does not reconcile"}</p></>}
               {step === 6 && <ol className="list-decimal pl-4">{[...wb.steps].sort((x, y) => Math.abs(y.value) - Math.abs(x.value)).map((s) => <li key={s.label}>{s.label}: <span className="num">{fmtM(s.value)}</span> {s.kind === "residual" && "(unexplained)"}</li>)}</ol>}
-              {step === 7 && <ul className="space-y-2">{INVESTIGATIONS[0].findings.map((f) => <li key={f.id} className="flex items-start justify-between gap-2"><span><StatusBadge value={f.kind} tone={f.kind === "Measured" ? "info" : "neutral"} icon={false} /> {f.claim}</span><EvidenceBadge state={f.state} /></li>)}</ul>}
-              {step === 8 && <ul className="list-disc pl-4">{INVESTIGATIONS[0].contradictions.map((c) => <li key={c}>{c}</li>)}</ul>}
+              {step === 7 && <ul className="space-y-2">{INVESTIGATIONS[0]!.findings.map((f) => <li key={f.id} className="flex items-start justify-between gap-2"><span><StatusBadge value={f.kind} tone={f.kind === "Measured" ? "info" : "neutral"} icon={false} /> {f.claim}</span><EvidenceBadge state={f.state} /></li>)}</ul>}
+              {step === 8 && <ul className="list-disc pl-4">{INVESTIGATIONS[0]!.contradictions.map((c) => <li key={c}>{c}</li>)}</ul>}
               {step === 9 && (createdId ? <p>Investigation <Link to="/investigations/$id" params={{ id: createdId }} className="text-primary underline">{createdId}</Link> created. <Link to="/reports/$id" params={{ id: "RPT-FY25-PERF" }} className="text-primary underline">Preview linked report</Link>.</p> : <Button onClick={finish}>Create investigation & draft report</Button>)}
               {step === 10 && <div className="space-y-2"><p>Corrective actions are assigned from findings on the investigation page.</p><Button size="sm" onClick={() => navigate({ to: "/investigations/$id", params: { id: createdId ?? "INV-2025-014" } })}>Open investigation</Button></div>}
             </div>

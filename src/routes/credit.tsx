@@ -45,7 +45,7 @@ function CreditPage() {
   const lim = sum(rows.map((r) => r.limit));
   const coll = sum(rows.map((r) => r.collateral));
   const loans = sum(rows.map((r) => r.loans));
-  const sc = STRESS[stress];
+  const sc = STRESS[stress]!;
 
   const breakdown = Object.values(rows.reduce<Record<string, { key: string; balance: number; revenue: number; npl: number }>>((acc, r) => {
     const k = r[dim];
@@ -86,8 +86,8 @@ function CreditPage() {
         <Kpi label="30+ DPD rate" value={fmtPct(pct(dpd, bal), 2)} sub="ratio" definition="Balance 30+ days past due ÷ balance." period="31 Dec 2025" />
         <Kpi label="Expected credit loss" value={fmtM(ecl)} sub="model output" definition="IFRS 9 ECL stock — model estimate, not observed loss." period="31 Dec 2025" />
         <Kpi label="Net write-offs" value={fmtM(wo - rec)} sub={`WO ${wo.toFixed(1)} · Rec ${rec.toFixed(1)}`} definition="Write-offs less recoveries (observed flow)." />
-        <Kpi label="Approval rate" value={fmtPct(pct(FUNNEL[3].count, FUNNEL[0].count))} definition="Approvals ÷ applications (bank-wide)." />
-        <Kpi label="App → disbursement" value={fmtPct(pct(FUNNEL[6].count, FUNNEL[0].count))} definition="Disbursements ÷ applications." />
+        <Kpi label="Approval rate" value={fmtPct(pct(FUNNEL[3]!.count, FUNNEL[0]!.count))} definition="Approvals ÷ applications (bank-wide)." />
+        <Kpi label="App → disbursement" value={fmtPct(pct(FUNNEL[6]!.count, FUNNEL[0]!.count))} definition="Disbursements ÷ applications." />
         <Kpi label="Avg loan size" value={`$${((bal * 1e6) / Math.max(loans, 1) / 1000).toFixed(1)}k`} definition="Balance ÷ number of loans." period="31 Dec 2025" />
         <Kpi label="Limit utilization" value={fmtPct(pct(bal, lim))} definition="Balance ÷ committed limits." period="31 Dec 2025" />
         <Kpi label="Collateral coverage" value={fmtPct(pct(coll, bal), 0)} definition="Collateral value ÷ balance (simulated valuations)." period="31 Dec 2025" />
@@ -111,8 +111,8 @@ function CreditPage() {
           <ul className="space-y-1.5">{FUNNEL.map((f, i) => (
             <li key={f.stage} className="grid grid-cols-[140px_1fr_110px] items-center gap-2 text-xs">
               <span>{f.stage}</span>
-              <div className="h-5 rounded bg-muted"><div className="h-5 rounded bg-primary/80" style={{ width: `${pct(f.count, FUNNEL[0].count)}%` }} /></div>
-              <span className="num text-right">{f.count.toLocaleString()} {i > 0 && <span className="text-muted-foreground">({pct(f.count, FUNNEL[i - 1].count).toFixed(0)}%)</span>}</span>
+              <div className="h-5 rounded bg-muted"><div className="h-5 rounded bg-primary/80" style={{ width: `${pct(f.count, FUNNEL[0]!.count)}%` }} /></div>
+              <span className="num text-right">{f.count.toLocaleString()} {i > 0 && <span className="text-muted-foreground">({pct(f.count, FUNNEL[i - 1]!.count).toFixed(0)}%)</span>}</span>
             </li>))}
           </ul>
           <p className="eyebrow mt-4 mb-1">Rejection reasons</p>

@@ -49,7 +49,7 @@ for (const segment of SEGMENTS) {
     for (const region of REGIONS) {
       k++;
       const r = seeded(k);
-      const band = RISK_BANDS[Math.floor(seeded(k + 100) * 4)];
+      const band = RISK_BANDS[Math.floor(seeded(k + 100) * 4)]!;
       const segW = segment === "Corporate" ? 1.6 : segment === "SME" ? 1.1 : 0.8;
       const yieldW = segment === "Consumer" ? 1.5 : segment === "SME" ? 1.0 : 0.55;
       const bandRisk = { A: 0.006, B: 0.015, C: 0.035, D: 0.07 }[band];

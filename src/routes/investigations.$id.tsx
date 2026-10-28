@@ -65,7 +65,7 @@ function InvDetail() {
                 <Input type="date" className="h-8 w-40" value={form.due} onChange={(e) => setForm({ ...form, due: e.target.value })} />
                 <Button size="sm" type="submit">Save</Button><Button size="sm" variant="ghost" type="button" onClick={() => setForm(null)}>Cancel</Button>
               </form>
-            ) : <Button size="sm" variant="outline" onClick={() => setForm({ finding: f.id, text: f.next, owner: OWNERS[0], due: "2026-02-28" })}>Assign corrective action</Button>}
+            ) : <Button size="sm" variant="outline" onClick={() => setForm({ finding: f.id, text: f.next, owner: OWNERS[0]!, due: "2026-02-28" })}>Assign corrective action</Button>}
           </li>))}
         </ul>
       </Panel>

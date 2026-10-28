@@ -34,7 +34,7 @@ function DataPage() {
   const [domain, setDomain] = useState("All");
   const [certF, setCertF] = useState("All");
   const [ds, setDs] = useState<Dataset | null>(null);
-  const [node, setNode] = useState<LineageNode>(LINEAGE_NODES[4]);
+  const [node, setNode] = useState<LineageNode>(LINEAGE_NODES[4]!);
   const [issueId, setIssueId] = useState<string | null>(null);
   const [resolution, setResolution] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -50,7 +50,7 @@ function DataPage() {
     { key: "classification", header: "Class." },
     { key: "frequency", header: "Refresh" },
     { key: "quality", header: "Quality*", align: "right", cell: (d) => d.quality.toFixed(1) },
-    { key: "cert", header: "Certification", value: (d) => cert[d.id], cell: (d) => <StatusBadge value={cert[d.id]} /> },
+    { key: "cert", header: "Certification", value: (d) => cert[d.id] ?? "Unavailable", cell: (d) => <StatusBadge value={cert[d.id] ?? "Unavailable"} /> },
   ];
 
   const upstream = (id: string): string[] => LINEAGE_EDGES.filter(([, t]) => t === id).flatMap(([s]) => [s, ...upstream(s)]);
@@ -174,7 +174,7 @@ function DataPage() {
             </dl>
             <div className="mt-4"><p className="eyebrow mb-1">Downstream</p><div className="flex flex-wrap gap-1">{ds.downstream.map((d) => <StatusBadge key={d} value={d} tone="info" icon={false} />)}</div></div>
             <div className="mt-4"><p className="eyebrow mb-1">Certification</p>
-              <div className="flex items-center gap-2"><StatusBadge value={cert[ds.id]} />
+              <div className="flex items-center gap-2"><StatusBadge value={cert[ds.id] ?? "Unavailable"} />
                 <select aria-label="Change certification" className="h-8 rounded-md border bg-card px-2 text-sm" value={cert[ds.id]} onChange={(e) => { actions.setCertification(ds.id, e.target.value as "Certified"); toast.success("Certification updated"); }}>
                   <option>Certified</option><option>Pending</option><option>Not certified</option><option>Revoked</option>
                 </select>
