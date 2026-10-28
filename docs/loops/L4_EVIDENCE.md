@@ -8,8 +8,8 @@ Deciding rule, fixed before T1 starts: T0 to T6 are ticked, `npm run gate` exits
 
 ## Current state (read 2026-10-28; T0 re-verifies)
 
-- Evidence states are a type with no policy behind them: `src/data/investigations.ts#export type EvidenceState = "VERIFIED" | "PARTIALLY_VERIFIED" | "UNVERIFIED" | "CONFLICTING_EVIDENCE" | "NOT_AVAILABLE";`.
-- The copilot assigns states by hand, including VERIFIED: `src/lib/copilot.ts#state: "VERIFIED", missing: ["Targets are synthetic budget figures"]`.
+- Evidence states are a type with no policy behind them: `src/data/investigations.ts#export type EvidenceState =`.
+- The copilot assigns states by hand, including VERIFIED: `src/lib/copilot.ts#state: "VERIFIED",`.
 - zod is installed (`package.json#"zod": "^3.25.76"`).
 
 ## Tasks

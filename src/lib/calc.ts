@@ -9,7 +9,8 @@ export const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
 export const pct = (num: number, den: number) => (den === 0 ? 0 : (num / den) * 100);
 
-export const growth = (current: number, prior: number) => (prior === 0 ? 0 : ((current - prior) / prior) * 100);
+export const growth = (current: number, prior: number) =>
+  prior === 0 ? 0 : ((current - prior) / prior) * 100;
 
 export const costToIncome = (opex: number, income: number) => pct(opex, income);
 
@@ -33,12 +34,23 @@ export interface Bridge {
 export function reconcileBridge(b: Bridge) {
   const gap = round(b.actual - b.base, 4);
   const explained = round(sum(b.steps.map((s) => s.value)), 4);
-  return { gap, explained, difference: round(gap - explained, 4), reconciles: Math.abs(gap - explained) < 1e-6 };
+  return {
+    gap,
+    explained,
+    difference: round(gap - explained, 4),
+    reconciles: Math.abs(gap - explained) < 1e-6,
+  };
 }
 
 /** Waterfall rows for charting: invisible offset + visible bar. */
 export function waterfallRows(b: Bridge) {
-  const rows: { name: string; offset: number; value: number; signed: number; type: "total" | "up" | "down" | "residual" }[] = [];
+  const rows: {
+    name: string;
+    offset: number;
+    value: number;
+    signed: number;
+    type: "total" | "up" | "down" | "residual";
+  }[] = [];
   rows.push({ name: b.baseLabel, offset: 0, value: b.base, signed: b.base, type: "total" });
   let running = b.base;
   for (const s of b.steps) {
@@ -68,7 +80,8 @@ export function psi(expected: number[], actual: number[]) {
   return total;
 }
 
-export const psiBand = (v: number) => (v < 0.1 ? "Stable" : v < 0.25 ? "Moderate shift" : "Significant shift");
+export const psiBand = (v: number) =>
+  v < 0.1 ? "Stable" : v < 0.25 ? "Moderate shift" : "Significant shift";
 
 export function classificationMetrics(tp: number, fp: number, fn: number, tn: number) {
   const precision = tp / (tp + fp);
@@ -78,10 +91,12 @@ export function classificationMetrics(tp: number, fp: number, fn: number, tn: nu
   return { precision, recall, f1, accuracy };
 }
 
-export const fmtM = (v: number, dp = 1) => `${v < 0 ? "−" : ""}$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp })}M`;
+export const fmtM = (v: number, dp = 1) =>
+  `${v < 0 ? "−" : ""}$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp })}M`;
 export const fmtPct = (v: number, dp = 1) => `${v.toFixed(dp)}%`;
 export const fmtNum = (v: number) => v.toLocaleString("en-US");
-export const fmtSigned = (v: number, dp = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp)}`;
+export const fmtSigned = (v: number, dp = 1) =>
+  `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp)}`;
 
 export function toCSV(rows: Record<string, unknown>[]) {
   const [first] = rows;

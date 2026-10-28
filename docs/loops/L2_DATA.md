@@ -8,7 +8,7 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
 
 ## Current state (read 2026-10-28; T0 re-verifies)
 
-- Pages import fixtures directly, e.g. `src/routes/performance.tsx#import { BANK, BRIDGES, DEPARTMENTS, PEER_BENCHMARK_NOTE, PEER_HISTORY, PEERS, SCORECARD } from "@/data/finance";`, `src/routes/credit.tsx#from "@/data/credit";`, `src/routes/crime.$id.tsx#import { CASES, INVESTIGATORS_LIST, type AlertStatus } from "@/data/crime";`; so does the copilot (`src/lib/copilot.ts#import { DEPARTMENTS, SCORECARD, BRIDGES, PEERS } from "@/data/finance";`).
+- Pages import fixtures directly, e.g. `src/routes/performance.tsx#} from "@/data/finance";`, `src/routes/credit.tsx#from "@/data/credit";`, `src/routes/crime.$id.tsx#import { CASES, INVESTIGATORS_LIST, type AlertStatus } from "@/data/crime";`; so does the copilot (`src/lib/copilot.ts#import { DEPARTMENTS, SCORECARD, BRIDGES, PEERS } from "@/data/finance";`).
 - Mutable state is a module-level object behind `useSyncExternalStore` (`src/store/app-store.ts#export function useStore<T>(selector: (s: State) => T): T {`); TanStack Query is installed (`package.json#"@tanstack/react-query"`) and unused for data.
 - Calc helpers have no tests: `src/lib/calc.ts`.
 

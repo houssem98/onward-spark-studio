@@ -28,12 +28,12 @@ A front-end proof of concept for the fictional Northstar Bank, built in Lovable.
 | Data | fixtures imported straight into pages | `src/routes/index.tsx#import { DEPARTMENTS, quarterlyRevenue } from "@/data/finance";` |
 | Persistence | browser memory, lost on reload | `src/store/app-store.ts#let state: State = {` |
 | Identity | one hard-coded Chief Risk Officer | `src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },` |
-| Evidence states | typed, hand-assigned, VERIFIED included | `src/lib/copilot.ts#state: "VERIFIED", missing: ["Targets are synthetic budget figures"]` |
+| Evidence states | typed, hand-assigned, VERIFIED included | `src/lib/copilot.ts#state: "VERIFIED",` |
 | AI | canned regex routing, labeled in code only | `src/lib/copilot.ts#no live LLM is connected` |
 | Approvals | the maker approves its own model to Production | `src/store/app-store.ts#decideModel(model: string,` |
 | Reconciliation | exact, untested | `src/lib/calc.ts#export function reconcileBridge(b: Bridge) {` |
 | Exports | unlabeled CSV, no formula neutralization | `src/lib/calc.ts#export function toCSV(` |
-| Synthetic notice | sidebar footer only, hidden when collapsed | `src/components/AppShell.tsx#{!collapsed && <p className="mb-2 px-1 text-[10px] leading-snug text-ink-muted">Proof of concept.` |
+| Synthetic notice | sidebar footer only, hidden when collapsed | `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.` |
 
 ## 3. Phases to loops
 

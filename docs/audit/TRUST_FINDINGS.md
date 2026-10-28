@@ -14,12 +14,12 @@ No finding is critical today only because there is no real data, no backend and 
 ## Findings
 
 ### F1 · high · Evidence states are assigned by hand
-- Evidence: the copilot writes VERIFIED as a literal (`src/lib/copilot.ts#state: "VERIFIED", missing: ["Targets are synthetic budget figures"]`) and so do the fixtures (`src/data/investigations.ts#state: "VERIFIED"`); 12 literal assignments in src. This is what `BankIntelli_Elite_Premium_Design_Roadmap.md#A model cannot set a claim to Verified simply by generating confident` forbids.
+- Evidence: the copilot writes VERIFIED as a literal (`src/lib/copilot.ts#state: "VERIFIED",`) and so do the fixtures (`src/data/investigations.ts#state: "VERIFIED"`); 12 literal assignments in src. This is what `BankIntelli_Elite_Premium_Design_Roadmap.md#A model cannot set a claim to Verified simply by generating confident` forbids.
 - Fix: L4 T2, L4 T3
 - Status: open
 
 ### F2 · high · The maker approves its own model straight to Production
-- Evidence: `src/store/app-store.ts#modelLifecycle: { ...s.modelLifecycle, [model]: decision === "Approved" ? "Production" : "Development" },`
+- Evidence: `src/store/app-store.ts#[model]: decision === "Approved" ? "Production" : "Development",`
 - Fix: L3 T6
 - Status: open
 
@@ -79,7 +79,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F14 · medium · Two CSV exports carry no synthetic label
-- Evidence: the table export's toast says synthetic and the file does not (`src/components/DataTable.tsx#synthetic records`); the inventory CSV has no label (`src/routes/models.index.tsx#downloadFile("model-inventory.csv"`).
+- Evidence: the table export's toast says synthetic and the file does not (`src/components/DataTable.tsx#synthetic records`); the inventory CSV has no label (`src/routes/models.index.tsx#"model-inventory.csv",`).
 - Fix: L2 T7
 - Status: open
 
@@ -94,7 +94,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F17 · medium · The synthetic-data notice disappears when the sidebar collapses
-- Evidence: `src/components/AppShell.tsx#{!collapsed && <p className="mb-2 px-1 text-[10px] leading-snug text-ink-muted">Proof of concept.`
+- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`
 - Fix: L1 T2
 - Status: open
 
@@ -104,7 +104,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F19 · low · The reporting-period selector does nothing
-- Evidence: no change handler: `src/components/AppShell.tsx#aria-label="Reporting period" defaultValue="FY2025"`
+- Evidence: no change handler: `src/components/AppShell.tsx#aria-label="Reporting period"`
 - Fix: L1 T2
 - Status: open
 

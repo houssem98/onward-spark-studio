@@ -10,7 +10,15 @@ export const PRODUCTS: Record<(typeof SEGMENTS)[number], string[]> = {
   Corporate: ["Syndicated loan", "Revolving facility"],
 };
 
-export const INDUSTRIES = ["Retail trade", "Manufacturing", "Construction", "Healthcare", "Technology", "Agriculture", "Households"];
+export const INDUSTRIES = [
+  "Retail trade",
+  "Manufacturing",
+  "Construction",
+  "Healthcare",
+  "Technology",
+  "Agriculture",
+  "Households",
+];
 
 export interface Slice {
   id: string;
@@ -54,10 +62,19 @@ for (const segment of SEGMENTS) {
       const yieldW = segment === "Consumer" ? 1.5 : segment === "SME" ? 1.0 : 0.55;
       const bandRisk = { A: 0.006, B: 0.015, C: 0.035, D: 0.07 }[band];
       const ind = segment === "Consumer" ? "Households" : INDUSTRIES[Math.floor(seeded(k + 7) * 6)];
-      const ch = segment === "Corporate" ? "Relationship" : CHANNELS[Math.floor(seeded(k + 11) * 3)];
+      const ch =
+        segment === "Corporate" ? "Relationship" : CHANNELS[Math.floor(seeded(k + 11) * 3)];
       (raw as unknown as Record<string, unknown>[]).push({
-        id: `SL-${String(k).padStart(3, "0")}`, segment, product, region, riskBand: band, channel: ch, industry: ind,
-        w: segW * (0.6 + r), y: yieldW * (0.8 + seeded(k + 3) * 0.4), bandRisk,
+        id: `SL-${String(k).padStart(3, "0")}`,
+        segment,
+        product,
+        region,
+        riskBand: band,
+        channel: ch,
+        industry: ind,
+        w: segW * (0.6 + r),
+        y: yieldW * (0.8 + seeded(k + 3) * 0.4),
+        bandRisk,
       });
     }
   }
@@ -67,13 +84,22 @@ const rw = raw as unknown as { w: number; y: number; bandRisk: number }[];
 const sumW = rw.reduce((a, s) => a + s.w, 0);
 const sumY = rw.reduce((a, s) => a + s.w * s.y, 0);
 
-export const SLICES: Slice[] = (raw as unknown as (Slice & { w: number; y: number; bandRisk: number })[]).map((s, i) => {
+export const SLICES: Slice[] = (
+  raw as unknown as (Slice & { w: number; y: number; bandRisk: number })[]
+).map((s, i) => {
   const balance = (TOTAL_BALANCE * s.w) / sumW;
   const revenue = (TOTAL_REVENUE * s.w * s.y) / sumY;
   const growth = 0.02 + seeded(i + 50) * 0.08;
   return {
-    id: s.id, segment: s.segment, product: s.product, region: s.region, riskBand: s.riskBand, channel: s.channel, industry: s.industry,
-    balance, revenue,
+    id: s.id,
+    segment: s.segment,
+    product: s.product,
+    region: s.region,
+    riskBand: s.riskBand,
+    channel: s.channel,
+    industry: s.industry,
+    balance,
+    revenue,
     priorBalance: balance / (1 + growth),
     originations: balance * (s.segment === "Consumer" ? 0.42 : 0.24) * (0.8 + seeded(i + 9) * 0.4),
     npl: balance * s.bandRisk * 1.4,
@@ -114,6 +140,12 @@ export const STRESS = [
 ];
 
 export const CREDIT_TREND = [
-  { q: "Q1-24", revenue: 27.7, nim: 3.12, npl: 2.1 }, { q: "Q2-24", revenue: 28.3, nim: 3.1, npl: 2.1 }, { q: "Q3-24", revenue: 28.7, nim: 3.08, npl: 2.2 }, { q: "Q4-24", revenue: 29.3, nim: 3.07, npl: 2.2 },
-  { q: "Q1-25", revenue: 28.8, nim: 3.05, npl: 2.3 }, { q: "Q2-25", revenue: 29.5, nim: 3.04, npl: 2.4 }, { q: "Q3-25", revenue: 30.5, nim: 3.03, npl: 2.4 }, { q: "Q4-25", revenue: 31.2, nim: 3.02, npl: 2.5 },
+  { q: "Q1-24", revenue: 27.7, nim: 3.12, npl: 2.1 },
+  { q: "Q2-24", revenue: 28.3, nim: 3.1, npl: 2.1 },
+  { q: "Q3-24", revenue: 28.7, nim: 3.08, npl: 2.2 },
+  { q: "Q4-24", revenue: 29.3, nim: 3.07, npl: 2.2 },
+  { q: "Q1-25", revenue: 28.8, nim: 3.05, npl: 2.3 },
+  { q: "Q2-25", revenue: 29.5, nim: 3.04, npl: 2.4 },
+  { q: "Q3-25", revenue: 30.5, nim: 3.03, npl: 2.4 },
+  { q: "Q4-25", revenue: 31.2, nim: 3.02, npl: 2.5 },
 ];
