@@ -20,6 +20,7 @@ import { Route as InvestigationsIndexRouteImport } from './routes/investigations
 import { Route as InvestigationsIdRouteImport } from './routes/investigations.$id'
 import { Route as ModelsIndexRouteImport } from './routes/models.index'
 import { Route as ModelsIdRouteImport } from './routes/models.$id'
+import { Route as ReportsIdRouteImport } from './routes/reports.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const ModelsIdRoute = ModelsIdRouteImport.update({
   path: '/models/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsIdRoute = ReportsIdRouteImport.update({
+  id: '/reports/$id',
+  path: '/reports/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/crime/': typeof CrimeIndexRoute
   '/investigations/': typeof InvestigationsIndexRoute
   '/models/': typeof ModelsIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/crime': typeof CrimeIndexRoute
   '/investigations': typeof InvestigationsIndexRoute
   '/models': typeof ModelsIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/crime/': typeof CrimeIndexRoute
   '/investigations/': typeof InvestigationsIndexRoute
   '/models/': typeof ModelsIndexRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
+    | '/reports/$id'
     | '/crime/'
     | '/investigations/'
     | '/models/'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
+    | '/reports/$id'
     | '/crime'
     | '/investigations'
     | '/models'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
+    | '/reports/$id'
     | '/crime/'
     | '/investigations/'
     | '/models/'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   CrimeIdRoute: typeof CrimeIdRoute
   InvestigationsIdRoute: typeof InvestigationsIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
+  ReportsIdRoute: typeof ReportsIdRoute
   CrimeIndexRoute: typeof CrimeIndexRoute
   InvestigationsIndexRoute: typeof InvestigationsIndexRoute
   ModelsIndexRoute: typeof ModelsIndexRoute
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModelsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports/$id': {
+      id: '/reports/$id'
+      path: '/reports/$id'
+      fullPath: '/reports/$id'
+      preLoaderRoute: typeof ReportsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrimeIdRoute: CrimeIdRoute,
   InvestigationsIdRoute: InvestigationsIdRoute,
   ModelsIdRoute: ModelsIdRoute,
+  ReportsIdRoute: ReportsIdRoute,
   CrimeIndexRoute: CrimeIndexRoute,
   InvestigationsIndexRoute: InvestigationsIndexRoute,
   ModelsIndexRoute: ModelsIndexRoute,

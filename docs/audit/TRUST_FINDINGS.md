@@ -34,9 +34,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F5 · high · Five links lead to a page that does not exist
-- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`
+- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`; now served by an honest placeholder (`src/routes/reports.$id.tsx#Report preview not built yet.`) and guarded by `src/test/link-integrity.test.tsx#resolves every in-app link to a route`
 - Fix: L0 T3
-- Status: open
+- Status: fixed in L0 T3
 
 ### F6 · high · Identity is a constant, so every audit event names the same person
 - Evidence: `src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },`, `src/store/app-store.ts#actor: state.user.name`

@@ -17,7 +17,7 @@ A route row rates the data the page shows; its controls and exports have their o
 
 ## Counts
 
-32 rows: 13 routes (12 files plus the absent report route), 14 controls, 5 exports. implemented 0, partial 17, mocked 13, broken 1, absent 1, not verified 0.
+32 rows: 13 routes, 14 controls, 5 exports. implemented 0, partial 18, mocked 14, broken 0, absent 0, not verified 0. (L0 T4 had partial 17, mocked 13, broken 1, absent 1; L0 T3 replaced the absent report route with a placeholder.)
 
 ## Routes
 
@@ -35,7 +35,7 @@ A route row rates the data the page shows; its controls and exports have their o
 | route | `src/routes/investigations.index.tsx` | mocked | Registers seeded from fixtures: `src/routes/investigations.index.tsx#import { REPORTS, type Action, type Investigation } from "@/data/investigations";` | read |
 | route | `src/routes/investigations.$id.tsx` | mocked | Detail over the store's fixture copy: `src/store/app-store.ts#investigations: INVESTIGATIONS.map((i) => ({ ...i })),` | read |
 | route | `src/routes/audit.tsx` | partial | Seeded events plus this session's, labeled honestly: `src/routes/audit.tsx#Session-only; not persisted.` | read |
-| route | `/reports/$id` | absent | Five links point at it, no route declares it: `src/routes/index.tsx#to="/reports/$id"`; planned in `.lovable/plan/finish-the-bankintelli-poc-2026-10-28.md#Report preview` | read; typecheck at L0 T0 |
+| route | `src/routes/reports.$id.tsx` | mocked | Placeholder added in L0 T3: names the fixture report or says no report has the id, and states the preview is not built (`src/routes/reports.$id.tsx#Report preview not built yet.`); the full report is L5 T3 | read; `src/test/link-integrity.test.tsx#resolves every in-app link to a route` |
 
 ## Controls
 
@@ -54,7 +54,7 @@ A route row rates the data the page shows; its controls and exports have their o
 | control | wizard "Create investigation", `actions.createInvestigation` findings | mocked | Every new investigation receives INV-2025-014's findings, evidence states included, renamed to the new id: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))` | read |
 | control | copilot | mocked | Regex routing over fixtures, labeled in the panel: `src/components/AppShell.tsx#No live AI provider is connected.`; it sets evidence states by hand: `src/lib/copilot.ts#state: "VERIFIED", missing: ["Targets are synthetic budget figures"]` | read |
 | control | reporting-period selector | mocked | No change handler, so picking does nothing: `src/components/AppShell.tsx#aria-label="Reporting period" defaultValue="FY2025"` | read |
-| control | links to `/reports/$id` (5 sites) | broken | `src/routes/investigations.$id.tsx#to="/reports/$id"`, `src/routes/performance.tsx#Preview linked report`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"` | read; typecheck at L0 T0 |
+| control | links to `/reports/$id` (5 sites) | partial | They resolve since L0 T3, to a placeholder rather than a report: `src/routes/investigations.$id.tsx#to="/reports/$id"`, `src/routes/performance.tsx#Preview linked report`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"` | read; `src/test/link-integrity.test.tsx#resolves every in-app link to a route` |
 
 ## Exports
 
