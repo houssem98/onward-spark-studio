@@ -10,16 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as CrimeIndexRouteImport } from './routes/crime.index'
 import { Route as CrimeIdRouteImport } from './routes/crime.$id'
+import { Route as InvestigationsIndexRouteImport } from './routes/investigations.index'
+import { Route as InvestigationsIdRouteImport } from './routes/investigations.$id'
 import { Route as ModelsIndexRouteImport } from './routes/models.index'
 import { Route as ModelsIdRouteImport } from './routes/models.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreditRoute = CreditRouteImport.update({
@@ -32,6 +41,11 @@ const DataRoute = DataRouteImport.update({
   path: '/data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerformanceRoute = PerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrimeIndexRoute = CrimeIndexRouteImport.update({
   id: '/crime/',
   path: '/crime/',
@@ -40,6 +54,16 @@ const CrimeIndexRoute = CrimeIndexRouteImport.update({
 const CrimeIdRoute = CrimeIdRouteImport.update({
   id: '/crime/$id',
   path: '/crime/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestigationsIndexRoute = InvestigationsIndexRouteImport.update({
+  id: '/investigations/',
+  path: '/investigations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestigationsIdRoute = InvestigationsIdRouteImport.update({
+  id: '/investigations/$id',
+  path: '/investigations/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModelsIndexRoute = ModelsIndexRouteImport.update({
@@ -55,69 +79,97 @@ const ModelsIdRoute = ModelsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/performance': typeof PerformanceRoute
   '/crime/$id': typeof CrimeIdRoute
+  '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
   '/crime/': typeof CrimeIndexRoute
+  '/investigations/': typeof InvestigationsIndexRoute
   '/models/': typeof ModelsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/performance': typeof PerformanceRoute
   '/crime/$id': typeof CrimeIdRoute
+  '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
   '/crime': typeof CrimeIndexRoute
+  '/investigations': typeof InvestigationsIndexRoute
   '/models': typeof ModelsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit': typeof AuditRoute
   '/credit': typeof CreditRoute
   '/data': typeof DataRoute
+  '/performance': typeof PerformanceRoute
   '/crime/$id': typeof CrimeIdRoute
+  '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
   '/crime/': typeof CrimeIndexRoute
+  '/investigations/': typeof InvestigationsIndexRoute
   '/models/': typeof ModelsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/audit'
     | '/credit'
     | '/data'
+    | '/performance'
     | '/crime/$id'
+    | '/investigations/$id'
     | '/models/$id'
     | '/crime/'
+    | '/investigations/'
     | '/models/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/audit'
     | '/credit'
     | '/data'
+    | '/performance'
     | '/crime/$id'
+    | '/investigations/$id'
     | '/models/$id'
     | '/crime'
+    | '/investigations'
     | '/models'
   id:
     | '__root__'
     | '/'
+    | '/audit'
     | '/credit'
     | '/data'
+    | '/performance'
     | '/crime/$id'
+    | '/investigations/$id'
     | '/models/$id'
     | '/crime/'
+    | '/investigations/'
     | '/models/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditRoute: typeof AuditRoute
   CreditRoute: typeof CreditRoute
   DataRoute: typeof DataRoute
+  PerformanceRoute: typeof PerformanceRoute
   CrimeIdRoute: typeof CrimeIdRoute
+  InvestigationsIdRoute: typeof InvestigationsIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
   CrimeIndexRoute: typeof CrimeIndexRoute
+  InvestigationsIndexRoute: typeof InvestigationsIndexRoute
   ModelsIndexRoute: typeof ModelsIndexRoute
 }
 
@@ -128,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/credit': {
@@ -144,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/performance': {
+      id: '/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof PerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crime/': {
       id: '/crime/'
       path: '/crime'
@@ -156,6 +222,20 @@ declare module '@tanstack/react-router' {
       path: '/crime/$id'
       fullPath: '/crime/$id'
       preLoaderRoute: typeof CrimeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investigations/': {
+      id: '/investigations/'
+      path: '/investigations'
+      fullPath: '/investigations/'
+      preLoaderRoute: typeof InvestigationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investigations/$id': {
+      id: '/investigations/$id'
+      path: '/investigations/$id'
+      fullPath: '/investigations/$id'
+      preLoaderRoute: typeof InvestigationsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/models/': {
@@ -177,11 +257,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditRoute: AuditRoute,
   CreditRoute: CreditRoute,
   DataRoute: DataRoute,
+  PerformanceRoute: PerformanceRoute,
   CrimeIdRoute: CrimeIdRoute,
+  InvestigationsIdRoute: InvestigationsIdRoute,
   ModelsIdRoute: ModelsIdRoute,
   CrimeIndexRoute: CrimeIndexRoute,
+  InvestigationsIndexRoute: InvestigationsIndexRoute,
   ModelsIndexRoute: ModelsIndexRoute,
 }
 export const routeTree = rootRouteImport
