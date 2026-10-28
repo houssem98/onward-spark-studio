@@ -174,6 +174,17 @@ export function DataTable<T extends object>({
                   <tr
                     key={k}
                     onClick={onRowClick ? () => onRowClick(r) : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onRowClick(r);
+                            }
+                          }
+                        : undefined
+                    }
                     className={cn(
                       "border-b last:border-0",
                       onRowClick && "cursor-pointer hover:bg-accent/50",

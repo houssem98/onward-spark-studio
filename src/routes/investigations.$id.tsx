@@ -148,6 +148,7 @@ function InvDetail() {
                 >
                   <Input
                     className="h-8 max-w-sm"
+                    aria-label="Corrective action"
                     value={form.text}
                     onChange={(e) => setForm({ ...form, text: e.target.value })}
                     placeholder="Action"
@@ -165,6 +166,7 @@ function InvDetail() {
                   </select>
                   <Input
                     type="date"
+                    aria-label="Due date"
                     className="h-8 w-40"
                     value={form.due}
                     onChange={(e) => setForm({ ...form, due: e.target.value })}

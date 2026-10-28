@@ -229,6 +229,7 @@ function CasePage() {
             <option>Reviewer</option>
           </select>
           <Textarea
+            aria-label="Case note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Add a note…"

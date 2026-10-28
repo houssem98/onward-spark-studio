@@ -130,6 +130,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground focus:not-sr-only focus:fixed focus:left-2 focus:top-2"
+      >
+        Skip to content
+      </a>
       <aside
         className={cn(
           "no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] md:flex",
@@ -248,7 +254,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </header>
         </div>
-        <main className="mx-auto w-full min-w-0 max-w-[1500px] flex-1 p-3 sm:p-5">{children}</main>
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full min-w-0 max-w-[1500px] flex-1 p-3 outline-none sm:p-5"
+        >
+          {children}
+        </main>
       </div>
 
       <CommandPalette
@@ -288,7 +300,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               ask(q);
             }}
           >
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask a question…" />
+            <Input
+              aria-label="Question for the copilot"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ask a question…"
+            />
             <Button type="submit">Ask</Button>
           </form>
           {history.length === 0 && (

@@ -222,6 +222,16 @@ function DataPage() {
                     key={n.id}
                     transform={`translate(${p.x},${p.y})`}
                     onClick={() => setNode(n)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setNode(n);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Show lineage for ${n.label}`}
+                    aria-pressed={sel}
                     className="cursor-pointer"
                   >
                     <rect
@@ -362,9 +372,17 @@ function DataPage() {
                     <tr
                       key={i.id}
                       className="cursor-pointer border-b last:border-0 hover:bg-accent/50"
+                      tabIndex={0}
                       onClick={() => {
                         setIssueId(i.id);
                         setResolution(i.resolution ?? "");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setIssueId(i.id);
+                          setResolution(i.resolution ?? "");
+                        }
                       }}
                     >
                       <td className="num px-3 py-2 text-xs">{i.id}</td>
@@ -507,6 +525,7 @@ function DataPage() {
               <div className="mt-4">
                 <p className="eyebrow mb-1">Request access</p>
                 <Input
+                  aria-label="Business purpose for access"
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="Business purpose"

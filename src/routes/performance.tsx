@@ -529,6 +529,7 @@ function PerformancePage() {
             <div className="min-h-[220px] space-y-3 text-sm">
               {step === 0 && (
                 <select
+                  aria-label="Investigation question"
                   className="h-9 w-full rounded-md border bg-card px-2"
                   value={wq}
                   onChange={(e) => setWq(e.target.value)}

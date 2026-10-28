@@ -174,14 +174,14 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F33 · medium · Detail pages cannot be reached by keyboard
-- Evidence: table rows open details on click only (`src/components/DataTable.tsx#onClick={onRowClick ? () => onRowClick(r) : undefined}`), and src outside the UI kit has no `tabIndex` or `onKeyDown` at all; lineage nodes are click-only too.
+- Evidence: table rows open details on click only (`src/components/DataTable.tsx#onClick={onRowClick ? () => onRowClick(r) : undefined}`), and src outside the UI kit had no `tabIndex` or `onKeyDown` at all; lineage nodes were click-only too. L1 T5 made clickable rows and lineage nodes focusable and operable with Enter or Space, checked on every page and tab by `src/test/accessibility.test.tsx#names every button, labels every field and makes every clickable row focusable, on every page and tab`; in Chrome, Enter on a focused model row opens the model, and on an issue row opens its drawer.
 - Fix: L1 T5
-- Status: open
+- Status: fixed in L1 T5
 
 ### F34 · medium · Form fields without labels
-- Evidence: the case note (`src/routes/crime.$id.tsx#<Textarea`) and the model decision comment, the drift assessment, a data-page textarea and the copilot question have placeholders and no label; the L0 T6 measurement saw only the first tab of each page, so it missed most of them.
+- Evidence: the case note (`src/routes/crime.$id.tsx#<Textarea`) and the model decision comment, the drift assessment, a data-page textarea and the copilot question have placeholders and no label; the L0 T6 measurement saw only the first tab of each page, so it missed most of them. L1 T5 labeled all nine (`src/routes/crime.$id.tsx#aria-label="Case note"`, the decision rationale, the access purpose, the corrective action and its due date, the wizard question, the copilot question); the same test checks every page and tab, and a Chrome pass found no unlabeled field in the row drawers.
 - Fix: L1 T5
-- Status: open
+- Status: fixed in L1 T5
 
 ### F35 · medium · The audit trail claims more than it records
 - Evidence: the page says `src/routes/audit.tsx#Every simulated change made in this session is recorded here`, but version changes (F8) and exports (F15) are not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).

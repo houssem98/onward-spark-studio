@@ -549,6 +549,7 @@ function ModelDetail() {
             subtitle="Demo decision — no regulatory approval implied"
           >
             <Textarea
+              aria-label="Decision rationale"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Decision rationale (required)"
