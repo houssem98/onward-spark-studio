@@ -219,8 +219,8 @@ function InvDetail() {
         </Panel>
       </div>
       <Notice>
-        Arithmetic is computed deterministically. Narrative is predefined demo text; no claim is
-        marked Verified without passing source, period, unit and reconciliation checks.
+        Narrative, figures and evidence states on this page come from the demo data; no automated
+        verification has run.
       </Notice>
     </div>
   );

@@ -44,13 +44,13 @@ import { downloadFile, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
 export const Route = createFileRoute("/credit")({
   head: () => ({
     meta: [
-      { title: "AI Credit Intelligence — BankIntelli" },
+      { title: "Credit Intelligence — BankIntelli" },
       {
         name: "description",
         content:
           "Credit portfolio performance, lifecycle funnel, risk monitoring and revenue investigation.",
       },
-      { property: "og:title", content: "AI Credit Intelligence — BankIntelli" },
+      { property: "og:title", content: "Credit Intelligence — BankIntelli" },
       {
         property: "og:description",
         content:
@@ -131,7 +131,7 @@ function CreditPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="AI Credit Intelligence"
+        title="Credit Intelligence"
         description="Portfolio performance, revenue and credit quality. Not approved for production underwriting decisions."
         actions={
           <>

@@ -564,8 +564,9 @@ function PerformancePage() {
                   </span>
                   {wDept !== "credit" && (
                     <Notice tone="warning">
-                      Decomposition inputs (volume, yield, mix) are only seeded for Credit in this
-                      POC; other departments will show NOT_AVAILABLE.
+                      Decomposition inputs (volume, yield, mix) are only seeded for Credit. This
+                      demo still copies the Credit sample findings into an investigation for any
+                      department.
                     </Notice>
                   )}
                 </div>
@@ -596,6 +597,9 @@ function PerformancePage() {
               )}
               {step === 4 && (
                 <ul className="space-y-1.5">
+                  <li className="text-xs text-muted-foreground">
+                    These results are fixed in this demo, not computed from the sources.
+                  </li>
                   {[
                     ["Source identity & provenance", true],
                     ["Access permissions", true],
@@ -689,7 +693,7 @@ function PerformancePage() {
                     .
                   </p>
                 ) : (
-                  <Button onClick={finish}>Create investigation & draft report</Button>
+                  <Button onClick={finish}>Create investigation</Button>
                 ))}
               {step === 10 && (
                 <div className="space-y-2">

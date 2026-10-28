@@ -53,9 +53,9 @@ function CasePage() {
   const [pending, setPending] = useState<AlertStatus | null>(null);
 
   const exportSummary = () => {
-    const md = `# Sanitized case summary — ${c.id}\n\n_Fictional synthetic data. Customer identifiers are pseudonymous._\n\n- Type: ${c.type}\n- Status: ${c.status}\n- Priority: ${c.priority}\n- Assignee: ${c.assignee}\n\n## Summary\n${c.summary}\n\n## Evidence\n${c.evidence.map((e) => `- ${e.label}: ${e.state} (${e.source})`).join("\n")}\n\n## Timeline\n${c.timeline.map((t) => `- ${t.at} ${t.event}`).join("\n")}\n`;
+    const md = `# Case summary — ${c.id}\n\n_Fictional synthetic data. Customer identifiers are pseudonymous._\n\n- Type: ${c.type}\n- Status: ${c.status}\n- Priority: ${c.priority}\n- Assignee: ${c.assignee}\n\n## Summary\n${c.summary}\n\n## Evidence\n${c.evidence.map((e) => `- ${e.label}: ${e.state} (${e.source})`).join("\n")}\n\n## Timeline\n${c.timeline.map((t) => `- ${t.at} ${t.event}`).join("\n")}\n`;
     downloadFile(`${c.id}-summary.md`, md, "text/markdown");
-    toast.success("Sanitized summary exported");
+    toast.success("Case summary exported");
   };
 
   return (
@@ -66,7 +66,7 @@ function CasePage() {
         description={c.summary}
         actions={
           <Button size="sm" variant="outline" onClick={exportSummary}>
-            <Download className="h-3.5 w-3.5" /> Sanitized summary
+            <Download className="h-3.5 w-3.5" /> Case summary
           </Button>
         }
       />

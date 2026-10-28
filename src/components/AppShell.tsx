@@ -38,7 +38,7 @@ export const NAV_GROUPS = [
     label: "Intelligence",
     items: [
       { to: "/performance", label: "Performance & Peers", icon: TrendingUp },
-      { to: "/credit", label: "AI Credit Intelligence", icon: Landmark },
+      { to: "/credit", label: "Credit Intelligence", icon: Landmark },
       { to: "/crime", label: "Fraud, AML & Fin. Crime", icon: ShieldAlert },
       { to: "/data", label: "Data Governance", icon: Database },
       { to: "/models", label: "AI & Model Governance", icon: BrainCircuit },
@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="text-sm font-semibold text-sidebar-accent-foreground">
                 BankIntelli
               </div>
-              <div className="text-micro text-ink-muted">Verified intelligence</div>
+              <div className="text-micro text-ink-muted">Banking intelligence · demo</div>
             </div>
           )}
         </div>
@@ -289,8 +289,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Bot className="h-4 w-4 text-primary" /> BankIntelli Copilot
             </SheetTitle>
             <p className="text-xs text-muted-foreground">
-              Demo workflow using predefined analytical logic over synthetic data. No live AI
-              provider is connected. Arithmetic is computed deterministically.
+              Demo: predefined answers over synthetic data; no AI provider is connected. Some
+              figures are computed from the demo data, other answer text is fixed.
             </p>
           </SheetHeader>
           <form

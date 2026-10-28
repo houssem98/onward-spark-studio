@@ -101,6 +101,9 @@ export function StatusBadge({
   );
 }
 
+// Every state in this demo comes from the sample data; no verification policy exists yet.
+const SAMPLE = " In this demo the state is set in the sample data; no automated check has run.";
+
 const EV: Record<
   EvidenceState,
   { tone: Tone; icon: typeof CheckCircle2; label: string; desc: string }
@@ -109,31 +112,31 @@ const EV: Record<
     tone: "success",
     icon: CheckCircle2,
     label: "Verified",
-    desc: "Source, period, units and calculation checks passed; reconciled to controls.",
+    desc: "Means: source, period, units and calculation checked and reconciled." + SAMPLE,
   },
   PARTIALLY_VERIFIED: {
     tone: "warning",
     icon: CircleDashed,
     label: "Partially verified",
-    desc: "Some checks passed; open limitations or data issues remain.",
+    desc: "Means: some checks pass while limitations or data issues remain." + SAMPLE,
   },
   UNVERIFIED: {
     tone: "neutral",
     icon: CircleHelp,
     label: "Unverified",
-    desc: "Not yet supported by validated evidence.",
+    desc: "Means: not yet supported by validated evidence." + SAMPLE,
   },
   CONFLICTING_EVIDENCE: {
     tone: "critical",
     icon: AlertTriangle,
     label: "Conflicting evidence",
-    desc: "Sources disagree; requires review.",
+    desc: "Means: sources disagree and need review." + SAMPLE,
   },
   NOT_AVAILABLE: {
     tone: "neutral",
     icon: CircleSlash,
     label: "Not available",
-    desc: "Required evidence is not accessible in this environment.",
+    desc: "Means: the required evidence is not accessible here." + SAMPLE,
   },
 };
 

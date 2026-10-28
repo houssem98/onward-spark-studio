@@ -81,8 +81,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BankIntelli — AI Banking Intelligence Platform" },
-      { name: "description", content: "Verified intelligence for better banking decisions." },
+      { title: "BankIntelli — Banking Intelligence (demo)" },
+      {
+        name: "description",
+        content:
+          "Banking intelligence proof of concept on synthetic data for the fictional Northstar Bank.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

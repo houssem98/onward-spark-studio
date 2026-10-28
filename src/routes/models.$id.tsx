@@ -436,7 +436,7 @@ function ModelDetail() {
                   Save assessment
                 </Button>
                 {[
-                  "Request independent validation",
+                  "Needs independent validation",
                   "Accept with monitoring",
                   "Recalibrate model",
                 ].map((d) => (

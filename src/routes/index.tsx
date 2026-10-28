@@ -228,8 +228,8 @@ function Overview() {
             </Link>
           ))}
           <p className="text-xs text-muted-foreground">
-            A report is only labeled Verified when every material finding passes the verification
-            workflow and a reviewer signs off.
+            Report states here come from the demo data. No verification workflow or reviewer
+            sign-off exists yet.
           </p>
         </Panel>
       </div>

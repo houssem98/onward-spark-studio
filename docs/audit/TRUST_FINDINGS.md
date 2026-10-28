@@ -29,7 +29,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F4 · high · New investigations inherit another investigation's findings
-- Evidence: the wizard copies INV-2025-014's findings and their evidence states into every new investigation, whatever department is chosen: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`. Corrected in L0 T7: with 4 seeded investigations the first new id is INV-2026-014 (maker probe: `INVESTIGATIONS.length` 4 → `INV-2026-014`), so the rename replaces "014" with "014" and the copied findings keep INV-2025-014's ids; actions matched by finding id then appear on both. The button promises a draft report and drafts none (`src/routes/performance.tsx#Create investigation & draft report`).
+- Evidence: the wizard copies INV-2025-014's findings and their evidence states into every new investigation, whatever department is chosen: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`. Corrected in L0 T7: with 4 seeded investigations the first new id is INV-2026-014 (maker probe: `INVESTIGATIONS.length` 4 → `INV-2026-014`), so the rename replaces "014" with "014" and the copied findings keep INV-2025-014's ids; actions matched by finding id then appear on both. The button promised a draft report and drafted none; L1 T6 renamed it (`src/routes/performance.tsx#<Button onClick={finish}>Create investigation</Button>`).
 - Fix: L4 T3, L5 T1
 - Status: open
 
@@ -89,9 +89,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F16 · high · The product claims verification it does not perform
-- Evidence: `src/components/AppShell.tsx#Verified intelligence`, `src/routes/__root.tsx#Verified intelligence for better banking decisions.`. Raised from medium in L0 T7, because the product asserts specific controls that do not exist, beside hand-set states: the evidence badge's tooltip says `src/components/kit.tsx#checks passed; reconciled to controls`; the investigation page says no claim is `src/routes/investigations.$id.tsx#marked Verified without passing source, period, unit and reconciliation checks.`; the case summary is called sanitized with no sanitizer (`src/routes/crime.$id.tsx#Sanitized summary exported`).
+- Evidence: the shell's tagline read "Verified intelligence" and the page description "Verified intelligence for better banking decisions."; raised from medium in L0 T7, because the product asserted specific controls that do not exist, beside hand-set states: the evidence badge's tooltip said the checks passed and were reconciled to controls; the investigation page said no claim is marked Verified without passing source, period, unit and reconciliation checks; the overview said reports are labeled Verified only after a verification workflow and a reviewer's sign-off; the copilot panel and the investigation page said arithmetic is computed deterministically; the case summary was called sanitized with no sanitizer; the wizard promised a draft report; the credit page and the page title claimed AI. L1 T6 retired all of these. The tagline now reads `src/components/AppShell.tsx#Banking intelligence · demo`, every evidence-state explanation says the state comes from the sample data (`src/components/kit.tsx#In this demo the state is set in the sample data; no automated check has run.`), and `src/test/honest-copy.test.ts#retires every claim the product cannot back` fails if any of the eleven phrases returns. The states themselves are still hand-set: that is F1, owned by L4.
 - Fix: L1 T6
-- Status: open
+- Status: fixed in L1 T6
 
 ### F17 · low · The sidebar's synthetic-data notice disappears when the sidebar collapses
 - Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), seen on every page in `docs/audit/VISUAL_BASELINE.md`. L1 T2 added an environment banner above every page that does not collapse with the sidebar and is not hidden in print (`src/components/AppShell.tsx#aria-label="Environment"`), checked by `src/test/app-shell.test.tsx#shows the synthetic-data banner on every route, also with the sidebar collapsed`.
@@ -149,7 +149,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F28 · high · The wizard's validation step shows fixed passes
-- Evidence: `src/routes/performance.tsx#["Access permissions", true],` and its siblings are literals; the step promises `src/routes/performance.tsx#POC; other departments will show NOT_AVAILABLE.`, yet any department receives the Credit findings (F4).
+- Evidence: `src/routes/performance.tsx#["Access permissions", true],` and its siblings are literals; the step promised that other departments would show NOT_AVAILABLE, yet any department receives the Credit findings (F4). L1 T6 made the copy honest (the checklist now says `src/routes/performance.tsx#These results are fixed in this demo, not computed from the sources.`, and the department note says the Credit findings are copied); the fixed passes themselves remain until L4 T3.
 - Fix: L4 T3, L5 T1
 - Status: open
 
@@ -159,7 +159,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F30 · medium · Approval and disposition gates are advisory
-- Evidence: a comment is the only gate on model approval (`src/routes/models.$id.tsx#disabled={!comment.trim()}`), so a model with an open High finding and an open drift alert can be approved, the same model approved twice, and Reject demotes a Production model; every drift disposition, "Request independent validation" included, closes the alert and requests nothing (`src/routes/models.$id.tsx#disposition: d,`); certification is allowed where the page warns it should be withheld.
+- Evidence: a comment is the only gate on model approval (`src/routes/models.$id.tsx#disabled={!comment.trim()}`), so a model with an open High finding and an open drift alert can be approved, the same model approved twice, and Reject demotes a Production model; every drift disposition closes the alert and none requests anything (L1 T6 renamed "Request independent validation" to "Needs independent validation", so the label no longer promises a request; the behavior is unchanged) (`src/routes/models.$id.tsx#disposition: d,`); certification is allowed where the page warns it should be withheld.
 - Fix: L3 T6, L5 T5
 - Status: open
 
