@@ -1,6 +1,6 @@
 # Trust Findings
 
-Written in L0 T5 (2026-10-28) from the T4 read of src and the T0 baseline. `src/test/trust-findings.test.ts` fails when a finding has no code citation, an unknown severity, no open/fixed status, or names a fixing task that no ledger has. graph-lint checks every citation. L8 T6 later requires zero open critical or high.
+Written in L0 T5 (2026-10-28) from the T4 read of src and the T0 baseline; extended by the L0 T6 browser run and corrected by the L0 T7 independent check (three runs on a different model; each item below that came from it was reproduced by the maker before it was written). `src/test/trust-findings.test.ts` fails when a finding has no code citation, an unknown severity, no open/fixed status, or names a fixing task that no ledger has. graph-lint checks every citation. L8 T6 later requires zero open critical or high.
 
 ## Severity
 
@@ -14,12 +14,12 @@ No finding is critical today only because there is no real data, no backend and 
 ## Findings
 
 ### F1 · high · Evidence states are assigned by hand
-- Evidence: the copilot writes VERIFIED as a literal (`src/lib/copilot.ts#state: "VERIFIED",`) and so do the fixtures (`src/data/investigations.ts#state: "VERIFIED"`); 12 literal assignments in src. This is what `BankIntelli_Elite_Premium_Design_Roadmap.md#A model cannot set a claim to Verified simply by generating confident` forbids.
+- Evidence: the copilot writes VERIFIED as a literal (`src/lib/copilot.ts#state: "VERIFIED",`) and so do the fixtures (`src/data/investigations.ts#state: "VERIFIED"`, `src/data/crime.ts#label: "Cash deposit pattern (14 txns)",`); 11 literal assignments in src (L0 T5 said 12, counting a type annotation). The copilot also marks VERIFIED an answer whose missing-data note says the lineage is illustrative. This is what `BankIntelli_Elite_Premium_Design_Roadmap.md#A model cannot set a claim to Verified simply by generating confident` forbids.
 - Fix: L4 T2, L4 T3
 - Status: open
 
-### F2 · high · The maker approves its own model straight to Production
-- Evidence: `src/store/app-store.ts#[model]: decision === "Approved" ? "Production" : "Development",`
+### F2 · high · Anyone approves any model straight to Production
+- Evidence: `src/store/app-store.ts#[model]: decision === "Approved" ? "Production" : "Development",`. Retitled in L0 T7: there is no maker or owner concept at all, so the defect is that no validator role or second person exists, not that the maker self-approves.
 - Fix: L3 T6
 - Status: open
 
@@ -29,12 +29,12 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F4 · high · New investigations inherit another investigation's findings
-- Evidence: the wizard copies INV-2025-014's findings and their evidence states, renaming only the ids: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`
+- Evidence: the wizard copies INV-2025-014's findings and their evidence states into every new investigation, whatever department is chosen: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`. Corrected in L0 T7: with 4 seeded investigations the first new id is INV-2026-014 (maker probe: `INVESTIGATIONS.length` 4 → `INV-2026-014`), so the rename replaces "014" with "014" and the copied findings keep INV-2025-014's ids; actions matched by finding id then appear on both. The button promises a draft report and drafts none (`src/routes/performance.tsx#Create investigation & draft report`).
 - Fix: L4 T3, L5 T1
 - Status: open
 
 ### F5 · high · Five links lead to a page that does not exist
-- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`; now served by an honest placeholder (`src/routes/reports.$id.tsx#Report preview not built yet.`) and guarded by `src/test/link-integrity.test.tsx#resolves every in-app link to a route`
+- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`; now served by an honest placeholder (`src/routes/reports.$id.tsx#Report preview not built yet.`) and guarded by `src/test/link-integrity.test.tsx#resolves every in-app link to a route`. All three L0 T7 runs asked to reopen this because the report itself is still not built; not reopened, because the finding was dead links, the human chose the honest placeholder in L0 T2, and the missing report is recorded as absent in `docs/audit/CAPABILITY_MATRIX.md` and owned by L5 T3.
 - Fix: L0 T3
 - Status: fixed in L0 T3
 
@@ -53,23 +53,23 @@ No finding is critical today only because there is no real data, no backend and 
 - Fix: L3 T5
 - Status: open
 
-### F9 · medium · The requester can approve their own data access
-- Evidence: `src/routes/data.tsx#actions.decideAccess(r.id, "Approved")`
+### F9 · high · The requester can approve their own data access
+- Evidence: `src/routes/data.tsx#actions.decideAccess(r.id, "Approved")`. Raised from medium in L0 T7: separation of duties is high on this document's own scale, as F2 and F3 are.
 - Fix: L3 T6
 - Status: open
 
-### F10 · medium · A case note's role comes from page state, not identity
-- Evidence: `src/routes/crime.$id.tsx#actions.addCaseNote(id, note, role)`
+### F10 · high · A case note's role comes from page state, not identity
+- Evidence: `src/routes/crime.$id.tsx#actions.addCaseNote(id, note, role)`; the investigator can post a Reviewer note on their own case. Raised from medium in L0 T7: attribution is high on this document's own scale.
 - Fix: L3 T2
 - Status: open
 
 ### F11 · medium · A zero denominator shows 0 instead of unavailable
-- Evidence: `src/lib/calc.ts#export const pct = (num: number, den: number) => (den === 0 ? 0 : (num / den) * 100);`
+- Evidence: `src/lib/calc.ts#export const pct = (num: number, den: number) => (den === 0 ? 0 : (num / den) * 100);`. Reachable today (L0 T7): credit filters that match no slice show an NPL ratio of 0.00% with no empty state (`src/routes/credit.tsx#fmtPct(pct(npl, bal), 2)`).
 - Fix: L2 T1
 - Status: open
 
-### F12 · medium · Classification metrics divide by zero
-- Evidence: `src/lib/calc.ts#const precision = tp / (tp + fp);`
+### F12 · low · Classification metrics divide by zero
+- Evidence: `src/lib/calc.ts#const precision = tp / (tp + fp);`. Lowered from medium in L0 T7: no fixture has a zero confusion cell (maker probe: `CONF0 none`), so it cannot trigger until real data arrives.
 - Fix: L2 T1
 - Status: open
 
@@ -88,8 +88,8 @@ No finding is critical today only because there is no real data, no backend and 
 - Fix: L3 T5
 - Status: open
 
-### F16 · medium · The product claims verification it does not perform
-- Evidence: `src/components/AppShell.tsx#Verified intelligence`, `src/routes/__root.tsx#Verified intelligence for better banking decisions.`
+### F16 · high · The product claims verification it does not perform
+- Evidence: `src/components/AppShell.tsx#Verified intelligence`, `src/routes/__root.tsx#Verified intelligence for better banking decisions.`. Raised from medium in L0 T7, because the product asserts specific controls that do not exist, beside hand-set states: the evidence badge's tooltip says `src/components/kit.tsx#checks passed; reconciled to controls`; the investigation page says no claim is `src/routes/investigations.$id.tsx#marked Verified without passing source, period, unit and reconciliation checks.`; the case summary is called sanitized with no sanitizer (`src/routes/crime.$id.tsx#Sanitized summary exported`).
 - Fix: L1 T6
 - Status: open
 
@@ -129,11 +129,76 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L0 T10
 
 ### F24 · medium · Every page scrolls sideways at phone width
-- Evidence: 53 to 356 px of horizontal overflow at 390 px on every page that renders; the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported.`).
+- Evidence: 53 to 380 px of horizontal overflow at 390 px on every page (L0 T6 said 356, before the case page rendered); the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported.`).
 - Fix: L1 T2
 - Status: open
 
 ### F25 · medium · Server and client render different content
-- Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown.
+- Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown. Candidate cause, not verified: numbers formatted with `toLocaleString()` and no locale, which can differ between server and browser.
 - Fix: L1 T2, L2 T6
+- Status: open
+
+### F26 · high · A VERIFIED drift claim contradicts the app's own calculation
+- Evidence: the fixture claims `src/data/investigations.ts#debt_service_coverage PSI exceeds 0.10 vs approved reference period.` and marks it VERIFIED, but the app's own `psi` over the same bins gives 0.0900, and every feature stays under 0.10 (maker probe: `debt_service_coverage=0.0900 sector_code=0.0471 years_in_business=0.0013 revenue_band=0.0010 utilization_rate=0.0731`), so the drift tab shows every band "Stable" beside a High alert seeded as "PSI threshold exceeded". The finance fixture cites a test file that does not exist: `src/data/finance.ts#see calc.test.ts`.
+- Fix: L4 T2, L4 T3
+- Status: open
+
+### F27 · high · The model data tab hard-codes dataset certification
+- Evidence: `src/routes/models.$id.tsx#d.includes("DS-004 Curated") || d.includes("Curated")` decides "Pending" or "Certified" from the dataset's name, ignoring the catalog and the store, so a dataset the catalog marks Pending shows Certified and a revoked one never changes.
+- Fix: L2 T4, L4 T3
+- Status: open
+
+### F28 · high · The wizard's validation step shows fixed passes
+- Evidence: `src/routes/performance.tsx#["Access permissions", true],` and its siblings are literals; the step promises `src/routes/performance.tsx#POC; other departments will show NOT_AVAILABLE.`, yet any department receives the Credit findings (F4).
+- Fix: L4 T3, L5 T1
+- Status: open
+
+### F29 · high · A VERIFIED case evidence item contradicts its own case
+- Evidence: `src/data/crime.ts#label: "Cash deposit pattern (14 txns)",` is VERIFIED, but the case lists 6 transactions, 5 of them sub-threshold deposits (maker probe: `CASETX 6 5`).
+- Fix: L4 T2
+- Status: open
+
+### F30 · medium · Approval and disposition gates are advisory
+- Evidence: a comment is the only gate on model approval (`src/routes/models.$id.tsx#disabled={!comment.trim()}`), so a model with an open High finding and an open drift alert can be approved, the same model approved twice, and Reject demotes a Production model; every drift disposition, "Request independent validation" included, closes the alert and requests nothing (`src/routes/models.$id.tsx#disposition: d,`); certification is allowed where the page warns it should be withheld.
+- Fix: L3 T6, L5 T5
+- Status: open
+
+### F31 · medium · Case and alert states drift apart
+- Evidence: closing an alert leaves its case open (`src/routes/crime.index.tsx#actions.updateAlert(a.id, { status: "Closed" });`); the "Open cases" panel lists closed cases too (`src/routes/crime.index.tsx#<Panel title="Open cases">`); case status moves have no rule beyond "not the current status".
+- Fix: L3 T6
+- Status: open
+
+### F32 · medium · Figures that do not reconcile
+- Evidence: the data-quality KPI shows 96.1 for week 02 while its own trend has `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; the only Critical quality issue is inside its own tolerance (`src/data/datasets.ts#± 0.05%` against `src/data/datasets.ts#0.025% of control`); the peer benchmark is described as the mean of `src/data/finance.ts#mean credit revenue of high-comparability peers` while including Cascade, rated Medium (maker probe: `Cascade Federal:Medium`); the copilot's bridge text is a literal (`src/lib/copilot.ts#Measured: volume −$18.0M`) beside the claim that arithmetic is computed; "critical notifications", the overview's model alerts and the inventory's open alerts are three different counts; the investigations register's "Open issues" column shows a typed-in number, not a count (`src/data/investigations.ts#outstanding: 3,`).
+- Fix: L2 T6, L4 T2
+- Status: open
+
+### F33 · medium · Detail pages cannot be reached by keyboard
+- Evidence: table rows open details on click only (`src/components/DataTable.tsx#onClick={onRowClick ? () => onRowClick(r) : undefined}`), and src outside the UI kit has no `tabIndex` or `onKeyDown` at all; lineage nodes are click-only too.
+- Fix: L1 T5
+- Status: open
+
+### F34 · medium · Form fields without labels
+- Evidence: the case note (`src/routes/crime.$id.tsx#<Textarea`) and the model decision comment, the drift assessment, a data-page textarea and the copilot question have placeholders and no label; the L0 T6 measurement saw only the first tab of each page, so it missed most of them.
+- Fix: L1 T5
+- Status: open
+
+### F35 · medium · The audit trail claims more than it records
+- Evidence: the page says `src/routes/audit.tsx#Every simulated change made in this session is recorded here`, but version changes (F8) and exports (F15) are not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).
+- Fix: L3 T5
+- Status: open
+
+### F36 · medium · The model card can describe a version that is not in production
+- Evidence: the card prints the picker's version (`src/routes/models.$id.tsx#- Version: ${version}`), which may be a candidate, beside the model's lifecycle, while its classification metrics come from the model rather than that version.
+- Fix: L2 T7
+- Status: open
+
+### F38 · medium · Missing drift data is shown as an all-clear
+- Evidence: every model without drift data shows `src/routes/models.$id.tsx#No feature-level drift beyond thresholds for this model in the current period.`, including a model with an open drift alert; the roadmap requires unavailable to look unavailable.
+- Fix: L4 T2
+- Status: open
+
+### F37 · low · Small truth gaps
+- Evidence: a frozen date drives "overdue" (`src/routes/models.index.tsx#const TODAY = "2026-01-14";`) while audit times use the real clock; the copilot's `src/lib/copilot.ts#/margin|nim/` also matches "minimum"; the table CSV writes amounts without their currency while alerts mix EUR and USD.
+- Fix: L2 T6, L2 T7
 - Status: open

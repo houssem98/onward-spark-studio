@@ -72,6 +72,17 @@ describe("capability matrix", () => {
     expect(exporters.filter((f) => !ids.has(f))).toEqual([]);
   });
 
+  it("names every table export in an export row", () => {
+    const named = walk("src")
+      .filter((f) => /\.tsx$/.test(f))
+      .flatMap((f) => [...read(f).matchAll(/exportName="([^"]+)"/g)].map((m) => m[1]!));
+    const text = read("docs/audit/CAPABILITY_MATRIX.md")
+      .split("\n")
+      .filter((l) => l.startsWith("| export |"))
+      .join("\n");
+    expect(named.filter((n) => !text.includes(`\`exportName="${n}"\``)).sort()).toEqual([]);
+  });
+
   it("uses only the roadmap's status words and cites evidence on every row", () => {
     const bad = rows().filter(
       (r) => !STATUSES.includes(r.status) || !/`[^`]+\.(tsx?|md)#[^`]+`/.test(r.evidence),
