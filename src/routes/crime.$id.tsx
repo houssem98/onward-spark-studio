@@ -134,34 +134,36 @@ function CasePage() {
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Panel title="Supporting transactions" className="xl:col-span-2" bodyClass="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                <th className="px-3 py-2">Txn</th>
-                <th className="px-3 py-2">Date</th>
-                <th className="px-3 py-2">Dir</th>
-                <th className="px-3 py-2 text-right">Amount</th>
-                <th className="px-3 py-2">Counterparty</th>
-                <th className="px-3 py-2">Flag</th>
-              </tr>
-            </thead>
-            <tbody>
-              {c.transactions.map((t) => (
-                <tr key={t.id} className="border-b last:border-0">
-                  <td className="num px-3 py-2 text-xs">{t.id}</td>
-                  <td className="num px-3 py-2 text-xs">{t.date}</td>
-                  <td className="px-3 py-2">{t.direction}</td>
-                  <td className="num px-3 py-2 text-right">
-                    {t.amount.toLocaleString()} {t.currency}
-                  </td>
-                  <td className="px-3 py-2">{t.counterparty}</td>
-                  <td className="px-3 py-2">
-                    {t.flag && <StatusBadge value={t.flag} tone="warning" />}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
+                  <th className="px-3 py-2">Txn</th>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Dir</th>
+                  <th className="px-3 py-2 text-right">Amount</th>
+                  <th className="px-3 py-2">Counterparty</th>
+                  <th className="px-3 py-2">Flag</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {c.transactions.map((t) => (
+                  <tr key={t.id} className="border-b last:border-0">
+                    <td className="num px-3 py-2 text-xs">{t.id}</td>
+                    <td className="num px-3 py-2 text-xs">{t.date}</td>
+                    <td className="px-3 py-2">{t.direction}</td>
+                    <td className="num px-3 py-2 text-right">
+                      {t.amount.toLocaleString()} {t.currency}
+                    </td>
+                    <td className="px-3 py-2">{t.counterparty}</td>
+                    <td className="px-3 py-2">
+                      {t.flag && <StatusBadge value={t.flag} tone="warning" />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Panel>
         <Panel title="Alert & entities">
           <dl className="space-y-3">

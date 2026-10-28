@@ -344,46 +344,48 @@ function DataPage() {
             </Panel>
           </div>
           <Panel title="Failed rules & issues" bodyClass="p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">ID</th>
-                  <th className="px-3 py-2">Issue</th>
-                  <th className="px-3 py-2">Dimension</th>
-                  <th className="px-3 py-2 text-right">Affected</th>
-                  <th className="px-3 py-2">Severity</th>
-                  <th className="px-3 py-2">Owner</th>
-                  <th className="px-3 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {issues.map((i) => (
-                  <tr
-                    key={i.id}
-                    className="cursor-pointer border-b last:border-0 hover:bg-accent/50"
-                    onClick={() => {
-                      setIssueId(i.id);
-                      setResolution(i.resolution ?? "");
-                    }}
-                  >
-                    <td className="num px-3 py-2 text-xs">{i.id}</td>
-                    <td className="px-3 py-2">
-                      {i.title}
-                      <div className="text-xs text-muted-foreground">{i.dataset}</div>
-                    </td>
-                    <td className="px-3 py-2">{i.dimension}</td>
-                    <td className="num px-3 py-2 text-right">{i.affected.toLocaleString()}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge value={i.severity} />
-                    </td>
-                    <td className="px-3 py-2">{i.owner}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge value={i.status} />
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
+                    <th className="px-3 py-2">ID</th>
+                    <th className="px-3 py-2">Issue</th>
+                    <th className="px-3 py-2">Dimension</th>
+                    <th className="px-3 py-2 text-right">Affected</th>
+                    <th className="px-3 py-2">Severity</th>
+                    <th className="px-3 py-2">Owner</th>
+                    <th className="px-3 py-2">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {issues.map((i) => (
+                    <tr
+                      key={i.id}
+                      className="cursor-pointer border-b last:border-0 hover:bg-accent/50"
+                      onClick={() => {
+                        setIssueId(i.id);
+                        setResolution(i.resolution ?? "");
+                      }}
+                    >
+                      <td className="num px-3 py-2 text-xs">{i.id}</td>
+                      <td className="px-3 py-2">
+                        {i.title}
+                        <div className="text-xs text-muted-foreground">{i.dataset}</div>
+                      </td>
+                      <td className="px-3 py-2">{i.dimension}</td>
+                      <td className="num px-3 py-2 text-right">{i.affected.toLocaleString()}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge value={i.severity} />
+                      </td>
+                      <td className="px-3 py-2">{i.owner}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge value={i.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Panel>
         </TabsContent>
 

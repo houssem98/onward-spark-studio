@@ -10,8 +10,10 @@ import {
   ChevronsRight,
   Database,
   FileSearch,
+  FlaskConical,
   Landmark,
   LayoutDashboard,
+  Menu,
   Search,
   ShieldAlert,
   Sparkles,
@@ -26,16 +28,80 @@ import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 
-const NAV = [
-  { to: "/", label: "Executive Overview", icon: LayoutDashboard },
-  { to: "/models", label: "AI & Model Governance", icon: BrainCircuit },
-  { to: "/data", label: "Data Governance", icon: Database },
-  { to: "/credit", label: "AI Credit Intelligence", icon: Landmark },
-  { to: "/crime", label: "Fraud, AML & Fin. Crime", icon: ShieldAlert },
-  { to: "/performance", label: "Performance & Peers", icon: TrendingUp },
-  { to: "/investigations", label: "Investigations & Reports", icon: FileSearch },
-  { to: "/audit", label: "Audit Trail", icon: Activity },
+export const NAV_GROUPS = [
+  {
+    label: "Overview",
+    items: [{ to: "/", label: "Executive Overview", icon: LayoutDashboard }],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { to: "/performance", label: "Performance & Peers", icon: TrendingUp },
+      { to: "/credit", label: "AI Credit Intelligence", icon: Landmark },
+      { to: "/crime", label: "Fraud, AML & Fin. Crime", icon: ShieldAlert },
+      { to: "/data", label: "Data Governance", icon: Database },
+      { to: "/models", label: "AI & Model Governance", icon: BrainCircuit },
+    ],
+  },
+  {
+    label: "Workflow",
+    items: [{ to: "/investigations", label: "Investigations & Reports", icon: FileSearch }],
+  },
+  {
+    label: "Administration",
+    items: [{ to: "/audit", label: "Audit Trail", icon: Activity }],
+  },
 ] as const;
+
+function NavList({
+  path,
+  collapsed,
+  onNavigate,
+}: {
+  path: string;
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav aria-label="Main" className="flex-1 space-y-3 overflow-y-auto p-2">
+      {NAV_GROUPS.map((g) => (
+        <div key={g.label}>
+          {!collapsed && (
+            <p className="px-2.5 pb-1 text-micro font-semibold uppercase tracking-wider text-ink-muted">
+              {g.label}
+            </p>
+          )}
+          <div className="space-y-0.5">
+            {g.items.map((n) => {
+              const active =
+                n.to === "/"
+                  ? path === "/"
+                  : path.startsWith(n.to) ||
+                    (n.to === "/investigations" && path.startsWith("/reports"));
+              return (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  title={n.label}
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-ui transition-colors",
+                    active
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <n.icon className={cn("h-4 w-4 shrink-0", active && "text-cyan")} />
+                  {!collapsed && <span className="truncate">{n.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -47,6 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       s.driftAlerts.filter((a) => a.status === "Open").length,
   );
   const [open, setOpen] = useState(false);
+  const [mobileNav, setMobileNav] = useState(false);
   const [q, setQ] = useState("");
   const [history, setHistory] = useState<{ q: string; a: CopilotAnswer }[]>([]);
   const navigate = useNavigate();
@@ -63,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen">
       <aside
         className={cn(
-          "no-print sticky top-0 flex h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width]",
+          "no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] md:flex",
           collapsed ? "w-14" : "w-60",
         )}
       >
@@ -80,31 +147,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
         </div>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-          {NAV.map((n) => {
-            const active =
-              n.to === "/"
-                ? path === "/"
-                : path.startsWith(n.to) ||
-                  (n.to === "/investigations" && path.startsWith("/reports"));
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                title={n.label}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-ui transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                )}
-              >
-                <n.icon className={cn("h-4 w-4 shrink-0", active && "text-cyan")} />
-                {!collapsed && <span className="truncate">{n.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
+        <NavList path={path} collapsed={collapsed} />
         <div className="border-t border-sidebar-border p-2">
           {!collapsed && (
             <p className="mb-2 px-1 text-micro leading-snug text-ink-muted">
@@ -128,62 +171,87 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4">
-          <form
-            className="relative w-full max-w-md"
-            onSubmit={(e) => {
-              e.preventDefault();
-              ask(q);
-            }}
+        <div className="sticky top-0 z-20">
+          <div
+            role="note"
+            aria-label="Environment"
+            className="flex items-center gap-2 border-b bg-warning/10 px-4 py-1 text-caption text-warning"
           >
-            <Sparkles className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Ask BankIntelli about performance, risk, data or models…"
-              className="h-9 pl-8 text-sm"
-              aria-label="Ask BankIntelli"
-            />
-          </form>
-          <div className="ml-auto flex items-center gap-3 text-xs">
-            <select
-              className="hidden h-8 rounded-md border bg-card px-2 md:block"
-              aria-label="Organization"
-              defaultValue="ns"
-            >
-              <option value="ns">Northstar Bank (fictional)</option>
-            </select>
-            <select
-              className="hidden h-8 rounded-md border bg-card px-2 md:block"
-              aria-label="Reporting period"
-              defaultValue="FY2025"
-            >
-              <option>FY2025</option>
-              <option disabled>FY2024 (compare in modules)</option>
-            </select>
-            <button
-              className="relative rounded-md p-1.5 hover:bg-muted"
-              aria-label={`${openCount} critical notifications`}
-              onClick={() => navigate({ to: "/audit" })}
-            >
-              <Bell className="h-4 w-4" />
-              {openCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-micro font-semibold text-primary-foreground">
-                  {openCount}
-                </span>
-              )}
-            </button>
-            <Button size="sm" variant="outline" className="h-8" onClick={() => setOpen(true)}>
-              <Bot className="h-3.5 w-3.5" /> Copilot
-            </Button>
-            <div className="hidden text-right leading-tight lg:block">
-              <div className="font-medium">{user.name}</div>
-              <div className="text-muted-foreground">{user.role}</div>
-            </div>
+            <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              <b>Demo · synthetic data</b> — every figure belongs to the fictional Northstar Bank.
+            </span>
           </div>
-        </header>
-        <main className="mx-auto w-full max-w-[1500px] flex-1 p-5">{children}</main>
+          <header className="no-print flex h-14 items-center gap-3 border-b bg-card px-3 md:px-4">
+            <button
+              className="rounded-md p-1.5 hover:bg-muted md:hidden"
+              aria-label="Open navigation"
+              onClick={() => setMobileNav(true)}
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <form
+              className="relative min-w-0 max-w-md flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                ask(q);
+              }}
+            >
+              <Sparkles className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Ask BankIntelli about performance, risk, data or models…"
+                className="h-9 pl-8 text-sm"
+                aria-label="Ask BankIntelli"
+              />
+            </form>
+            <div className="ml-auto flex items-center gap-2 text-xs md:gap-3">
+              <span className="hidden text-muted-foreground md:inline">
+                Northstar Bank (fictional) · FY2025
+              </span>
+              <button
+                className="relative rounded-md p-1.5 hover:bg-muted"
+                aria-label={`${openCount} critical notifications`}
+                onClick={() => navigate({ to: "/audit" })}
+              >
+                <Bell className="h-4 w-4" />
+                {openCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-critical px-1 text-micro font-semibold text-primary-foreground">
+                    {openCount}
+                  </span>
+                )}
+              </button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8"
+                aria-label="Copilot"
+                onClick={() => setOpen(true)}
+              >
+                <Bot className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Copilot</span>
+              </Button>
+              <div className="hidden text-right leading-tight lg:block">
+                <div className="font-medium">{user.name}</div>
+                <div className="text-muted-foreground">{user.role}</div>
+              </div>
+            </div>
+          </header>
+        </div>
+        <main className="mx-auto w-full min-w-0 max-w-[1500px] flex-1 p-3 sm:p-5">{children}</main>
       </div>
+
+      <Sheet open={mobileNav} onOpenChange={setMobileNav}>
+        <SheetContent
+          side="left"
+          className="flex w-64 flex-col bg-sidebar p-0 text-sidebar-foreground"
+        >
+          <SheetHeader className="border-b border-sidebar-border px-3 py-3">
+            <SheetTitle className="text-sm text-sidebar-accent-foreground">BankIntelli</SheetTitle>
+          </SheetHeader>
+          <NavList path={path} collapsed={false} onNavigate={() => setMobileNav(false)} />
+        </SheetContent>
+      </Sheet>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">

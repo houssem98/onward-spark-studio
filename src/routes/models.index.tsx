@@ -177,7 +177,7 @@ function ModelsPage() {
       <Panel
         title="Model alerts"
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <FilterSelect
               label="Severity"
               value={sev}

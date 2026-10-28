@@ -258,49 +258,52 @@ function PerformancePage() {
             </ResponsiveContainer>
           </Panel>
           <Panel title="Business-unit table" bodyClass="p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">Unit</th>
-                  <th className="px-3 py-2">Owner</th>
-                  <th className="px-3 py-2 text-right">Revenue</th>
-                  <th className="px-3 py-2 text-right">vs target</th>
-                  <th className="px-3 py-2 text-right">Growth</th>
-                  <th className="px-3 py-2 text-right">Expenses</th>
-                  <th className="px-3 py-2 text-right">Contribution</th>
-                  <th className="px-3 py-2 text-right">CIR</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DEPARTMENTS.map((d) => (
-                  <tr key={d.id} className="border-b last:border-0">
-                    <td className="px-3 py-2 font-medium">{d.name}</td>
-                    <td className="px-3 py-2">{d.owner}</td>
-                    <td className="num px-3 py-2 text-right">{d.costCenter ? "—" : d.revenue}</td>
-                    <td
-                      className={cn(
-                        "num px-3 py-2 text-right",
-                        !d.costCenter && (d.revenue >= d.target ? "text-success" : "text-critical"),
-                      )}
-                    >
-                      {d.costCenter
-                        ? "—"
-                        : `${d.revenue - d.target >= 0 ? "+" : ""}${d.revenue - d.target}`}
-                    </td>
-                    <td className="num px-3 py-2 text-right">
-                      {d.costCenter ? "—" : `${growth(d.revenue, d.prior).toFixed(1)}%`}
-                    </td>
-                    <td className="num px-3 py-2 text-right">{d.expenses}</td>
-                    <td className="num px-3 py-2 text-right">{d.revenue - d.expenses}</td>
-                    <td className="num px-3 py-2 text-right">
-                      {d.costCenter
-                        ? "Cost center"
-                        : `${costToIncome(d.expenses, d.revenue).toFixed(1)}%`}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
+                    <th className="px-3 py-2">Unit</th>
+                    <th className="px-3 py-2">Owner</th>
+                    <th className="px-3 py-2 text-right">Revenue</th>
+                    <th className="px-3 py-2 text-right">vs target</th>
+                    <th className="px-3 py-2 text-right">Growth</th>
+                    <th className="px-3 py-2 text-right">Expenses</th>
+                    <th className="px-3 py-2 text-right">Contribution</th>
+                    <th className="px-3 py-2 text-right">CIR</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {DEPARTMENTS.map((d) => (
+                    <tr key={d.id} className="border-b last:border-0">
+                      <td className="px-3 py-2 font-medium">{d.name}</td>
+                      <td className="px-3 py-2">{d.owner}</td>
+                      <td className="num px-3 py-2 text-right">{d.costCenter ? "—" : d.revenue}</td>
+                      <td
+                        className={cn(
+                          "num px-3 py-2 text-right",
+                          !d.costCenter &&
+                            (d.revenue >= d.target ? "text-success" : "text-critical"),
+                        )}
+                      >
+                        {d.costCenter
+                          ? "—"
+                          : `${d.revenue - d.target >= 0 ? "+" : ""}${d.revenue - d.target}`}
+                      </td>
+                      <td className="num px-3 py-2 text-right">
+                        {d.costCenter ? "—" : `${growth(d.revenue, d.prior).toFixed(1)}%`}
+                      </td>
+                      <td className="num px-3 py-2 text-right">{d.expenses}</td>
+                      <td className="num px-3 py-2 text-right">{d.revenue - d.expenses}</td>
+                      <td className="num px-3 py-2 text-right">
+                        {d.costCenter
+                          ? "Cost center"
+                          : `${costToIncome(d.expenses, d.revenue).toFixed(1)}%`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Panel>
         </TabsContent>
 
@@ -369,54 +372,56 @@ function PerformancePage() {
             </Panel>
           </div>
           <Panel title="Source register & comparability" bodyClass="p-0">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">Institution</th>
-                  <th className="px-3 py-2">Source type</th>
-                  <th className="px-3 py-2">Period</th>
-                  <th className="px-3 py-2">Comparability</th>
-                  <th className="px-3 py-2">Warning</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="px-3 py-2 font-medium">Northstar Bank</td>
-                  <td className="px-3 py-2">
-                    <StatusBadge value="INTERNAL" tone="info" icon={false} />
-                  </td>
-                  <td className="px-3 py-2">FY2025</td>
-                  <td className="px-3 py-2">—</td>
-                  <td className="px-3 py-2 text-xs">—</td>
-                </tr>
-                {PEERS.map((p) => (
-                  <tr key={p.id} className="border-b last:border-0">
-                    <td className="px-3 py-2 font-medium">{p.name}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge
-                        value={p.source}
-                        tone={p.source === "NOT_AVAILABLE" ? "neutral" : "info"}
-                        icon={false}
-                      />
-                    </td>
-                    <td className="px-3 py-2">{p.period}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge
-                        value={p.comparability}
-                        tone={
-                          p.comparability === "High"
-                            ? "success"
-                            : p.comparability === "Medium"
-                              ? "warning"
-                              : "critical"
-                        }
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-xs">{p.warning ?? "—"}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
+                    <th className="px-3 py-2">Institution</th>
+                    <th className="px-3 py-2">Source type</th>
+                    <th className="px-3 py-2">Period</th>
+                    <th className="px-3 py-2">Comparability</th>
+                    <th className="px-3 py-2">Warning</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="px-3 py-2 font-medium">Northstar Bank</td>
+                    <td className="px-3 py-2">
+                      <StatusBadge value="INTERNAL" tone="info" icon={false} />
+                    </td>
+                    <td className="px-3 py-2">FY2025</td>
+                    <td className="px-3 py-2">—</td>
+                    <td className="px-3 py-2 text-xs">—</td>
+                  </tr>
+                  {PEERS.map((p) => (
+                    <tr key={p.id} className="border-b last:border-0">
+                      <td className="px-3 py-2 font-medium">{p.name}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge
+                          value={p.source}
+                          tone={p.source === "NOT_AVAILABLE" ? "neutral" : "info"}
+                          icon={false}
+                        />
+                      </td>
+                      <td className="px-3 py-2">{p.period}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge
+                          value={p.comparability}
+                          tone={
+                            p.comparability === "High"
+                              ? "success"
+                              : p.comparability === "Medium"
+                                ? "warning"
+                                : "critical"
+                          }
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-xs">{p.warning ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Panel>
         </TabsContent>
 

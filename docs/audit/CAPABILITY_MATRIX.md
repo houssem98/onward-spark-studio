@@ -17,9 +17,9 @@ A route row rates the data the page shows; its controls and exports have their o
 
 ## Counts
 
-35 rows: 13 routes, 17 controls, 5 exports. implemented 0, partial 17, mocked 16, broken 0, absent 2, not verified 0.
+33 rows: 13 routes, 15 controls, 5 exports. implemented 0, partial 17, mocked 14, broken 0, absent 2, not verified 0.
 
-History: L0 T4 wrote 32 rows (partial 17, mocked 13, broken 1, absent 1). L0 T3 put a placeholder on the report route. L0 T6 ran every page and found the two detail pages broken; L0 T10 fixed them. L0 T7's three independent runs then corrected: the report route and its links are absent, because the placeholder says the report is not built; approving data access is mocked, because it grants nothing; marking an action Done is mocked, because it writes invented evidence, and so it left the partial investigation row, which no longer double-rates `createInvestigation`; the organization selector and the notifications bell gained rows; the audit route's evidence no longer says "labeled honestly"; each table export is named.
+History: L0 T4 wrote 32 rows (partial 17, mocked 13, broken 1, absent 1). L0 T3 put a placeholder on the report route. L0 T6 ran every page and found the two detail pages broken; L0 T10 fixed them. L0 T7's three independent runs then corrected: the report route and its links are absent, because the placeholder says the report is not built; approving data access is mocked, because it grants nothing; marking an action Done is mocked, because it writes invented evidence, and so it left the partial investigation row, which no longer double-rates `createInvestigation`; the organization selector and the notifications bell gained rows; the audit route's evidence no longer says "labeled honestly"; each table export is named. L1 T2 replaced the organization and period selectors, which changed nothing, with plain text (`src/components/AppShell.tsx#Northstar Bank (fictional) · FY2025`), so their two mocked rows left.
 
 ## Routes
 
@@ -56,8 +56,6 @@ History: L0 T4 wrote 32 rows (partial 17, mocked 13, broken 1, absent 1). L0 T3 
 | control | action status, `actions.updateAction` | mocked | Marking an action Done writes invented completion evidence: `src/routes/investigations.index.tsx#evidence: "Marked complete (demo)"` | read |
 | control | wizard "Create investigation & draft report", `actions.createInvestigation` | mocked | Drafts no report; copies INV-2025-014's findings and evidence states; the first run's id is INV-2026-014, so the rename is a no-op and the copies collide with the original's finding ids and actions: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`; its validation step shows fixed passes: `src/routes/performance.tsx#["Access permissions", true],` | read; maker probe in the L0 T7 Journal |
 | control | copilot | mocked | Regex routing over fixtures, labeled in the panel: `src/components/AppShell.tsx#provider is connected. Arithmetic is computed deterministically.`; yet its bridge text is a literal (`src/lib/copilot.ts#Measured: volume −$18.0M`) and it sets evidence states by hand: `src/lib/copilot.ts#state: "VERIFIED",` | read |
-| control | reporting-period selector | mocked | No change handler, so picking does nothing: `src/components/AppShell.tsx#aria-label="Reporting period"` | read |
-| control | organization selector | mocked | One option and no change handler: `src/components/AppShell.tsx#aria-label="Organization"` | read |
 | control | notifications bell | partial | Opens the audit trail; its count is labeled critical but counts every open drift alert, a third definition next to the overview's and the inventory's: `src/components/AppShell.tsx#critical notifications` | read |
 | control | links to `/reports/$id` (5 sites) | absent | They resolve since L0 T3, to a placeholder that says the report is not built: `src/routes/investigations.$id.tsx#to="/reports/$id"`, `src/routes/performance.tsx#Preview linked report`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"` | read; `src/test/link-integrity.test.tsx#resolves every in-app link to a route` |
 

@@ -378,36 +378,38 @@ function CreditPage() {
       </div>
 
       <Panel title="Watchlist — highest NPL ratio slices" bodyClass="p-0">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-              <th className="px-3 py-2">Slice</th>
-              <th className="px-3 py-2">Segment / product</th>
-              <th className="px-3 py-2">Region</th>
-              <th className="px-3 py-2">Band</th>
-              <th className="px-3 py-2 text-right">Balance</th>
-              <th className="px-3 py-2 text-right">NPL %</th>
-              <th className="px-3 py-2">Signal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {watch.map((w) => (
-              <tr key={w.id} className="border-b last:border-0">
-                <td className="num px-3 py-2 text-xs">{w.id}</td>
-                <td className="px-3 py-2">
-                  {w.segment} · {w.product}
-                </td>
-                <td className="px-3 py-2">{w.region}</td>
-                <td className="px-3 py-2">{w.riskBand}</td>
-                <td className="num px-3 py-2 text-right">{w.balance.toFixed(0)}</td>
-                <td className="num px-3 py-2 text-right">{pct(w.npl, w.balance).toFixed(2)}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge value={w.riskBand === "D" ? "High" : "Watch"} />
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-2">Slice</th>
+                <th className="px-3 py-2">Segment / product</th>
+                <th className="px-3 py-2">Region</th>
+                <th className="px-3 py-2">Band</th>
+                <th className="px-3 py-2 text-right">Balance</th>
+                <th className="px-3 py-2 text-right">NPL %</th>
+                <th className="px-3 py-2">Signal</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {watch.map((w) => (
+                <tr key={w.id} className="border-b last:border-0">
+                  <td className="num px-3 py-2 text-xs">{w.id}</td>
+                  <td className="px-3 py-2">
+                    {w.segment} · {w.product}
+                  </td>
+                  <td className="px-3 py-2">{w.region}</td>
+                  <td className="px-3 py-2">{w.riskBand}</td>
+                  <td className="num px-3 py-2 text-right">{w.balance.toFixed(0)}</td>
+                  <td className="num px-3 py-2 text-right">{pct(w.npl, w.balance).toFixed(2)}</td>
+                  <td className="px-3 py-2">
+                    <StatusBadge value={w.riskBand === "D" ? "High" : "Watch"} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Panel>
     </div>
   );

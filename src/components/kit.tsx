@@ -230,7 +230,7 @@ export function Panel({
   bodyClass?: string;
 }) {
   return (
-    <section className={cn("rounded-md border bg-card", className)}>
+    <section className={cn("min-w-0 rounded-md border bg-card", className)}>
       {(title || actions) && (
         <header className="flex items-start justify-between gap-3 border-b px-4 py-2.5">
           <div>

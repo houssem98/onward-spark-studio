@@ -94,9 +94,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F17 · low · The sidebar's synthetic-data notice disappears when the sidebar collapses
-- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), seen on every page in `docs/audit/VISUAL_BASELINE.md`.
+- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), seen on every page in `docs/audit/VISUAL_BASELINE.md`. L1 T2 added an environment banner above every page that does not collapse with the sidebar and is not hidden in print (`src/components/AppShell.tsx#aria-label="Environment"`), checked by `src/test/app-shell.test.tsx#shows the synthetic-data banner on every route, also with the sidebar collapsed`.
 - Fix: L1 T2
-- Status: open
+- Status: fixed in L1 T2
 
 ### F18 · medium · Two high-severity dependency advisories are unreviewed
 - Evidence: the T0 install reported them (`docs/loops/L0_TRUTH.md#2 high severity vulnerabilities`); which packages is not verified.
@@ -104,9 +104,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F19 · low · The reporting-period selector does nothing
-- Evidence: no change handler: `src/components/AppShell.tsx#aria-label="Reporting period"`
+- Evidence: it had no change handler. L1 T2 replaced it and the one-option organization selector with plain text (`src/components/AppShell.tsx#Northstar Bank (fictional) · FY2025`), checked by `src/test/app-shell.test.tsx#has no form controls that change nothing in the header`.
 - Fix: L1 T2
-- Status: open
+- Status: fixed in L1 T2
 
 ### F20 · low · Fonts load from a third party on every page
 - Evidence: `src/routes/__root.tsx#https://fonts.googleapis.com`
@@ -129,9 +129,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L0 T10
 
 ### F24 · medium · Every page scrolls sideways at phone width
-- Evidence: 53 to 380 px of horizontal overflow at 390 px on every page (L0 T6 said 356, before the case page rendered); the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported.`).
+- Evidence: 53 to 380 px of horizontal overflow at 390 px on every page (L0 T6 said 356, before the case page rendered); the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported`). L1 T2 hid the sidebar below the md breakpoint behind a menu drawer (`src/components/AppShell.tsx#aria-label="Open navigation"`), let panels shrink in grids (`src/components/kit.tsx#min-w-0 rounded-md border bg-card`) and put the five bare tables in scroll containers; a Playwright pass then measured `worst overflow at 390px: 0px` across all 13 page loads.
 - Fix: L1 T2
-- Status: open
+- Status: fixed in L1 T2
 
 ### F25 · medium · Server and client render different content
 - Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown. Candidate cause, not verified: numbers formatted with `toLocaleString()` and no locale, which can differ between server and browser.
