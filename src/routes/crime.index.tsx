@@ -152,7 +152,7 @@ function CrimePage() {
           description="Fraud and AML alerts raised per week"
           unit="Alerts per week"
           period="W49 2025 to W02 2026"
-          source="Synthetic alert queue (demo data)"
+          source="Synthetic weekly alert counts (demo data; not derived from the alert queue below)"
           rows={CRIME_TREND}
           columns={[
             { key: "week", header: "Week" },

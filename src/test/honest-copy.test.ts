@@ -28,6 +28,13 @@ const RETIRED = [
   "AI Banking Intelligence Platform",
   "other departments will show NOT_AVAILABLE",
   "Request independent validation",
+  // Retired in L1 T11 after the T7 council.
+  "Customer identifiers are pseudonymous",
+  '"Generate report",',
+  "scenario logic is documented under governance",
+  "Every simulated change made in this session is recorded here",
+  "Volume = ΔVolume × benchmark yield",
+  'source="Synthetic alert queue (demo data)"',
 ];
 
 describe("honest copy", () => {

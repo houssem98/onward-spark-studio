@@ -1,13 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { actions, useStore } from "@/store/app-store";
+import { actions, getState, useStore } from "@/store/app-store";
 import type { InvStatus } from "@/data/investigations";
 
 export const Route = createFileRoute("/investigations/$id")({
+  loader: ({ params }) => {
+    if (!getState().investigations.some((i) => i.id === params.id)) throw notFound();
+  },
   head: ({ params }) => ({
     meta: [
       { title: `Investigation ${params.id} — BankIntelli` },
@@ -38,20 +41,12 @@ function InvDetail() {
     due: string;
   } | null>(null);
 
-  if (!inv)
-    return (
-      <div className="p-8 text-center">
-        <p className="text-sm text-muted-foreground">Investigation {id} not found.</p>
-        <Link to="/investigations" className="text-primary">
-          Back to register
-        </Link>
-      </div>
-    );
+  if (!inv) return null;
 
   return (
     <div className="space-y-5">
       <PageHeader
-        crumbs={[{ label: "Investigations", to: "/investigations" }, { label: inv.id }]}
+        crumbs={[{ label: "Investigations & Reports", to: "/investigations" }, { label: inv.id }]}
         title={inv.title}
         description={inv.question}
         actions={

@@ -184,8 +184,8 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L1 T5
 
 ### F35 · medium · The audit trail claims more than it records
-- Evidence: the page says `src/routes/audit.tsx#Every simulated change made in this session is recorded here`, but version changes (F8) and exports (F15) are not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).
-- Fix: L1 T11, L3 T5
+- Evidence: the page said every simulated change was recorded; L1 T11 narrowed it to `src/routes/audit.tsx#Model version switches and exports are not recorded`, which is true, but version changes (F8) and exports (F15) are still not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).
+- Fix: L3 T5
 - Status: open
 
 ### F36 · medium · The model card can describe a version that is not in production
@@ -209,8 +209,8 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F40 · medium · The crime trend is not derived from the queue it cites
-- Evidence: the trend chart names its source `src/routes/crime.index.tsx#source="Synthetic alert queue (demo data)"`, but that queue is `src/data/crime.ts#export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }` alerts dated 1 to 14 Jan 2026, while the plotted series starts at `src/data/crime.ts#{ week: "W49", fraud: 412, aml: 96 },`; found by the L1 T7 council.
-- Fix: L1 T11, L2 T4
+- Evidence: the trend chart named the alert queue as its source; since L1 T11 it says `src/routes/crime.index.tsx#not derived from the alert queue below`, which is true but leaves the gap: the queue is `src/data/crime.ts#export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }` alerts dated 1 to 14 Jan 2026, while the plotted series starts at `src/data/crime.ts#{ week: "W49", fraud: 412, aml: 96 },`; found by the L1 T7 council.
+- Fix: L2 T4
 - Status: open
 
 ### F41 · low · Two data-quality scores for the same week disagree

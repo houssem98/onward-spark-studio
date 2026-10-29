@@ -80,4 +80,18 @@ describe("command palette", () => {
       screen.getByRole("group", { name: /Copilot \(predefined demo answers\)/ }),
     ).toBeInTheDocument();
   });
+  it("starts empty again after Ctrl+K closes it", async () => {
+    await renderShell();
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    fireEvent.change(await screen.findByPlaceholderText(/Search pages, investigations/), {
+      target: { value: "SME" },
+    });
+    await act(async () => {
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    });
+    await act(async () => {
+      fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+    });
+    expect(await screen.findByPlaceholderText(/Search pages, investigations/)).toHaveValue("");
+  });
 });

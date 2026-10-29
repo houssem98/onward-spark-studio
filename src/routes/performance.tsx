@@ -104,7 +104,7 @@ const STEPS = [
   "Rank factors",
   "Measured vs hypothesis",
   "Contradictions",
-  "Generate report",
+  "Create investigation",
   "Assign actions",
 ];
 
@@ -136,11 +136,12 @@ function PerformancePage() {
   const peerChart = useMemo(
     () =>
       [
-        { name: "Northstar", value: +ns[metric].toFixed(2), src: "INTERNAL" },
+        { name: "Northstar", value: +ns[metric].toFixed(2), src: "INTERNAL", period: "FY2025" },
         ...PEERS.filter((p) => peerSel.includes(p.id)).map((p) => ({
           name: p.name.split(" ")[0],
           value: p[metric],
           src: p.source,
+          period: p.period,
         })),
       ].filter((x) => x.value !== null),
     [peerSel, metric],
@@ -180,7 +181,7 @@ function PerformancePage() {
         description={`${BANK.name} · FY2025 · ${BANK.currency} ${BANK.unit} · ${BANK.basis}. Peers are fictional institutions with illustrative metrics.`}
       />
       <Tabs defaultValue="scorecard">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>
           <TabsTrigger value="peers">Peer benchmarking</TabsTrigger>
@@ -376,22 +377,21 @@ function PerformancePage() {
                 </option>
               ))}
             </select>
-            <span className="text-xs text-muted-foreground">
-              Period FY2025 · USD · % values unitless
-            </span>
+            <span className="text-xs text-muted-foreground">USD · % values unitless</span>
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
             <ChartFrame
               title={METRICS.find((m) => m.key === metric)!.label}
               description="Peers without permitted data are excluded"
               unit={unitOf(METRICS.find((m) => m.key === metric)!.label)}
-              period="FY2025"
-              source="Internal figures and peer disclosures (synthetic demo data)"
+              period={[...new Set(peerChart.map((r) => r.period))].join("; ")}
+              source="Internal figures, peer disclosures and licensed data (synthetic demo data)"
               rows={peerChart}
               columns={[
                 { key: "name", header: "Bank" },
                 { key: "value", header: "Value" },
                 { key: "src", header: "Source" },
+                { key: "period", header: "Period" },
               ]}
             >
               <ResponsiveContainer width="100%" height={240}>
@@ -493,7 +493,7 @@ function PerformancePage() {
             title="Credit revenue bridge"
             description={bridge.method}
             unit="USD M"
-            period="FY2025"
+            period={bridge.period}
             source="Synthetic finance data (demo data)"
             rows={bridgeRows(bridge)}
             columns={BRIDGE_COLUMNS}
@@ -565,8 +565,8 @@ function PerformancePage() {
                 : `Difference ${rec.difference}`}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Volume = ΔVolume × benchmark yield; Price = ΔYield × actual volume; Mix =
-              segment-weighted yield difference. Residuals are labeled, not attributed.
+              The step values are fixed demo figures, not computed from volumes and yields.
+              Residuals are labeled, not attributed.
             </p>
           </Panel>
         </TabsContent>
@@ -700,7 +700,7 @@ function PerformancePage() {
                     title="Revenue gap bridge"
                     description={wb.method}
                     unit="USD M"
-                    period="FY2025"
+                    period={wb.period}
                     source="Synthetic finance data (demo data)"
                     rows={bridgeRows(wb)}
                     columns={BRIDGE_COLUMNS}

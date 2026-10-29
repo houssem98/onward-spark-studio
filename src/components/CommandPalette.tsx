@@ -37,6 +37,7 @@ export function CommandPalette({
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
+        if (open) setQuery("");
         onOpenChange(!open);
       }
     };

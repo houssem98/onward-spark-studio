@@ -23,6 +23,7 @@ export interface BridgeStep {
 export interface Bridge {
   id: string;
   method: string;
+  period: string;
   baseLabel: string;
   base: number;
   actualLabel: string;

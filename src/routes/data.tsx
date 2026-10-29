@@ -310,7 +310,18 @@ function DataPage() {
 
         <TabsContent value="quality" className="mt-4 space-y-4">
           <div className="grid gap-4 lg:grid-cols-3">
-            <Panel title="Dimension scores" subtitle="Simulated">
+            <ChartFrame
+              title="Dimension scores"
+              description="Simulated"
+              unit="Score out of 100 (simulated)"
+              period="Week 02"
+              source="Simulated quality checks (demo data)"
+              rows={DQ_DIMENSIONS}
+              columns={[
+                { key: "dimension", header: "Dimension" },
+                { key: "score", header: "Score" },
+              ]}
+            >
               <ul className="space-y-2 text-sm">
                 {DQ_DIMENSIONS.map((d) => (
                   <li key={d.dimension}>
@@ -341,7 +352,7 @@ function DataPage() {
               <p className="mt-2 text-xs text-muted-foreground">
                 Accuracy requires an independent reference source not available in this POC.
               </p>
-            </Panel>
+            </ChartFrame>
             <ChartFrame
               title="Quality score trend"
               description="Average data-quality score across catalogued datasets"

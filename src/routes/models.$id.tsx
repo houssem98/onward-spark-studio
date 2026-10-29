@@ -42,6 +42,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { actions, useStore } from "@/store/app-store";
 import { classificationMetrics, downloadFile, psi, psiBand } from "@/lib/calc";
 
+const TABS = [
+  "overview",
+  "performance",
+  "data",
+  "drift",
+  "validation",
+  "explainability",
+  "governance",
+  "versions",
+];
+
 export const Route = createFileRoute("/models/$id")({
   validateSearch: (s: Record<string, unknown>): { tab?: string } =>
     typeof s["tab"] === "string" ? { tab: s["tab"] } : {},
@@ -71,7 +82,9 @@ const OWNERS = ["T. Ibrahim", "E. Varga", "N. Petrov", "H. Kim", "Model Validati
 
 function ModelDetail() {
   const { id } = Route.useParams();
-  const { tab = "overview" } = Route.useSearch();
+  // The root route passes unknown search params through, so check the tab here.
+  const { tab: asked } = Route.useSearch();
+  const tab = asked && TABS.includes(asked) ? asked : "overview";
   const navigate = Route.useNavigate();
   const m = MODELS.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
@@ -113,7 +126,7 @@ function ModelDetail() {
   return (
     <div className="space-y-5">
       <PageHeader
-        crumbs={[{ label: "Model Governance", to: "/models" }, { label: m.id }]}
+        crumbs={[{ label: "AI & Model Governance", to: "/models" }, { label: m.id }]}
         title={m.name}
         description={m.purpose}
         actions={
@@ -140,17 +153,8 @@ function ModelDetail() {
       />
 
       <Tabs value={tab} onValueChange={(t) => navigate({ search: { tab: t }, replace: true })}>
-        <TabsList className="flex-wrap">
-          {[
-            "overview",
-            "performance",
-            "data",
-            "drift",
-            "validation",
-            "explainability",
-            "governance",
-            "versions",
-          ].map((t) => (
+        <TabsList className="h-auto flex-wrap">
+          {TABS.map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">
               {t === "data" ? "Data quality" : t === "versions" ? "Versions & history" : t}
             </TabsTrigger>
@@ -584,7 +588,7 @@ function ModelDetail() {
               { key: "value", header: "Mean |SHAP|" },
             ]}
             state={FEATURE_IMPORTANCE[id] ? "success" : "empty"}
-            stateNote="Explainability evidence is not available for this model type; scenario logic is documented under governance."
+            stateNote="Explainability evidence is not available for this model type."
           >
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={FEATURE_IMPORTANCE[id] ?? []} layout="vertical" margin={{ left: 40 }}>

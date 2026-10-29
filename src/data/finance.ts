@@ -288,6 +288,7 @@ export const BRIDGES: Bridge[] = [
   {
     id: "peer",
     method: "Actual vs peer benchmark (volume / price / mix)",
+    period: "FY2025",
     baseLabel: "Peer benchmark",
     base: 150,
     actualLabel: "Northstar actual",
@@ -302,6 +303,7 @@ export const BRIDGES: Bridge[] = [
   {
     id: "budget",
     method: "Actual vs budget variance",
+    period: "FY2025",
     baseLabel: "FY2025 budget",
     base: 138,
     actualLabel: "FY2025 actual",
@@ -316,6 +318,7 @@ export const BRIDGES: Bridge[] = [
   {
     id: "prior",
     method: "Actual vs prior period variance",
+    period: "FY2024 to FY2025",
     baseLabel: "FY2024 actual",
     base: 114,
     actualLabel: "FY2025 actual",

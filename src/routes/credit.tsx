@@ -329,7 +329,18 @@ function CreditPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Credit lifecycle funnel" subtitle="FY2025 applications · bank-wide">
+        <ChartFrame
+          title="Credit lifecycle funnel"
+          description="Applications reaching each stage, bank-wide"
+          unit="Applications (share of previous stage)"
+          period="FY2025"
+          source="Synthetic origination data (demo data)"
+          rows={FUNNEL}
+          columns={[
+            { key: "stage", header: "Stage" },
+            { key: "count", header: "Applications" },
+          ]}
+        >
           <ul className="space-y-1.5">
             {FUNNEL.map((f, i) => (
               <li
@@ -362,7 +373,7 @@ function CreditPage() {
               </span>
             ))}
           </div>
-        </Panel>
+        </ChartFrame>
         <Panel
           title="Stress scenarios"
           subtitle="Illustrative multipliers on model ECL"

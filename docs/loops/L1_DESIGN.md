@@ -27,7 +27,7 @@ Deciding rule, fixed before T1 starts: T0 to T7 are ticked (and T9 to T12, added
 - [ ] T8 (human) Signoff. needs: T7, T10, T11, T12. The human walks every route at 1440 px and 390 px and keyboard-only. Evidence: the signoff line naming what was checked.
 - [x] T9 Charts adopt the frame. needs: T4. Added in T4: `ChartFrame` exists but no page uses it, and 15 charts in 6 route files render recharts with no unit, period or source and no table alternative. Every chart moves inside a `ChartFrame` with its real unit, period and source (the synthetic source named as such), and its rows as the table alternative. Evidence: a test that fails when a route file has more `<ResponsiveContainer` than `<ChartFrame`, quoted failing with the per-file counts before and passing after; a Playwright pass shows no page lost a chart.
 - [x] T10 Council fixes: access and states. needs: T7. Added in T7 from council items C5, C7, C8, C10 and C17. The evidence badge's caveat is reachable by keyboard and touch, not only on hover (src/components/kit.tsx). The lineage graph in src/routes/data.tsx is a group, not an image, so its node buttons stay in the accessibility tree. The credit page shows the empty state when a filter matches no slice, instead of a 0.00% ratio. Disabled content is inert, and a table in the denied, error or disabled state offers no CSV export or row count (src/components/states.tsx, src/components/DataTable.tsx). The accessibility sweep also checks `cursor-help` triggers, resolves `aria-labelledby`, flags focusable content inside `role="img"`, and opens the sheets and the palette. Evidence: the sweep quoted failing before; deleting the "Business purpose for access" label in src/routes/data.tsx fails the gate after.
-- [ ] T11 Council fixes: copy, links and frames. needs: T7. Added in T7 from council items C2, C3, C4, C9, C11, C12, C16 and C20. Waterfall bars are labeled with their signed step, not the stack top (Chrome read `150.0, 150.0, 132.0, 125.0, 122.0, 120.0` in T7). The bridge note stops describing a calculation the code does not run. The crime trend's source says it is not derived from the alert queue (F40). The peer and bridge frames state their real periods, including 9M annualized and FY2024 to FY2025. The credit funnel and data-quality bars sit in a `ChartFrame`. Remaining unbacked copy goes, with its stems banned by the retired-phrase test: pseudonymous identifiers, the "Generate report" step, the scenario-logic pointer, and the audit page's every-change sentence (F35). An unknown report or investigation id shows the not-found page. Closing the palette with Ctrl+K clears its query. An unknown `?tab=` falls back to the overview. Wrapped tab lists grow instead of overlapping the panel at 390 px (Chrome measured +52 px on /models/MDL-001 and +24 px on /performance in T7). Breadcrumb labels match the navigation. Evidence: tests quoted failing before and passing after; a Chrome pass re-reads the waterfall labels and tab heights, and measures the wizard's benchmark buttons at 390 px.
+- [x] T11 Council fixes: copy, links and frames. needs: T7. Added in T7 from council items C2, C3, C4, C9, C11, C12, C16 and C20. Waterfall bars are labeled with their signed step, not the stack top (Chrome read `150.0, 150.0, 132.0, 125.0, 122.0, 120.0` in T7). The bridge note stops describing a calculation the code does not run. The crime trend's source says it is not derived from the alert queue (F40). The peer and bridge frames state their real periods, including 9M annualized and FY2024 to FY2025. The credit funnel and data-quality bars sit in a `ChartFrame`. Remaining unbacked copy goes, with its stems banned by the retired-phrase test: pseudonymous identifiers, the "Generate report" step, the scenario-logic pointer, and the audit page's every-change sentence (F35). An unknown report or investigation id shows the not-found page. Closing the palette with Ctrl+K clears its query. An unknown `?tab=` falls back to the overview. Wrapped tab lists grow instead of overlapping the panel at 390 px (Chrome measured +52 px on /models/MDL-001 and +24 px on /performance in T7). Breadcrumb labels match the navigation. Evidence: tests quoted failing before and passing after; a Chrome pass re-reads the waterfall labels and tab heights, and measures the wizard's benchmark buttons at 390 px.
 - [ ] T12 Council fixes: test strength. needs: T7. Added in T7 from council items C13, C14 and C15. The chart-frame test checks containment, not per-file counts, so it catches a multi-line `<Waterfall` tag and an empty unit, period or source. The 13 numeric font sizes in TS/TSX move to type-scale tokens, and the token test then fails on any numeric font size there and on any CSS `font-size` literal outside the theme block. The banner test runs the real route tree over every path plus a 404. Evidence: each strengthened test is quoted failing on a mutation the old test let pass.
 
 ## Journal
@@ -66,3 +66,34 @@ Deciding rule, fixed before T1 starts: T0 to T7 are ticked (and T9 to T12, added
   - **Two citations re-pointed** to the renamed row handler.
   - **Direction:** keyboard, touch and screen-reader users now reach what mouse users reach on these surfaces. The one dialog the gate cannot open is checked by hand.
   - **Next:** L1 T11.
+- 2026-10-29 · L1/T11 · started T11
+- 2026-10-29 · L1/T11 · passed · gate green (`Test Files  20 passed (20)`, `Tests  89 passed (89)`, `gate-guard: clean`) · commit see `git log --grep "loop(L1/T11)"` · tick 11 of 20.
+  - **Failing checks first:** 10 failures.
+    - Retired phrases: 6 hits, including `"src/routes/performance.tsx: \"Volume = ΔVolume × benchmark yield\""`.
+    - Unknown ids: `/reports/NOPE` and `/investigations/NOPE` rendered no `Page not found`.
+    - Unknown tab: `/models/MDL-001?tab=bogus` showed no tab at all.
+    - Breadcrumbs: 3 differed from the nav.
+    - Periods: the peer frame lacked `9M annualized`; the prior-period bridge lacked `FY2024 to FY2025`.
+    - Frames: the funnel and the dimension scores had no `figcaption`.
+    - Palette: the query survived Ctrl+K closing.
+  - **Changes:**
+    - Waterfall: the label reads the signed step (`LabelList dataKey="signed"`), not the stack top.
+    - Bridge note: now says the steps are fixed demo figures.
+    - Crime trend source: says it is not derived from the alert queue (F40 keeps the data gap, L2 T4).
+    - Peer frame: lists each bank's period (`FY2025; FY2025 (9M annualized)`), gains a Period column, and names licensed data as a source.
+    - Bridges: carry their own period.
+    - Funnel and dimension scores: moved into `ChartFrame`.
+    - Retired copy: "pseudonymous" became "fictional"; the wizard step is named for what it does ("Create investigation"); the governance pointer was removed; the audit subtitle now says what it does not record (F35 keeps the recording gap, L3 T5).
+    - Not-found: a loader throws `notFound()` for unknown report and investigation ids.
+    - Palette: Ctrl+K closing clears the query.
+    - Tabs: an unknown model tab falls back to overview. The root route passes unknown search params through validation, so the component checks the tab.
+    - Tab lists: wrapped lists use `h-auto`.
+    - Breadcrumbs: labels now match the nav.
+  - **Citations:** four re-pointed in CAPABILITY_MATRIX and TRUST_FINDINGS.
+  - **Chrome:**
+    - Waterfall labels: `150, -18, -7, -3, -2, 120`, against `150.0, 150.0, 132.0…` in T7.
+    - Tab overhang at 390 px: `/models/MDL-001 … +-4px` and `/performance … +-4px`, against +52 and +24 in T7.
+    - Wizard benchmark buttons at 390 px: `{"buttons":3,"spill":0,"page":0}`. The claim the T7 chairman dropped as unmeasured is now measured and false.
+    - Captions: `Applications (share of previous stage) · FY2025 · Source: Synthetic origination data (demo data)` and `Score out of 100 (simulated) · Week 02 · Source: Simulated quality checks (demo data)`.
+  - **Direction:** every claim the council found on these surfaces is now either true or gone, and the tests hold that.
+  - **Next:** L1 T12.

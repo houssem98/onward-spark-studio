@@ -53,7 +53,7 @@ function CasePage() {
   const [pending, setPending] = useState<AlertStatus | null>(null);
 
   const exportSummary = () => {
-    const md = `# Case summary — ${c.id}\n\n_Fictional synthetic data. Customer identifiers are pseudonymous._\n\n- Type: ${c.type}\n- Status: ${c.status}\n- Priority: ${c.priority}\n- Assignee: ${c.assignee}\n\n## Summary\n${c.summary}\n\n## Evidence\n${c.evidence.map((e) => `- ${e.label}: ${e.state} (${e.source})`).join("\n")}\n\n## Timeline\n${c.timeline.map((t) => `- ${t.at} ${t.event}`).join("\n")}\n`;
+    const md = `# Case summary — ${c.id}\n\n_Fictional synthetic data. Customer identifiers are fictional._\n\n- Type: ${c.type}\n- Status: ${c.status}\n- Priority: ${c.priority}\n- Assignee: ${c.assignee}\n\n## Summary\n${c.summary}\n\n## Evidence\n${c.evidence.map((e) => `- ${e.label}: ${e.state} (${e.source})`).join("\n")}\n\n## Timeline\n${c.timeline.map((t) => `- ${t.at} ${t.event}`).join("\n")}\n`;
     downloadFile(`${c.id}-summary.md`, md, "text/markdown");
     toast.success("Case summary exported");
   };
@@ -61,7 +61,7 @@ function CasePage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        crumbs={[{ label: "Financial Crime", to: "/crime" }, { label: c.id }]}
+        crumbs={[{ label: "Fraud, AML & Fin. Crime", to: "/crime" }, { label: c.id }]}
         title={c.title}
         description={c.summary}
         actions={

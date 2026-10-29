@@ -3,6 +3,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -114,17 +115,9 @@ export function Waterfall({ bridge, height = 280 }: { bridge: Bridge; height?: n
         />
         <ReferenceLine y={0} stroke={CHART.grid} />
         <Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />
-        <Bar
-          dataKey="value"
-          stackId="a"
-          isAnimationActive={false}
-          label={{
-            position: "top",
-            fontSize: 11,
-            fill: CHART.text,
-            formatter: (v: number) => v.toFixed(1),
-          }}
-        >
+        <Bar dataKey="value" stackId="a" isAnimationActive={false}>
+          {/* Label the signed step; the stacked bar's own value is the stack top. */}
+          <LabelList dataKey="signed" position="top" fontSize={11} fill={CHART.text} />
           {rows.map((r, i) => (
             <Cell key={i} fill={color(r.type)} />
           ))}

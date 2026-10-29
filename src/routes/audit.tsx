@@ -46,7 +46,7 @@ function AuditPage() {
     <div className="space-y-5">
       <PageHeader
         title="Audit Trail & Activity"
-        description="Every simulated change made in this session is recorded here, newest first. Session-only; not persisted."
+        description="Sample events and simulated decisions from this session, newest first. Model version switches and exports are not recorded. Session-only; not persisted."
       />
       <DataTable
         rows={rows}

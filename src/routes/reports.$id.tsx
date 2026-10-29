@@ -1,8 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Notice, PageHeader } from "@/components/kit";
 import { REPORTS } from "@/data/investigations";
 
 export const Route = createFileRoute("/reports/$id")({
+  loader: ({ params }) => {
+    if (!REPORTS.some((r) => r.id === params.id)) throw notFound();
+  },
   head: ({ params }) => ({
     meta: [{ title: `Report ${params.id} — BankIntelli` }],
   }),
@@ -11,17 +14,13 @@ export const Route = createFileRoute("/reports/$id")({
 
 function ReportPlaceholder() {
   const { id } = Route.useParams();
-  const report = REPORTS.find((r) => r.id === id);
+  const report = REPORTS.find((r) => r.id === id)!;
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title={report?.title ?? `Report ${id}`}
-        description={
-          report
-            ? `${report.id} · ${report.period} · ${report.status}`
-            : `No report has the id ${id}.`
-        }
+        title={report.title}
+        description={`${report.id} · ${report.period} · ${report.status}`}
         crumbs={[{ label: "Investigations & Reports", to: "/investigations" }, { label: id }]}
       />
       <Notice tone="warning">
