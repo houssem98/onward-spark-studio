@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ChartFrame } from "@/components/charts";
@@ -115,6 +115,31 @@ describe("ChartFrame", () => {
     const table = screen.getByRole("table", { hidden: true });
     expect(table.querySelectorAll("tbody tr")).toHaveLength(1);
     expect(table).toHaveTextContent("Q1");
+  });
+
+  it("offers no row action, export or row count while a table is disabled, denied, failed or loading", () => {
+    for (const s of ["disabled", "denied", "error", "loading"] as const) {
+      const opened: string[] = [];
+      const { container, unmount } = show(
+        <DataTable
+          rows={[{ id: "a", name: "Row A" }]}
+          columns={[{ key: "name", header: "Name" }]}
+          rowKey={(r) => r.id}
+          exportName="data-catalog"
+          onRowClick={(r) => opened.push(r.id)}
+          state={s}
+        />,
+      );
+      for (const tr of container.querySelectorAll("tbody tr")) {
+        fireEvent.click(tr);
+        fireEvent.keyDown(tr, { key: "Enter" });
+      }
+      expect(opened, s).toEqual([]);
+      expect(screen.queryByRole("button", { name: /CSV/ }), s).toBeNull();
+      expect(container.textContent, s).not.toMatch(/\d+ rows/);
+      if (s === "disabled") expect(container.querySelector("[inert]"), s).not.toBeNull();
+      unmount();
+    }
   });
 
   it("does not compile without a unit", () => {

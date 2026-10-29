@@ -197,7 +197,7 @@ function DataPage() {
             className="xl:col-span-2"
             bodyClass="overflow-x-auto"
           >
-            <svg width={1040} height={260} role="img" aria-label="Data lineage graph">
+            <svg width={1040} height={260} role="group" aria-label="Data lineage graph">
               {LINEAGE_EDGES.map(([s, t]) => {
                 const a = pos(LINEAGE_NODES.find((n) => n.id === s)!),
                   b = pos(LINEAGE_NODES.find((n) => n.id === t)!);

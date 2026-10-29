@@ -41,6 +41,9 @@ export function DataTable<T extends object>({
   state?: DataState;
   stateNote?: string;
 }) {
+  // Only a table showing rows offers actions on them; disabled, denied, failed or loading offers none.
+  const live = !state || state === "success" || state === "stale" || state === "partial";
+  const rowAction = live ? onRowClick : undefined;
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [page, setPage] = useState(0);
@@ -103,8 +106,8 @@ export function DataTable<T extends object>({
         </div>
         {toolbar}
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="num">{filtered.length} rows</span>
-          {exportName && (
+          {live && <span className="num">{filtered.length} rows</span>}
+          {live && exportName && (
             <Button variant="outline" size="sm" className="h-8" onClick={exportCsv}>
               <Download className="h-3.5 w-3.5" /> CSV
             </Button>
@@ -173,21 +176,21 @@ export function DataTable<T extends object>({
                 return (
                   <tr
                     key={k}
-                    onClick={onRowClick ? () => onRowClick(r) : undefined}
-                    tabIndex={onRowClick ? 0 : undefined}
+                    onClick={rowAction ? () => rowAction(r) : undefined}
+                    tabIndex={rowAction ? 0 : undefined}
                     onKeyDown={
-                      onRowClick
+                      rowAction
                         ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              onRowClick(r);
+                              rowAction(r);
                             }
                           }
                         : undefined
                     }
                     className={cn(
                       "border-b last:border-0",
-                      onRowClick && "cursor-pointer hover:bg-accent/50",
+                      rowAction && "cursor-pointer hover:bg-accent/50",
                       selectedKey === k && "bg-accent",
                     )}
                   >

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -151,11 +151,19 @@ export function EvidenceBadge({
 }) {
   const e = EV[state];
   const Icon = e.icon;
+  const [open, setOpen] = useState(false);
   return (
     <StateBoundary state={dataState} label="evidence state" note={stateNote} inline>
-      <Tooltip>
+      <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
+          {/* Focusable so keyboard users get the caveat; a tap toggles it, since tooltips ignore touch. */}
           <span
+            tabIndex={0}
+            onPointerDown={(ev) => ev.preventDefault()}
+            onClick={(ev) => {
+              ev.preventDefault();
+              setOpen((o) => !o);
+            }}
             className={cn(
               "inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption font-semibold uppercase leading-none tracking-wide",
               toneCls[e.tone],

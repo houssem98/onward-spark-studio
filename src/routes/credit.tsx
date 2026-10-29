@@ -28,6 +28,7 @@ import {
   STRESS,
 } from "@/data/credit";
 import { FilterSelect } from "@/components/DataTable";
+import { StateBoundary } from "@/components/states";
 import {
   axisProps,
   CHART,
@@ -86,6 +87,8 @@ function CreditPage() {
     [segment, product, region, band, channel, industry],
   );
 
+  // A filter pair can match no slice; say so instead of showing 0.00% ratios.
+  const empty = rows.length ? "success" : "empty";
   const bal = sum(rows.map((r) => r.balance));
   const prior = sum(rows.map((r) => r.priorBalance));
   const rev = sum(rows.map((r) => r.revenue));
@@ -178,84 +181,86 @@ function CreditPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-        <Kpi
-          label="Outstanding balance"
-          value={fmtM(bal, 0)}
-          delta={`${growth(bal, prior).toFixed(1)}% YoY`}
-          deltaGood
-          sub="balance"
-          definition="Stock of outstanding principal at period end."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="New originations"
-          value={fmtM(orig, 0)}
-          sub="flow"
-          definition="Principal disbursed during the year."
-        />
-        <Kpi
-          label="Interest & fee revenue"
-          value={fmtM(rev)}
-          sub="flow"
-          definition="Interest and fee income recognized in the year."
-        />
-        <Kpi
-          label="NPL ratio"
-          value={fmtPct(pct(npl, bal), 2)}
-          sub="ratio"
-          definition="Non-performing balance ÷ outstanding balance (observed)."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="30+ DPD rate"
-          value={fmtPct(pct(dpd, bal), 2)}
-          sub="ratio"
-          definition="Balance 30+ days past due ÷ balance."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="Expected credit loss"
-          value={fmtM(ecl)}
-          sub="model output"
-          definition="IFRS 9 ECL stock — model estimate, not observed loss."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="Net write-offs"
-          value={fmtM(wo - rec)}
-          sub={`WO ${wo.toFixed(1)} · Rec ${rec.toFixed(1)}`}
-          definition="Write-offs less recoveries (observed flow)."
-        />
-        <Kpi
-          label="Approval rate"
-          value={fmtPct(pct(FUNNEL[3]!.count, FUNNEL[0]!.count))}
-          definition="Approvals ÷ applications (bank-wide)."
-        />
-        <Kpi
-          label="App → disbursement"
-          value={fmtPct(pct(FUNNEL[6]!.count, FUNNEL[0]!.count))}
-          definition="Disbursements ÷ applications."
-        />
-        <Kpi
-          label="Avg loan size"
-          value={`$${((bal * 1e6) / Math.max(loans, 1) / 1000).toFixed(1)}k`}
-          definition="Balance ÷ number of loans."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="Limit utilization"
-          value={fmtPct(pct(bal, lim))}
-          definition="Balance ÷ committed limits."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="Collateral coverage"
-          value={fmtPct(pct(coll, bal), 0)}
-          definition="Collateral value ÷ balance (simulated valuations)."
-          period="31 Dec 2025"
-        />
-      </div>
+      <StateBoundary state={empty} label="portfolio slices">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+          <Kpi
+            label="Outstanding balance"
+            value={fmtM(bal, 0)}
+            delta={`${growth(bal, prior).toFixed(1)}% YoY`}
+            deltaGood
+            sub="balance"
+            definition="Stock of outstanding principal at period end."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="New originations"
+            value={fmtM(orig, 0)}
+            sub="flow"
+            definition="Principal disbursed during the year."
+          />
+          <Kpi
+            label="Interest & fee revenue"
+            value={fmtM(rev)}
+            sub="flow"
+            definition="Interest and fee income recognized in the year."
+          />
+          <Kpi
+            label="NPL ratio"
+            value={fmtPct(pct(npl, bal), 2)}
+            sub="ratio"
+            definition="Non-performing balance ÷ outstanding balance (observed)."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="30+ DPD rate"
+            value={fmtPct(pct(dpd, bal), 2)}
+            sub="ratio"
+            definition="Balance 30+ days past due ÷ balance."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="Expected credit loss"
+            value={fmtM(ecl)}
+            sub="model output"
+            definition="IFRS 9 ECL stock — model estimate, not observed loss."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="Net write-offs"
+            value={fmtM(wo - rec)}
+            sub={`WO ${wo.toFixed(1)} · Rec ${rec.toFixed(1)}`}
+            definition="Write-offs less recoveries (observed flow)."
+          />
+          <Kpi
+            label="Approval rate"
+            value={fmtPct(pct(FUNNEL[3]!.count, FUNNEL[0]!.count))}
+            definition="Approvals ÷ applications (bank-wide)."
+          />
+          <Kpi
+            label="App → disbursement"
+            value={fmtPct(pct(FUNNEL[6]!.count, FUNNEL[0]!.count))}
+            definition="Disbursements ÷ applications."
+          />
+          <Kpi
+            label="Avg loan size"
+            value={`$${((bal * 1e6) / Math.max(loans, 1) / 1000).toFixed(1)}k`}
+            definition="Balance ÷ number of loans."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="Limit utilization"
+            value={fmtPct(pct(bal, lim))}
+            definition="Balance ÷ committed limits."
+            period="31 Dec 2025"
+          />
+          <Kpi
+            label="Collateral coverage"
+            value={fmtPct(pct(coll, bal), 0)}
+            definition="Collateral value ÷ balance (simulated valuations)."
+            period="31 Dec 2025"
+          />
+        </div>
+      </StateBoundary>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartFrame
@@ -265,6 +270,7 @@ function CreditPage() {
           period="Balances at 31 Dec 2025"
           source="Synthetic credit portfolio (demo data)"
           rows={breakdown}
+          state={empty}
           columns={[
             { key: "key", header: "Group" },
             { key: "balance", header: "Balance (USD M)" },
@@ -375,20 +381,22 @@ function CreditPage() {
             </select>
           }
         >
-          <div className="grid grid-cols-2 gap-3">
-            <Kpi
-              label="Stressed ECL"
-              value={fmtM(ecl * sc.eclMultiplier)}
-              delta={`×${sc.eclMultiplier}`}
-              definition="Model ECL × scenario multiplier (illustrative)."
-            />
-            <Kpi
-              label="Stressed NPL ratio"
-              value={fmtPct(pct(npl, bal) + sc.nplShift, 2)}
-              delta={`+${sc.nplShift}pp`}
-              definition="Observed NPL ratio + scenario shift."
-            />
-          </div>
+          <StateBoundary state={empty} label="portfolio slices">
+            <div className="grid grid-cols-2 gap-3">
+              <Kpi
+                label="Stressed ECL"
+                value={fmtM(ecl * sc.eclMultiplier)}
+                delta={`×${sc.eclMultiplier}`}
+                definition="Model ECL × scenario multiplier (illustrative)."
+              />
+              <Kpi
+                label="Stressed NPL ratio"
+                value={fmtPct(pct(npl, bal) + sc.nplShift, 2)}
+                delta={`+${sc.nplShift}pp`}
+                definition="Observed NPL ratio + scenario shift."
+              />
+            </div>
+          </StateBoundary>
           <div className="mt-3">
             <Notice>
               Stress outputs are simulated model projections and are distinguished from observed

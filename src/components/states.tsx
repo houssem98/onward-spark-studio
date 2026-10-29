@@ -67,7 +67,7 @@ export function StateBoundary({
       );
     case "disabled":
       return (
-        <Tag aria-disabled="true" className="pointer-events-none opacity-50">
+        <Tag aria-disabled="true" inert className="pointer-events-none opacity-50">
           {children}
         </Tag>
       );

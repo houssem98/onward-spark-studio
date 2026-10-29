@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { QueryClient } from "@tanstack/react-query";
-import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
-import { act, cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
-import { routeTree } from "@/routeTree.gen";
+import { FOCUSABLE, audit, clickTab, open, setUp } from "./a11y";
+
+setUp();
 
 const PATHS = [
   "/",
@@ -22,74 +22,11 @@ const PATHS = [
   "/reports/RPT-FY25-PERF",
 ];
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-beforeAll(() => {
-  Element.prototype.scrollIntoView = vi.fn();
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-});
-afterEach(cleanup);
-
-async function open(path: string) {
-  const router = createRouter({
-    routeTree,
-    context: { queryClient: new QueryClient() },
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  await act(async () => {
-    render(<RouterProvider router={router} />);
-  });
-  await act(async () => {
-    await router.load();
-  });
-}
-
-const nameOf = (el: Element) =>
-  (
-    el.getAttribute("aria-label") ||
-    (el.getAttribute("aria-labelledby") ? "labelledby" : "") ||
-    el.getAttribute("title") ||
-    el.textContent ||
-    ""
-  ).trim();
-
-function labelled(el: Element) {
-  if (el.getAttribute("aria-label") || el.getAttribute("aria-labelledby")) return true;
-  if (el.id && document.querySelector(`label[for="${el.id}"]`)) return true;
-  return !!el.closest("label");
-}
-
-/** Problems in what is on screen now, keyed so repeats collapse. */
-function audit(where: string, out: Set<string>) {
-  for (const b of document.querySelectorAll('button, [role="button"]')) {
-    if (!nameOf(b)) out.add(`${where}: unnamed button ${b.outerHTML.slice(0, 80)}`);
-  }
-  for (const f of document.querySelectorAll("input, select, textarea")) {
-    if ((f as HTMLInputElement).type === "hidden" || f.getAttribute("aria-hidden") === "true")
-      continue;
-    if (!labelled(f))
-      out.add(`${where}: unlabeled ${f.tagName.toLowerCase()} ${f.outerHTML.slice(0, 80)}`);
-  }
-  for (const r of document.querySelectorAll(".cursor-pointer")) {
-    if (r.closest("button, a, [role=tab]") || r.matches("button, a, label, summary")) continue;
-    if (r.getAttribute("tabindex") !== "0")
-      out.add(`${where}: clickable ${r.tagName.toLowerCase()} not keyboard-focusable`);
-  }
-}
-
 async function exercise(path: string, out: Set<string>) {
   await open(path);
   audit(path, out);
   for (const tab of [...document.querySelectorAll('[role="tab"]')]) {
-    await act(async () => {
-      fireEvent.mouseDown(tab, { button: 0 });
-      fireEvent.click(tab);
-    });
+    await clickTab(tab);
     audit(`${path} [${tab.textContent?.trim() ?? "?"}]`, out);
   }
 }

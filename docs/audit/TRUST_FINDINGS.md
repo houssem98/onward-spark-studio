@@ -174,7 +174,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F33 · medium · Detail pages cannot be reached by keyboard
-- Evidence: table rows open details on click only (`src/components/DataTable.tsx#onClick={onRowClick ? () => onRowClick(r) : undefined}`), and src outside the UI kit had no `tabIndex` or `onKeyDown` at all; lineage nodes were click-only too. L1 T5 made clickable rows and lineage nodes focusable and operable with Enter or Space, checked on every page and tab by `src/test/accessibility.test.tsx#names every button, labels every field and makes every clickable row focusable, on every page and tab`; in Chrome, Enter on a focused model row opens the model, and on an issue row opens its drawer.
+- Evidence: table rows open details on click only (`src/components/DataTable.tsx#onClick={rowAction ? () => rowAction(r) : undefined}`), and src outside the UI kit had no `tabIndex` or `onKeyDown` at all; lineage nodes were click-only too. L1 T5 made clickable rows and lineage nodes focusable and operable with Enter or Space, checked on every page and tab by `src/test/accessibility.test.tsx#names every button, labels every field and makes every clickable row focusable, on every page and tab`; in Chrome, Enter on a focused model row opens the model, and on an issue row opens its drawer.
 - Fix: L1 T5
 - Status: fixed in L1 T5
 
