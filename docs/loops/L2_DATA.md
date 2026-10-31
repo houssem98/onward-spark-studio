@@ -18,7 +18,7 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
 
 - [x] T0 Re-verify. needs: none. Run graph-lint and refresh citations L0 changed. Evidence: graph-lint exits 0.
 - [x] T1 Calc truth. needs: T0. Tests for every export of `src/lib/calc.ts`, edge cases first: zero denominators return `null` (unavailable), never 0 or NaN, and every caller renders null as "Unavailable" (I6: same task updates consumers); growth with prior 0; bridge reconciliation at the 4-dp boundary and with negative steps; PSI with zero bins and mismatched lengths (throws); waterfall rows sum to the actual. Evidence: tests quoted failing before, passing after.
-- [ ] T2 Repository contract. needs: T0. `src/repo/types.ts` (new) declares typed read and write interfaces per domain (finance, credit, crime, datasets, models, investigations, audit); `src/repo/demo.ts` (new) implements them and is the only module outside src/data that imports `@/data/`. Evidence: a test that fails when any other file imports `@/data/`, quoted failing with its count.
+- [x] T2 Repository contract. needs: T0. `src/repo/types.ts` (new) declares typed read and write interfaces per domain (finance, credit, crime, datasets, models, investigations, audit); `src/repo/demo.ts` (new) implements them and is the only module outside src/data that imports `@/data/`. Evidence: a test that fails when any other file imports `@/data/`, quoted failing with its count.
 - [ ] T3 Migrate overview, performance, investigations. needs: T2. Those routes and the copilot read through the repository with TanStack Query. Evidence: the T2 test's exemption list shrinks by those files; route tests still pass.
 - [ ] T4 Migrate the rest. needs: T3. Credit, crime, data, models, audit and the store read and write through the repository. Evidence: the T2 test passes with an empty exemption list.
 - [ ] T5 Environment. needs: T2. The repository reports `environment: "demo" | "production"`; every demo record carries `synthetic: true`; the production adapter throws "not configured" rather than returning anything; the L1 banner reads the environment from here. Evidence: tests: all demo records are synthetic; the production adapter returns no data.
@@ -48,3 +48,14 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
   - **Docs:** F11 and F12 fixed; four citations of the old code re-pointed (F11, F12, this ledger, L5's Current state); F26 now says the cited test exists.
   - **Direction:** goal unchanged; a missing value now reads as missing instead of 0, which T6's registry and L4's evidence states build on.
   - **Next:** L2 T2 repository contract.
+- 2026-10-31 · L2/T2 · started T2
+- 2026-10-31 · L2/T2 · passed · gate green (`GATE EXIT 0`, `Test Files  24 passed (24)`, `Tests  119 passed (119)`, `gate-guard: clean · HEAD..working tree`) · commit see `git log --grep "loop(L2/T2)"` · tick 3 of 15.
+  - **Failing check first.** `src/test/data-boundary.test.ts` with an empty migration list: `expected [ …(13) ] to deeply equal []`, the 13 files T0 counted, from `"src/components/CommandPalette.tsx"` to `"src/store/app-store.ts"`.
+  - **Changes.**
+    - `src/repo/types.ts` declares the contract per domain (finance, credit, crime, datasets, models, investigations, audit): one read that resolves to a snapshot of the domain, and one write for each of the store's 16 actions; finance and credit have no writes today. Its domain types come from the fixture modules as type-only imports.
+    - `src/repo/demo.ts` implements it: static data from the fixtures, mutable data from the store, and writes passed to the store's actions until T4 moves that state behind the adapter.
+    - The boundary test counts value imports, re-exports and dynamic imports of the fixtures, by alias or by relative path, outside src/data and test files. A type-only import carries no data, so the kit's and the investigation page's type imports do not count. The 13 readers form the migration list for T3 and T4, and a second assertion fails when a listed file stops reading fixtures, so the list can only shrink.
+    - `src/test/repo-demo.test.ts`: every domain reads non-empty, and a write shows in the next read and in the audit trail.
+  - **Probes:** a relative `../data/` import in the audit page, an inline `import { type … }` in the kit, and the report page's fixture import commented out → `"src/components/kit.tsx"`, `"src/routes/audit.tsx"` and `"src/routes/reports.$id.tsx"` reported; all three restored byte-identical.
+  - **Direction:** goal unchanged; the demo data now has one door, and T3 and T4 close the others.
+  - **Next:** L2 T3 migrate overview, performance and investigations (T5 and T6 also open).
