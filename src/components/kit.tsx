@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { UNAVAILABLE } from "@/lib/calc";
 import { cn } from "@/lib/utils";
 import type { EvidenceState } from "@/data/investigations";
 import { StateBoundary, type DataState } from "@/components/states";
@@ -315,7 +316,11 @@ export function Kpi({
             <span
               className={cn(
                 "num font-medium",
-                deltaGood === undefined ? "" : deltaGood ? "text-success" : "text-critical",
+                deltaGood === undefined || delta.startsWith(UNAVAILABLE)
+                  ? ""
+                  : deltaGood
+                    ? "text-success"
+                    : "text-critical",
               )}
             >
               {delta}

@@ -62,7 +62,7 @@ describe("capability matrix", () => {
 
   it("has an export row for every file that calls downloadFile", () => {
     const exporters = walk("src")
-      .filter((f) => /\.tsx?$/.test(f) && f !== "src/lib/calc.ts")
+      .filter((f) => /\.tsx?$/.test(f) && f !== "src/lib/calc.ts" && !/\.test\.tsx?$/.test(f))
       .filter((f) => /\bdownloadFile\(/.test(read(f)));
     const ids = new Set(
       rows()

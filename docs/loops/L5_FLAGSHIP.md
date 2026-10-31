@@ -9,7 +9,7 @@ Deciding rule, fixed before T1 starts: T0 to T7 are ticked, `npm run gate` exits
 ## Current state (read 2026-10-28; T0 re-verifies)
 
 - The performance page has the guided wizard and bridge method switcher; its last step links a report that has no page: `src/routes/performance.tsx#Preview linked report`.
-- Reconciliation exists and is exact to 1e-6: `src/lib/calc.ts#reconciles: Math.abs(gap - explained) < 1e-6`.
+- Reconciliation exists and, since L2 T1, decides at 4 dp on the difference rounded once: `src/lib/calc.ts#reconciles: difference === 0,`.
 - The report is planned with 14 sections and a Verified rule: `.lovable/plan/finish-the-bankintelli-poc-2026-10-28.md#Verified label only when all findings are verified and reviewer signs off`.
 
 ## Tasks

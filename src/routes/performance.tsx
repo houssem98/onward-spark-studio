@@ -40,11 +40,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
   costToIncome,
+  diff,
+  fmtFixed,
   fmtM,
   fmtPct,
   growth,
   pct,
   reconcileBridge,
+  round,
   sum,
   type Bridge,
 } from "@/lib/calc";
@@ -137,7 +140,7 @@ function PerformancePage() {
   const peerChart = useMemo(
     () =>
       [
-        { name: "Northstar", value: +ns[metric].toFixed(2), src: "INTERNAL", period: "FY2025" },
+        { name: "Northstar", value: round(ns[metric], 2), src: "INTERNAL", period: "FY2025" },
         ...PEERS.filter((p) => peerSel.includes(p.id)).map((p) => ({
           name: p.name.split(" ")[0],
           value: p[metric],
@@ -195,35 +198,35 @@ function PerformancePage() {
             <Kpi
               label="Total operating income"
               value={fmtM(rev, 0)}
-              delta={`${growth(rev, b.nii + b.nonInterest).toFixed(1)}% YoY`}
+              delta={`${fmtPct(growth(rev, b.nii + b.nonInterest))} YoY`}
               deltaGood
               definition="NII + non-interest income. Source: DS-009 Finance reporting."
             />
             <Kpi
               label="Net interest income"
               value={fmtM(a.nii, 0)}
-              delta={`${growth(a.nii, b.nii).toFixed(1)}%`}
+              delta={fmtPct(growth(a.nii, b.nii))}
               deltaGood
               definition="Interest income − interest expense. Source: DS-001 GL."
             />
             <Kpi
               label="Net interest margin"
               value={fmtPct(nim, 2)}
-              delta={`${(nim - pct(b.nii, b.avgEarningAssets)).toFixed(2)}pp`}
+              delta={fmtFixed(diff(nim, pct(b.nii, b.avgEarningAssets)), 2, "pp")}
               deltaGood={false}
               definition="NII ÷ average earning assets."
             />
             <Kpi
               label="Non-interest income"
               value={fmtM(a.nonInterest, 0)}
-              delta={`${growth(a.nonInterest, b.nonInterest).toFixed(1)}%`}
+              delta={fmtPct(growth(a.nonInterest, b.nonInterest))}
               deltaGood
               definition="Fees, commissions, trading and other income."
             />
             <Kpi
               label="Operating expenses"
               value={fmtM(opex, 0)}
-              delta={`${growth(opex, priorOpex).toFixed(1)}%`}
+              delta={fmtPct(growth(opex, priorOpex))}
               deltaGood={false}
               definition="Total operating expenses across all units."
             />
@@ -332,14 +335,12 @@ function PerformancePage() {
                           : `${d.revenue - d.target >= 0 ? "+" : ""}${d.revenue - d.target}`}
                       </td>
                       <td className="num px-3 py-2 text-right">
-                        {d.costCenter ? "—" : `${growth(d.revenue, d.prior).toFixed(1)}%`}
+                        {d.costCenter ? "—" : fmtPct(growth(d.revenue, d.prior))}
                       </td>
                       <td className="num px-3 py-2 text-right">{d.expenses}</td>
                       <td className="num px-3 py-2 text-right">{d.revenue - d.expenses}</td>
                       <td className="num px-3 py-2 text-right">
-                        {d.costCenter
-                          ? "Cost center"
-                          : `${costToIncome(d.expenses, d.revenue).toFixed(1)}%`}
+                        {d.costCenter ? "Cost center" : fmtPct(costToIncome(d.expenses, d.revenue))}
                       </td>
                     </tr>
                   ))}

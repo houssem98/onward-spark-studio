@@ -1,18 +1,28 @@
 // Deterministic financial arithmetic. All AI narrative must reference values produced here.
+// A value with a zero denominator is unavailable: null, never 0 or NaN.
 
-export const round = (v: number, dp = 1) => {
-  const f = 10 ** dp;
-  return Math.round(v * f) / f;
-};
+export const UNAVAILABLE = "Unavailable";
+
+// Half away from zero; toPrecision(15) drops binary noise, so 1.005 rounds to 1.01.
+export function round(v: number, dp?: number): number;
+export function round(v: number | null, dp?: number): number | null;
+export function round(v: number | null, dp = 1) {
+  if (v === null) return null;
+  const n = Math.round(Number((Math.abs(v) * 10 ** dp).toPrecision(15)));
+  return n === 0 ? 0 : (Math.sign(v) * n) / 10 ** dp;
+}
 
 export const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
-export const pct = (num: number, den: number) => (den === 0 ? 0 : (num / den) * 100);
+export const pct = (num: number, den: number) => (den === 0 ? null : (num / den) * 100);
 
 export const growth = (current: number, prior: number) =>
-  prior === 0 ? 0 : ((current - prior) / prior) * 100;
+  prior === 0 ? null : ((current - prior) / prior) * 100;
 
 export const costToIncome = (opex: number, income: number) => pct(opex, income);
+
+export const diff = (a: number | null, b: number | null) =>
+  a === null || b === null ? null : a - b;
 
 export interface BridgeStep {
   label: string;
@@ -31,15 +41,16 @@ export interface Bridge {
   steps: BridgeStep[];
 }
 
-/** Returns gap, explained total and whether the steps reconcile exactly to the gap. */
+/** Gap, explained total, and whether the steps reconcile to the gap at 4 dp. */
 export function reconcileBridge(b: Bridge) {
-  const gap = round(b.actual - b.base, 4);
-  const explained = round(sum(b.steps.map((s) => s.value)), 4);
+  const explained = sum(b.steps.map((s) => s.value));
+  // Rounding the difference once; rounding each total first can invent or hide 0.0001.
+  const difference = round(b.actual - b.base - explained, 4);
   return {
-    gap,
-    explained,
-    difference: round(gap - explained, 4),
-    reconciles: Math.abs(gap - explained) < 1e-6,
+    gap: round(b.actual - b.base, 4),
+    explained: round(explained, 4),
+    difference,
+    reconciles: difference === 0,
   };
 }
 
@@ -85,16 +96,21 @@ export const psiBand = (v: number) =>
   v < 0.1 ? "Stable" : v < 0.25 ? "Moderate shift" : "Significant shift";
 
 export function classificationMetrics(tp: number, fp: number, fn: number, tn: number) {
-  const precision = tp / (tp + fp);
-  const recall = tp / (tp + fn);
-  const f1 = (2 * precision * recall) / (precision + recall);
-  const accuracy = (tp + tn) / (tp + fp + fn + tn);
-  return { precision, recall, f1, accuracy };
+  const ratio = (num: number, den: number) => (den === 0 ? null : num / den);
+  return {
+    precision: ratio(tp, tp + fp),
+    recall: ratio(tp, tp + fn),
+    // 2PR / (P + R) over the counts, so no true positives scores 0 instead of 0/0.
+    f1: ratio(2 * tp, 2 * tp + fp + fn),
+    accuracy: ratio(tp + tn, tp + fp + fn + tn),
+  };
 }
 
 export const fmtM = (v: number, dp = 1) =>
   `${v < 0 ? "−" : ""}$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp })}M`;
-export const fmtPct = (v: number, dp = 1) => `${v.toFixed(dp)}%`;
+export const fmtFixed = (v: number | null, dp = 1, unit = "") =>
+  v === null ? UNAVAILABLE : `${v.toFixed(dp)}${unit}`;
+export const fmtPct = (v: number | null, dp = 1) => fmtFixed(v, dp, "%");
 export const fmtNum = (v: number) => v.toLocaleString("en-US");
 export const fmtSigned = (v: number, dp = 1) =>
   `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp)}`;

@@ -41,7 +41,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { actions, useStore } from "@/store/app-store";
-import { classificationMetrics, downloadFile, psi, psiBand } from "@/lib/calc";
+import { classificationMetrics, downloadFile, fmtFixed, psi, psiBand } from "@/lib/calc";
 
 const TABS = [
   "overview",
@@ -231,13 +231,13 @@ function ModelDetail() {
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                   <span>
-                    Precision <b className="num">{cm.precision.toFixed(3)}</b>
+                    Precision <b className="num">{fmtFixed(cm.precision, 3)}</b>
                   </span>
                   <span>
-                    Recall <b className="num">{cm.recall.toFixed(3)}</b>
+                    Recall <b className="num">{fmtFixed(cm.recall, 3)}</b>
                   </span>
                   <span>
-                    F1 <b className="num">{cm.f1.toFixed(3)}</b>
+                    F1 <b className="num">{fmtFixed(cm.f1, 3)}</b>
                   </span>
                 </div>
               </Panel>

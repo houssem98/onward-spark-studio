@@ -17,7 +17,7 @@ import { DEPARTMENTS, quarterlyRevenue } from "@/data/finance";
 import { MODELS } from "@/data/models";
 import { REPORTS, NEXT_STEPS } from "@/data/investigations";
 import { SLICES } from "@/data/credit";
-import { costToIncome, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
+import { costToIncome, diff, fmtFixed, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
 import {
   axisProps,
   CHART,
@@ -71,6 +71,7 @@ function Overview() {
   const prior = sum(DEPARTMENTS.map((d) => d.prior));
   const opex = sum(DEPARTMENTS.map((d) => d.expenses));
   const priorOpex = sum(DEPARTMENTS.map((d) => d.priorExpenses));
+  const cirChange = diff(costToIncome(opex, rev), costToIncome(priorOpex, prior));
   const bal = sum(SLICES.map((s) => s.balance));
   const npl = sum(SLICES.map((s) => s.npl));
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
@@ -120,22 +121,22 @@ function Overview() {
         <Kpi
           label="Operating income"
           value={fmtM(rev, 0)}
-          delta={`${growth(rev, prior).toFixed(1)}% YoY`}
+          delta={`${fmtPct(growth(rev, prior))} YoY`}
           deltaGood
           definition="Sum of operating income across revenue-generating units."
         />
         <Kpi
           label="Operating expenses"
           value={fmtM(opex, 0)}
-          delta={`${growth(opex, priorOpex).toFixed(1)}% YoY`}
+          delta={`${fmtPct(growth(opex, priorOpex))} YoY`}
           deltaGood={false}
           definition="Total operating expenses including cost centers."
         />
         <Kpi
           label="Cost-to-income"
           value={fmtPct(costToIncome(opex, rev))}
-          delta={`${(costToIncome(opex, rev) - costToIncome(priorOpex, prior)).toFixed(1)}pp`}
-          deltaGood={costToIncome(opex, rev) < costToIncome(priorOpex, prior)}
+          delta={fmtFixed(cirChange, 1, "pp")}
+          deltaGood={cirChange !== null && cirChange < 0}
           definition="Operating expenses ÷ operating income."
         />
         <Kpi

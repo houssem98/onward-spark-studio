@@ -42,7 +42,7 @@ import {
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { downloadFile, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
+import { downloadFile, fmtFixed, fmtM, fmtPct, growth, pct, round, sum } from "@/lib/calc";
 
 export const Route = createFileRoute("/credit")({
   head: () => ({
@@ -94,6 +94,7 @@ function CreditPage() {
   const prior = sum(rows.map((r) => r.priorBalance));
   const rev = sum(rows.map((r) => r.revenue));
   const npl = sum(rows.map((r) => r.npl));
+  const nplRatio = pct(npl, bal);
   const ecl = sum(rows.map((r) => r.ecl));
   const orig = sum(rows.map((r) => r.originations));
   const wo = sum(rows.map((r) => r.writeOffs));
@@ -120,7 +121,7 @@ function CreditPage() {
     ...x,
     balance: +x.balance.toFixed(0),
     revenue: +x.revenue.toFixed(1),
-    nplRatio: +pct(x.npl, x.balance).toFixed(2),
+    nplRatio: round(pct(x.npl, x.balance), 2),
   }));
 
   const watch = [...rows].sort((a, b) => b.npl / b.balance - a.npl / a.balance).slice(0, 6);
@@ -128,7 +129,7 @@ function CreditPage() {
     segment === "All" ? Object.values(PRODUCTS).flat() : PRODUCTS[segment as keyof typeof PRODUCTS];
 
   const report = () => {
-    const md = `# Credit performance report (synthetic)\n\nScope: segment=${segment}, product=${product}, region=${region}, band=${band}, channel=${channel}, industry=${industry} · FY2025 · USD M\n\n| Measure | Type | Value |\n|---|---|---|\n| Outstanding balance | Balance | ${bal.toFixed(1)} |\n| Balance growth | Ratio | ${growth(bal, prior).toFixed(1)}% |\n| Originations | Flow | ${orig.toFixed(1)} |\n| Interest & fee revenue | Flow | ${rev.toFixed(1)} |\n| NPL ratio | Ratio | ${pct(npl, bal).toFixed(2)}% |\n| ECL (model output) | Accounting | ${ecl.toFixed(1)} |\n| Net write-offs | Flow | ${(wo - rec).toFixed(1)} |\n\nNot for production credit decisions.\n`;
+    const md = `# Credit performance report (synthetic)\n\nScope: segment=${segment}, product=${product}, region=${region}, band=${band}, channel=${channel}, industry=${industry} · FY2025 · USD M\n\n| Measure | Type | Value |\n|---|---|---|\n| Outstanding balance | Balance | ${bal.toFixed(1)} |\n| Balance growth | Ratio | ${fmtPct(growth(bal, prior))} |\n| Originations | Flow | ${orig.toFixed(1)} |\n| Interest & fee revenue | Flow | ${rev.toFixed(1)} |\n| NPL ratio | Ratio | ${fmtPct(pct(npl, bal), 2)} |\n| ECL (model output) | Accounting | ${ecl.toFixed(1)} |\n| Net write-offs | Flow | ${(wo - rec).toFixed(1)} |\n\nNot for production credit decisions.\n`;
     downloadFile("credit-performance-report.md", md, "text/markdown");
     toast.success("Credit performance report generated");
   };
@@ -187,7 +188,7 @@ function CreditPage() {
           <Kpi
             label="Outstanding balance"
             value={fmtM(bal, 0)}
-            delta={`${growth(bal, prior).toFixed(1)}% YoY`}
+            delta={`${fmtPct(growth(bal, prior))} YoY`}
             deltaGood
             sub="balance"
             definition="Stock of outstanding principal at period end."
@@ -352,14 +353,14 @@ function CreditPage() {
                 <div className="h-5 rounded bg-muted">
                   <div
                     className="h-5 rounded bg-primary/80"
-                    style={{ width: `${pct(f.count, FUNNEL[0]!.count)}%` }}
+                    style={{ width: `${pct(f.count, FUNNEL[0]!.count) ?? 0}%` }}
                   />
                 </div>
                 <span className="num text-right">
                   {f.count.toLocaleString()}{" "}
                   {i > 0 && (
                     <span className="text-muted-foreground">
-                      ({pct(f.count, FUNNEL[i - 1]!.count).toFixed(0)}%)
+                      ({fmtPct(pct(f.count, FUNNEL[i - 1]!.count), 0)})
                     </span>
                   )}
                 </span>
@@ -403,7 +404,7 @@ function CreditPage() {
               />
               <Kpi
                 label="Stressed NPL ratio"
-                value={fmtPct(pct(npl, bal) + sc.nplShift, 2)}
+                value={fmtPct(nplRatio === null ? null : nplRatio + sc.nplShift, 2)}
                 delta={`+${sc.nplShift}pp`}
                 definition="Observed NPL ratio + scenario shift."
               />
@@ -442,7 +443,7 @@ function CreditPage() {
                   <td className="px-3 py-2">{w.region}</td>
                   <td className="px-3 py-2">{w.riskBand}</td>
                   <td className="num px-3 py-2 text-right">{w.balance.toFixed(0)}</td>
-                  <td className="num px-3 py-2 text-right">{pct(w.npl, w.balance).toFixed(2)}</td>
+                  <td className="num px-3 py-2 text-right">{fmtFixed(pct(w.npl, w.balance), 2)}</td>
                   <td className="px-3 py-2">
                     <StatusBadge value={w.riskBand === "D" ? "High" : "Watch"} />
                   </td>

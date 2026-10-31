@@ -11,7 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { ReactNode } from "react";
-import { waterfallRows, type Bridge } from "@/lib/calc";
+import { UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
 import { StateBoundary, type DataState } from "@/components/states";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export function ChartFrame({
                     <tr key={i} className="border-b last:border-0">
                       {cols.map((c) => (
                         <td key={c.key} className="num px-2 py-1">
-                          {r[c.key] ?? "—"}
+                          {r[c.key] === null ? UNAVAILABLE : (r[c.key] ?? "—")}
                         </td>
                       ))}
                     </tr>

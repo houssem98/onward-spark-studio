@@ -3,7 +3,7 @@ import { DEPARTMENTS, SCORECARD, BRIDGES, PEERS } from "@/data/finance";
 import { MODELS } from "@/data/models";
 import { DATASETS } from "@/data/datasets";
 import { getState } from "@/store/app-store";
-import { growth, reconcileBridge, pct, round } from "@/lib/calc";
+import { diff, fmtFixed, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
 import type { EvidenceState } from "@/data/investigations";
 
 export interface CopilotAnswer {
@@ -29,7 +29,7 @@ export function answer(q: string): CopilotAnswer {
       scope: "Credit division · FY2025 · USD M · peers: Harborline, Meridian, Cascade",
       metrics: [
         { label: "Credit revenue FY2025", value: `$${credit.revenue}M` },
-        { label: "YoY growth", value: `${round(growth(credit.revenue, credit.prior))}%` },
+        { label: "YoY growth", value: fmtPct(growth(credit.revenue, credit.prior)) },
         { label: "Peer benchmark", value: `$${b.base}M` },
         {
           label: "Gap (reconciled)",
@@ -79,15 +79,15 @@ export function answer(q: string): CopilotAnswer {
       intent: "Net interest margin change",
       scope: "Bank-wide · FY2025 vs FY2024",
       metrics: [
-        { label: "NIM FY2025", value: `${n1.toFixed(2)}%` },
-        { label: "NIM FY2024", value: `${n0.toFixed(2)}%` },
+        { label: "NIM FY2025", value: fmtPct(n1, 2) },
+        { label: "NIM FY2024", value: fmtPct(n0, 2) },
         {
           label: "Avg earning assets growth",
-          value: `${round(growth(a.avgEarningAssets, b.avgEarningAssets))}%`,
+          value: fmtPct(growth(a.avgEarningAssets, b.avgEarningAssets)),
         },
       ],
       summary: [
-        `NIM moved ${(n1 - n0).toFixed(2)}pp: earning assets grew faster (${round(growth(a.avgEarningAssets, b.avgEarningAssets))}%) than NII (${round(growth(a.nii, b.nii))}%).`,
+        `NIM moved ${fmtFixed(diff(n1, n0), 2, "pp")}: earning assets grew faster (${fmtPct(growth(a.avgEarningAssets, b.avgEarningAssets))}) than NII (${fmtPct(growth(a.nii, b.nii))}).`,
         "Deposit repricing is a plausible driver but not evidenced — funding cost data not loaded.",
       ],
       state: "PARTIALLY_VERIFIED",

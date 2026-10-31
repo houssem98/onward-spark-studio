@@ -64,14 +64,14 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F11 · medium · A zero denominator shows 0 instead of unavailable
-- Evidence: `src/lib/calc.ts#export const pct = (num: number, den: number) => (den === 0 ? 0 : (num / den) * 100);`. Reachable today (L0 T7): credit filters that match no slice show an NPL ratio of 0.00% with no empty state (`src/routes/credit.tsx#fmtPct(pct(npl, bal), 2)`).
+- Evidence: `pct` returned 0 for a zero denominator, so an empty credit selection showed an NPL ratio of 0.00% (L0 T7; L1 T10 put that page behind an empty state). L2 T1 made `pct`, `growth` and `costToIncome` return null (`src/lib/calc.ts#export const pct = (num: number, den: number) => (den === 0 ? null : (num / den) * 100);`), every caller formats null as `src/lib/calc.ts#export const UNAVAILABLE = "Unavailable";`, and a KPI leaves an unavailable delta uncoloured; checked by `src/test/calc.test.ts#zero denominators are unavailable, never 0 or NaN` and `src/test/unavailable.test.tsx#shows as Unavailable in a KPI, with an uncoloured delta`.
 - Fix: L2 T1
-- Status: open
+- Status: fixed in L2 T1
 
 ### F12 · low · Classification metrics divide by zero
-- Evidence: `src/lib/calc.ts#const precision = tp / (tp + fp);`. Lowered from medium in L0 T7: no fixture has a zero confusion cell (maker probe: `CONF0 none`), so it cannot trigger until real data arrives.
+- Evidence: precision, recall, F1 and accuracy divided by raw denominators, giving NaN on a zero cell. Lowered from medium in L0 T7: no fixture has a zero confusion cell (maker probe: `CONF0 none`). L2 T1 returns null only where a denominator is zero and computes F1 over the counts, so a model with no true positives scores 0 rather than 0/0 (`src/lib/calc.ts#f1: ratio(2 * tp, 2 * tp + fp + fn),`); the model page prints null as Unavailable.
 - Fix: L2 T1
-- Status: open
+- Status: fixed in L2 T1
 
 ### F13 · medium · CSV export does not neutralize formulas
 - Evidence: the escaper quotes commas, quotes and newlines only (`src/lib/calc.ts#const esc = (v: unknown) => {`), so a cell starting with `=`, `+`, `-` or `@` runs as a formula in a spreadsheet.
@@ -139,7 +139,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F26 · high · A VERIFIED drift claim contradicts the app's own calculation
-- Evidence: the fixture claims `src/data/investigations.ts#debt_service_coverage PSI exceeds 0.10 vs approved reference period.` and marks it VERIFIED, but the app's own `psi` over the same bins gives 0.0900, and every feature stays under 0.10 (maker probe: `debt_service_coverage=0.0900 sector_code=0.0471 years_in_business=0.0013 revenue_band=0.0010 utilization_rate=0.0731`), so the drift tab shows every band "Stable" beside a High alert seeded as "PSI threshold exceeded". The finance fixture cites a test file that does not exist: `src/data/finance.ts#see calc.test.ts`.
+- Evidence: the fixture claims `src/data/investigations.ts#debt_service_coverage PSI exceeds 0.10 vs approved reference period.` and marks it VERIFIED, but the app's own `psi` over the same bins gives 0.0900, and every feature stays under 0.10 (maker probe: `debt_service_coverage=0.0900 sector_code=0.0471 years_in_business=0.0013 revenue_band=0.0010 utilization_rate=0.0731`), so the drift tab shows every band "Stable" beside a High alert seeded as "PSI threshold exceeded". The finance fixture cited a test file that did not exist (`src/data/finance.ts#see calc.test.ts`); L2 T1 added it, and it checks that every demo bridge reconciles (`src/test/calc.test.ts#reconciles every demo bridge`).
 - Fix: L4 T2, L4 T3
 - Status: open
 
