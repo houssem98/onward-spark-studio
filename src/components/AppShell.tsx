@@ -29,7 +29,8 @@ import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 import { CommandPalette } from "@/components/CommandPalette";
-import { crimeQuery, datasetsQuery, financeQuery, modelsQuery } from "@/repo/queries";
+import { crimeQuery, datasetsQuery, financeQuery, modelsQuery, repo } from "@/repo/queries";
+import type { Repository } from "@/repo/types";
 
 export const NAV_GROUPS = [
   {
@@ -55,6 +56,27 @@ export const NAV_GROUPS = [
     items: [{ to: "/audit", label: "Audit Trail", icon: Activity }],
   },
 ] as const;
+
+export function EnvironmentBanner({ environment }: { environment: Repository["environment"] }) {
+  return (
+    <div
+      role="note"
+      aria-label="Environment"
+      className="flex items-center gap-2 border-b bg-warning/10 px-4 py-1 text-caption text-warning"
+    >
+      {environment === "demo" ? (
+        <>
+          <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+          <span>
+            <b>Demo · synthetic data</b> — every figure belongs to the fictional Northstar Bank.
+          </span>
+        </>
+      ) : (
+        <b>Production</b>
+      )}
+    </div>
+  );
+}
 
 function NavList({
   path,
@@ -190,16 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-20">
-          <div
-            role="note"
-            aria-label="Environment"
-            className="flex items-center gap-2 border-b bg-warning/10 px-4 py-1 text-caption text-warning"
-          >
-            <FlaskConical className="h-3.5 w-3.5 shrink-0" />
-            <span>
-              <b>Demo · synthetic data</b> — every figure belongs to the fictional Northstar Bank.
-            </span>
-          </div>
+          <EnvironmentBanner environment={repo.environment} />
           <header className="no-print flex h-14 items-center gap-3 border-b bg-card px-3 md:px-4">
             <button
               className="rounded-md p-1.5 hover:bg-muted md:hidden"

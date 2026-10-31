@@ -118,6 +118,7 @@ export interface InvestigationsData {
 }
 
 export interface Repository {
+  environment: "demo" | "production";
   session: { read(): Promise<{ user: User }> };
   finance: { read(): Promise<FinanceData> };
   credit: { read(): Promise<CreditData> };

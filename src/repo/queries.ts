@@ -1,8 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { demoRepo } from "./demo";
+import { productionRepo } from "./production";
+import type { Repository } from "./types";
 
-export const repo = demoRepo;
+export const repo: Repository =
+  import.meta.env["VITE_DATA_SOURCE"] === "production" ? productionRepo : demoRepo;
 
 export const financeQuery = queryOptions({
   queryKey: ["finance"],

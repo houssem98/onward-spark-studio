@@ -156,22 +156,28 @@ async function set(
   }
 }
 
+// Every record the demo serves says it is synthetic.
+const tag = <T extends object>(records: readonly T[]) =>
+  records.map((r) => ({ ...r, synthetic: true as const }));
+const tagOne = <T extends object>(record: T) => ({ ...record, synthetic: true as const });
+
 const describePatch = (patch: object) =>
   Object.entries(patch)
     .map(([k, v]) => `${k}: ${v}`)
     .join("; ");
 
 export const demoRepo: Repository = {
-  session: { read: async () => ({ user: USER }) },
+  environment: "demo",
+  session: { read: async () => ({ user: tagOne(USER) }) },
   finance: {
     read: async () => ({
-      bank: finance.BANK,
-      departments: finance.DEPARTMENTS,
-      quarterlyRevenue: finance.quarterlyRevenue(),
-      scorecard: finance.SCORECARD,
-      peers: finance.PEERS,
-      peerHistory: finance.PEER_HISTORY,
-      bridges: finance.BRIDGES,
+      bank: tagOne(finance.BANK),
+      departments: tag(finance.DEPARTMENTS),
+      quarterlyRevenue: tag(finance.quarterlyRevenue()),
+      scorecard: tagOne(finance.SCORECARD),
+      peers: tag(finance.PEERS),
+      peerHistory: tag(finance.PEER_HISTORY),
+      bridges: tag(finance.BRIDGES),
       peerBenchmarkNote: finance.PEER_BENCHMARK_NOTE,
     }),
   },
@@ -183,18 +189,18 @@ export const demoRepo: Repository = {
       channels: credit.CHANNELS,
       products: credit.PRODUCTS,
       industries: credit.INDUSTRIES,
-      slices: credit.SLICES,
-      funnel: credit.FUNNEL,
-      rejectionReasons: credit.REJECTION_REASONS,
-      stress: credit.STRESS,
-      trend: credit.CREDIT_TREND,
+      slices: tag(credit.SLICES),
+      funnel: tag(credit.FUNNEL),
+      rejectionReasons: tag(credit.REJECTION_REASONS),
+      stress: tag(credit.STRESS),
+      trend: tag(credit.CREDIT_TREND),
     }),
   },
   crime: {
     read: async () => ({
-      alerts: state.alerts,
-      cases: state.cases,
-      trend: crime.CRIME_TREND,
+      alerts: tag(state.alerts),
+      cases: tag(state.cases),
+      trend: tag(crime.CRIME_TREND),
       investigators: crime.INVESTIGATORS_LIST,
     }),
     updateAlert: (id, patch) =>
@@ -243,14 +249,14 @@ export const demoRepo: Repository = {
   },
   datasets: {
     read: async () => ({
-      datasets: datasets.DATASETS,
+      datasets: tag(datasets.DATASETS),
       certification: state.certification,
-      lineage: { nodes: datasets.LINEAGE_NODES, edges: datasets.LINEAGE_EDGES },
-      issues: state.issues,
-      dimensions: datasets.DQ_DIMENSIONS,
-      trend: datasets.DQ_TREND,
-      glossary: datasets.GLOSSARY,
-      accessRequests: state.accessRequests,
+      lineage: { nodes: tag(datasets.LINEAGE_NODES), edges: datasets.LINEAGE_EDGES },
+      issues: tag(state.issues),
+      dimensions: tag(datasets.DQ_DIMENSIONS),
+      trend: tag(datasets.DQ_TREND),
+      glossary: tag(datasets.GLOSSARY),
+      accessRequests: tag(state.accessRequests),
     }),
     setCertification: (id, c) =>
       set((s) => ({ certification: { ...s.certification, [id]: c } }), {
@@ -293,17 +299,19 @@ export const demoRepo: Repository = {
   },
   models: {
     read: async () => ({
-      models: models.MODELS,
+      models: tag(models.MODELS),
       lifecycle: state.modelLifecycle,
       selectedVersion: state.modelVersion,
-      decisions: state.modelDecisions,
+      decisions: tag(state.modelDecisions),
       findingStatus: state.findingStatus,
-      driftAlerts: state.driftAlerts,
-      driftFeatures: models.DRIFT_FEATURES,
-      perfHistory: models.PERF_HISTORY,
-      forecast: models.FORECAST_SERIES,
-      lgdScatter: models.LGD_SCATTER,
-      featureImportance: models.FEATURE_IMPORTANCE,
+      driftAlerts: tag(state.driftAlerts),
+      driftFeatures: tag(models.DRIFT_FEATURES),
+      perfHistory: tag(models.PERF_HISTORY),
+      forecast: tag(models.FORECAST_SERIES),
+      lgdScatter: tag(models.LGD_SCATTER),
+      featureImportance: Object.fromEntries(
+        Object.entries(models.FEATURE_IMPORTANCE).map(([id, rows]) => [id, tag(rows)]),
+      ),
     }),
     selectVersion: (model, version) =>
       set((s) => ({ modelVersion: { ...s.modelVersion, [model]: version } })),
@@ -343,10 +351,10 @@ export const demoRepo: Repository = {
   },
   investigations: {
     read: async () => ({
-      investigations: state.investigations,
-      actions: state.actions,
-      reports: investigations.REPORTS,
-      nextSteps: investigations.NEXT_STEPS,
+      investigations: tag(state.investigations),
+      actions: tag(state.actions),
+      reports: tag(investigations.REPORTS),
+      nextSteps: tag(investigations.NEXT_STEPS),
     }),
     create: (inv) =>
       set((s) => ({ investigations: [inv, ...s.investigations] }), {
@@ -378,7 +386,7 @@ export const demoRepo: Repository = {
       }),
   },
   audit: {
-    read: async () => state.audit,
+    read: async () => tag(state.audit),
     log: (module, entity, action, detail) => set(() => ({}), { module, entity, action, detail }),
   },
 };

@@ -21,7 +21,7 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
 - [x] T2 Repository contract. needs: T0. `src/repo/types.ts` (new) declares typed read and write interfaces per domain (finance, credit, crime, datasets, models, investigations, audit); `src/repo/demo.ts` (new) implements them and is the only module outside src/data that imports `@/data/`. Evidence: a test that fails when any other file imports `@/data/`, quoted failing with its count.
 - [x] T3 Migrate overview, performance, investigations. needs: T2. Those routes and the copilot read through the repository with TanStack Query. Evidence: the T2 test's exemption list shrinks by those files; route tests still pass.
 - [x] T4 Migrate the rest. needs: T3. Credit, crime, data, models, audit and the store read and write through the repository. Evidence: the T2 test passes with an empty exemption list.
-- [ ] T5 Environment. needs: T2. The repository reports `environment: "demo" | "production"`; every demo record carries `synthetic: true`; the production adapter throws "not configured" rather than returning anything; the L1 banner reads the environment from here. Evidence: tests: all demo records are synthetic; the production adapter returns no data.
+- [x] T5 Environment. needs: T2. The repository reports `environment: "demo" | "production"`; every demo record carries `synthetic: true`; the production adapter throws "not configured" rather than returning anything; the L1 banner reads the environment from here. Evidence: tests: all demo records are synthetic; the production adapter returns no data.
 - [ ] T6 Definitions registry. needs: T2. One registry holds each metric's definition, unit, currency, period basis, formula and source; KPI tiles and the copilot take a definition id, not inline unit strings. Evidence: a test fails when a rendered KPI has no registry id.
 - [ ] T7 Safe exports. needs: T5. Every export (CSV, HTML, Markdown, print) carries an environment and synthetic line; CSV cells starting with `=`, `+`, `-`, `@`, tab or CR are neutralized. Evidence: tests for each format and each leading character.
 - [ ] T8 Independent check. needs: T1, T4, T6, T7. A different model, in at least 3 independent runs, applies the numbers, synthetic and exports attacks. Evidence: findings quoted in the Journal; `npm run gate` exits 0.
@@ -90,3 +90,17 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
   - **Housekeeping:** stopping the T3 dev server's shell had left its Vite process holding the port; it was found and stopped.
   - **Direction:** goal unchanged; demo data now has one door, which T5's environment switch can close for production.
   - **Next:** L2 T5 environment (T6 also open).
+- 2026-10-31 · L2/T5 · started T5
+- 2026-10-31 · L2/T5 · passed · gate green (`GATE EXIT 0`, `Test Files  26 passed (26)`, `Tests  124 passed (124)`, `gate-guard: clean · HEAD..working tree`) · commit see `git log --grep "loop(L2/T5)"` · tick 6 of 15.
+  - **Failing checks first.** `src/test/environment.test.tsx` first failed to load (`Failed to resolve import "@/repo/production"`). With the adapter, the switch and the banner in place but no tagging, it failed with `expected [ 'finance.departments', …(32) ] to deeply equal []`: 33 collections across the seven domains served records without the flag.
+  - **Changes.**
+    - The contract reports `environment` (`src/repo/types.ts#environment: "demo" | "production";`).
+    - The demo adapter tags every record of every collection it serves, plus the bank, the scorecard and the user, with `synthetic: true` (`src/repo/demo.ts#records.map((r) => ({ ...r, synthetic: true as const }));`). Lists of plain values (segment names, investigators, lineage edges) and maps keyed by id stay as they are.
+    - `src/repo/production.ts` implements every read and write as a rejection, `Production data source not configured`, so a production build serves nothing rather than demo data.
+    - `VITE_DATA_SOURCE=production` selects that adapter (`src/repo/queries.ts#import.meta.env["VITE_DATA_SOURCE"] === "production" ? productionRepo : demoRepo;`); demo is the default.
+    - The environment banner renders from the repository's environment: the demo text as before, `Production` otherwise.
+    - The LGD frame got explicit table columns: it was the one frame that took its columns from the row keys, and would have shown the new flag as a column.
+  - **Tests:** every demo record is synthetic; every production method rejects as not configured; the environment variable switches the adapter and the default is demo; the banner text follows the environment. Probes: the credit slices served untagged gave `expected [ 'credit.slices' ] to deeply equal []`, and a production read returning a user gave `expected [ 'session.read' ] to deeply equal []`; both restored byte-identical.
+  - **Side effect:** table CSV exports write raw rows, so each row now carries `synthetic: true`. F14 stays open for T7, which adds an environment and synthetic line to every export format.
+  - **Direction:** goal unchanged; a demo record now says it is synthetic, and production cannot fall back to demo data.
+  - **Next:** L2 T6 definitions registry (T7 now also open).

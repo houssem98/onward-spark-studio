@@ -308,6 +308,10 @@ function ModelDetail() {
               period="Validation sample"
               source="Synthetic validation sample (demo data)"
               rows={lgdScatter}
+              columns={[
+                { key: "actual", header: "actual" },
+                { key: "predicted", header: "predicted" },
+              ]}
             >
               <ResponsiveContainer width="100%" height={260}>
                 <ScatterChart>
