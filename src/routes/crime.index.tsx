@@ -20,6 +20,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -167,7 +168,7 @@ function CrimePage() {
               <XAxis dataKey="week" {...axisProps} />
               <YAxis {...axisProps} width={35} />
               <Tooltip {...tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
               <Bar dataKey="fraud" stackId="a" fill={CHART.c1} />
               <Bar dataKey="aml" stackId="a" fill={CHART.c2} />
             </BarChart>

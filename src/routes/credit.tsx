@@ -38,6 +38,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
@@ -298,7 +299,7 @@ function CreditPage() {
               <YAxis yAxisId="l" {...axisProps} width={50} />
               <YAxis yAxisId="r" orientation="right" {...axisProps} width={35} />
               <Tooltip {...tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
               <Bar yAxisId="l" dataKey="balance" name="Balance" fill={CHART.c1} />
               <Bar yAxisId="r" dataKey="nplRatio" name="NPL %" fill={CHART.c4} />
             </BarChart>

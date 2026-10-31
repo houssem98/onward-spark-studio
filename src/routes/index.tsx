@@ -27,6 +27,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Input } from "@/components/ui/input";
@@ -196,7 +197,7 @@ function Overview() {
               <XAxis dataKey="quarter" {...axisProps} />
               <YAxis {...axisProps} width={40} />
               <Tooltip {...tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
               <Area
                 dataKey="total"
                 name="Operating income"
@@ -275,7 +276,7 @@ function Overview() {
               />
               <YAxis {...axisProps} width={40} />
               <Tooltip {...tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
               <Bar dataKey="revenue" name="Actual" fill={CHART.c1} radius={[2, 2, 0, 0]} />
               <Bar
                 dataKey="target"

@@ -383,14 +383,17 @@ export const CHART = {
   critical: "var(--critical)",
 };
 
+// The type scale in px, for chart text sized by props; a test keeps it equal to the CSS tokens.
+export const TYPE = { micro: 10, caption: 11, xs: 12, ui: 13 } as const;
+
 export const axisProps = {
-  tick: { fontSize: 11, fill: "var(--muted-foreground)" },
+  tick: { fontSize: TYPE.caption, fill: "var(--muted-foreground)" },
   axisLine: false,
   tickLine: false,
 } as const;
 export const tooltipStyle = {
   contentStyle: {
-    fontSize: 12,
+    fontSize: TYPE.xs,
     borderRadius: 6,
     border: "1px solid var(--border)",
     background: "var(--card)",

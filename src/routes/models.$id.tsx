@@ -34,6 +34,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -289,7 +290,7 @@ function ModelDetail() {
                   <XAxis dataKey="q" {...axisProps} />
                   <YAxis {...axisProps} domain={["auto", "auto"]} width={45} />
                   <Tooltip {...tooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
                   <Line dataKey="actual" stroke={CHART.c3} strokeWidth={2} />
                   <Line
                     dataKey="predicted"
@@ -429,7 +430,7 @@ function ModelDetail() {
                       <XAxis dataKey="bin" {...axisProps} />
                       <YAxis {...axisProps} width={35} />
                       <Tooltip {...tooltipStyle} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
                       <Bar dataKey="reference" fill={CHART.c3} />
                       <Bar dataKey="current" fill={CHART.c1} />
                     </BarChart>

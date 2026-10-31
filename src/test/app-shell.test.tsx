@@ -8,13 +8,22 @@ import {
   rootRouteId,
   RouterProvider,
 } from "@tanstack/react-router";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AppShell, NAV_GROUPS } from "@/components/AppShell";
 import { routeTree } from "@/routeTree.gen";
+import { open, setUp } from "./a11y";
+
+setUp();
 
 const paths = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.to));
+const SAMPLE_PATHS: Record<string, string> = {
+  "/crime/$id": "/crime/CASE-0917",
+  "/models/$id": "/models/MDL-002",
+  "/investigations/$id": "/investigations/INV-2025-014",
+  "/reports/$id": "/reports/RPT-FY25-PERF",
+};
 
 async function renderShellAt(path: string) {
   const root = createRootRoute({
@@ -50,17 +59,27 @@ describe("app shell", () => {
     expect(dead).toEqual([]);
   });
 
-  it("shows the synthetic-data banner on every route, also with the sidebar collapsed", async () => {
-    for (const p of paths) {
-      await renderShellAt(p);
-      expect(screen.getByRole("note", { name: "Environment" })).toHaveTextContent(
-        "Demo · synthetic data",
-      );
+  it("shows the synthetic-data banner on every real route and the 404, also with the sidebar collapsed and in print", async () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const routes = Object.keys(router.routesByPath).map((p) => SAMPLE_PATHS[p] ?? p);
+    expect(
+      routes.filter((p) => p.includes("$")),
+      "routes without a sample path",
+    ).toEqual([]);
+    // jsdom applies no stylesheet, so toBeVisible misses a class that hides the banner.
+    const hider =
+      'aside, [hidden], [aria-hidden="true"], .hidden, .invisible, .sr-only, .no-print, [class*=":hidden"], [class*=":invisible"], [class*=":sr-only"]';
+    for (const p of [...routes, "/no-such-page"]) {
+      await open(p);
+      const banner = () => screen.queryByRole("note", { name: "Environment" });
+      expect(banner(), p).not.toBeNull();
+      expect(banner(), p).toHaveTextContent("Demo · synthetic data");
       fireEvent.click(screen.getByRole("button", { name: "Toggle sidebar" }));
-      expect(screen.getByRole("note", { name: "Environment" })).toBeVisible();
-      document.body.innerHTML = "";
+      expect(banner(), p).toBeVisible();
+      expect(banner()?.closest(hider), p).toBeNull();
+      cleanup();
     }
-  });
+  }, 60_000);
 
   it("has no form controls that change nothing in the header", async () => {
     await renderShellAt("/");

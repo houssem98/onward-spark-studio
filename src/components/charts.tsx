@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import type { ReactNode } from "react";
 import { waterfallRows, type Bridge } from "@/lib/calc";
-import { axisProps, CHART, tooltipStyle } from "@/components/kit";
+import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
 import { StateBoundary, type DataState } from "@/components/states";
 import { cn } from "@/lib/utils";
 
@@ -117,7 +117,7 @@ export function Waterfall({ bridge, height = 280 }: { bridge: Bridge; height?: n
         <Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="value" stackId="a" isAnimationActive={false}>
           {/* Label the signed step; the stacked bar's own value is the stack top. */}
-          <LabelList dataKey="signed" position="top" fontSize={11} fill={CHART.text} />
+          <LabelList dataKey="signed" position="top" fontSize={TYPE.caption} fill={CHART.text} />
           {rows.map((r, i) => (
             <Cell key={i} fill={color(r.type)} />
           ))}

@@ -33,6 +33,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame, Waterfall } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -291,7 +292,7 @@ function PerformancePage() {
                 />
                 <YAxis {...axisProps} width={40} />
                 <Tooltip {...tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
                 <Bar dataKey="prior" name="FY2024" fill={CHART.c3} fillOpacity={0.4} />
                 <Bar dataKey="revenue" name="FY2025" fill={CHART.c1} />
                 <Bar dataKey="target" name="Target" fill={CHART.c2} />
@@ -425,7 +426,7 @@ function PerformancePage() {
                   <XAxis dataKey="year" {...axisProps} />
                   <YAxis {...axisProps} domain={["auto", "auto"]} width={40} />
                   <Tooltip {...tooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
                   <Line dataKey="northstar" stroke={CHART.c1} strokeWidth={2.5} />
                   <Line dataKey="harborline" stroke={CHART.c2} />
                   <Line dataKey="meridian" stroke={CHART.c4} />

@@ -31,6 +31,7 @@ import {
   Panel,
   StatusBadge,
   tooltipStyle,
+  TYPE,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -246,7 +247,7 @@ function DataPage() {
                     <text
                       x={10}
                       y={18}
-                      fontSize={10}
+                      fontSize={TYPE.micro}
                       fill={sel ? "var(--cyan)" : "var(--muted-foreground)"}
                       style={{ textTransform: "uppercase", letterSpacing: 1 }}
                     >
@@ -255,7 +256,7 @@ function DataPage() {
                     <text
                       x={10}
                       y={34}
-                      fontSize={12}
+                      fontSize={TYPE.xs}
                       fontWeight={600}
                       fill={sel ? "var(--ink-foreground)" : "var(--foreground)"}
                     >
