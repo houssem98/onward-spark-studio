@@ -5,9 +5,52 @@ import type * as finance from "@/data/finance";
 import type * as investigations from "@/data/investigations";
 import type * as models from "@/data/models";
 import type { Bridge } from "@/lib/calc";
-import type { AccessRequest, AuditEvent, DriftAlert, getState } from "@/store/app-store";
 
-type Store = ReturnType<typeof getState>;
+export interface User {
+  name: string;
+  role: string;
+}
+
+export interface AuditEvent {
+  id: string;
+  at: string;
+  actor: string;
+  module: string;
+  entity: string;
+  action: string;
+  detail: string;
+}
+
+export interface DriftAlert {
+  id: string;
+  model: string;
+  severity: "Critical" | "High" | "Medium" | "Low";
+  title: string;
+  status: "Open" | "Under assessment" | "Closed";
+  owner: string;
+  assessment: string;
+  disposition: string;
+  raised: string;
+}
+
+export interface AccessRequest {
+  id: string;
+  dataset: string;
+  requester: string;
+  purpose: string;
+  status: "Pending" | "Approved" | "Rejected";
+  at: string;
+}
+
+export interface ModelDecision {
+  model: string;
+  decision: "Approved" | "Rejected";
+  by: string;
+  at: string;
+  comment: string;
+}
+
+export type FindingStatus = "Open" | "Remediating" | "Closed";
 
 // A read resolves to a snapshot of one domain; a write resolves once the change is stored.
 export interface FinanceData {
@@ -44,7 +87,7 @@ export interface CrimeData {
 
 export interface DatasetsData {
   datasets: datasets.Dataset[];
-  certification: Store["certification"];
+  certification: Record<string, datasets.Certification>;
   lineage: { nodes: datasets.LineageNode[]; edges: [string, string][] };
   issues: datasets.QualityIssue[];
   dimensions: typeof datasets.DQ_DIMENSIONS;
@@ -55,10 +98,10 @@ export interface DatasetsData {
 
 export interface ModelsData {
   models: models.Model[];
-  lifecycle: Store["modelLifecycle"];
-  selectedVersion: Store["modelVersion"];
-  decisions: Store["modelDecisions"];
-  findingStatus: Store["findingStatus"];
+  lifecycle: Record<string, models.Lifecycle>;
+  selectedVersion: Record<string, string>;
+  decisions: ModelDecision[];
+  findingStatus: Record<string, FindingStatus>;
   driftAlerts: DriftAlert[];
   driftFeatures: typeof models.DRIFT_FEATURES;
   perfHistory: typeof models.PERF_HISTORY;
@@ -75,6 +118,7 @@ export interface InvestigationsData {
 }
 
 export interface Repository {
+  session: { read(): Promise<{ user: User }> };
   finance: { read(): Promise<FinanceData> };
   credit: { read(): Promise<CreditData> };
   crime: {
@@ -94,7 +138,7 @@ export interface Repository {
     read(): Promise<ModelsData>;
     selectVersion(model: string, version: string): Promise<void>;
     decide(model: string, decision: "Approved" | "Rejected", comment: string): Promise<void>;
-    setFindingStatus(id: string, status: Store["findingStatus"][string]): Promise<void>;
+    setFindingStatus(id: string, status: FindingStatus): Promise<void>;
     updateDrift(id: string, patch: Partial<DriftAlert>): Promise<void>;
   };
   investigations: {

@@ -12,6 +12,10 @@ export const creditQuery = queryOptions({
   queryKey: ["credit"],
   queryFn: () => repo.credit.read(),
 });
+export const crimeQuery = queryOptions({
+  queryKey: ["crime"],
+  queryFn: () => repo.crime.read(),
+});
 export const datasetsQuery = queryOptions({
   queryKey: ["datasets"],
   queryFn: () => repo.datasets.read(),

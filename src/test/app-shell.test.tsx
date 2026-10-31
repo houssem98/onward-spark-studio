@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 
 import { AppShell, NAV_GROUPS } from "@/components/AppShell";
 import { routeTree } from "@/routeTree.gen";
+import { storeQuery } from "@/store/app-store";
 import { open, setUp } from "./a11y";
 
 setUp();
@@ -27,6 +28,7 @@ const SAMPLE_PATHS: Record<string, string> = {
 
 async function renderShellAt(path: string) {
   const queryClient = new QueryClient();
+  await queryClient.ensureQueryData(storeQuery);
   const root = createRootRoute({
     component: () => (
       <QueryClientProvider client={queryClient}>

@@ -43,7 +43,7 @@ import {
   sum,
   type Bridge,
 } from "@/lib/calc";
-import { actions, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 import { financeQuery } from "@/repo/queries";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +109,7 @@ const STEPS = [
 
 function PerformancePage() {
   const navigate = useNavigate();
+  const actions = useActions();
   const invs = useStore((s) => s.investigations);
   const template = invs.find((i) => i.id === "INV-2025-014")!;
   const { bank, bridges, departments, peerBenchmarkNote, peerHistory, peers, scorecard } =

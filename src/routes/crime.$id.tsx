@@ -2,7 +2,9 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import { CASES, INVESTIGATORS_LIST, type AlertStatus } from "@/data/crime";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type { AlertStatus } from "@/data/crime";
+import { crimeQuery } from "@/repo/queries";
 import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,13 +18,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { actions, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 import { downloadFile } from "@/lib/calc";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crime/$id")({
-  loader: ({ params }) => {
-    if (!CASES.some((c) => c.id === params.id)) throw notFound();
+  loader: async ({ params, context: { queryClient } }) => {
+    const { cases } = await queryClient.ensureQueryData(crimeQuery);
+    if (!cases.some((c) => c.id === params.id)) throw notFound();
     return { id: params.id };
   },
   head: ({ params }) => ({
@@ -46,6 +49,8 @@ const FLOW: AlertStatus[] = ["New", "Triage", "Investigation", "Review"];
 
 function CasePage() {
   const { id } = Route.useParams();
+  const actions = useActions();
+  const { investigators } = useSuspenseQuery(crimeQuery).data;
   const c = useStore((s) => s.cases.find((x) => x.id === id))!;
   const audit = useStore((s) => s.audit.filter((a) => a.entity === id));
   const [note, setNote] = useState("");
@@ -125,7 +130,7 @@ function CasePage() {
               actions.updateCase(id, { assignee: e.target.value }, `Assigned to ${e.target.value}`)
             }
           >
-            {INVESTIGATORS_LIST.map((i) => (
+            {investigators.map((i) => (
               <option key={i}>{i}</option>
             ))}
           </select>

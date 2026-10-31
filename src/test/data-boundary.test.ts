@@ -10,17 +10,7 @@ const walk = (dir: string): string[] =>
   });
 
 const ADAPTER = "src/repo/demo.ts";
-// Still reading fixtures directly; L2 T3 and T4 move each one behind the repository.
-const NOT_YET_MIGRATED = [
-  "src/components/CommandPalette.tsx",
-  "src/routes/credit.tsx",
-  "src/routes/crime.$id.tsx",
-  "src/routes/crime.index.tsx",
-  "src/routes/data.tsx",
-  "src/routes/models.$id.tsx",
-  "src/routes/models.index.tsx",
-  "src/store/app-store.ts",
-];
+const NOT_YET_MIGRATED: string[] = [];
 
 // A type-only import carries no data, so only value imports, re-exports and dynamic imports count.
 const READS_FIXTURES = [

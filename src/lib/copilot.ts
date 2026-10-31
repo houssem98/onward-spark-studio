@@ -1,8 +1,7 @@
 // Predefined analytical routing — no live LLM is connected. Answers are composed from deterministic demo data.
-import { getState } from "@/store/app-store";
 import { diff, fmtFixed, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
 import type { EvidenceState } from "@/data/investigations";
-import type { DatasetsData, FinanceData, ModelsData } from "@/repo/types";
+import type { CrimeData, DatasetsData, FinanceData, ModelsData } from "@/repo/types";
 
 export interface CopilotAnswer {
   intent: string;
@@ -16,13 +15,17 @@ export interface CopilotAnswer {
 
 export function answer(
   q: string,
-  data: { finance: FinanceData; models: ModelsData; datasets: DatasetsData },
+  data: { finance: FinanceData; models: ModelsData; datasets: DatasetsData; crime: CrimeData },
 ): CopilotAnswer {
   const { departments, scorecard, bridges } = data.finance;
   const { models } = data.models;
   const { datasets } = data.datasets;
   const t = q.toLowerCase();
-  const s = getState();
+  const s = {
+    certification: data.datasets.certification,
+    issues: data.datasets.issues,
+    cases: data.crime.cases,
+  };
 
   if (/(credit).*(peer|competitor)|competitor|peer/.test(t)) {
     const b = bridges.find((x) => x.id === "peer")!;

@@ -25,10 +25,15 @@ import {
 import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { CRIME_TREND, INVESTIGATORS_LIST, type CrimeAlert } from "@/data/crime";
-import { actions, useStore } from "@/store/app-store";
+import type { CrimeAlert } from "@/data/crime";
+import { crimeQuery } from "@/repo/queries";
+import { useActions, useStore } from "@/store/app-store";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/crime/")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(crimeQuery);
+  },
   head: () => ({
     meta: [
       { title: "Financial Crime Center — BankIntelli" },
@@ -48,6 +53,8 @@ export const Route = createFileRoute("/crime/")({
 
 function CrimePage() {
   const navigate = useNavigate();
+  const actions = useActions();
+  const { trend, investigators } = useSuspenseQuery(crimeQuery).data;
   const alerts = useStore((s) => s.alerts);
   const cases = useStore((s) => s.cases);
   const [type, setType] = useState("All");
@@ -67,7 +74,7 @@ function CrimePage() {
     [alerts, type, status, cat],
   );
   const open = alerts.filter((x) => x.status !== "Closed");
-  const workload = INVESTIGATORS_LIST.map((i) => ({
+  const workload = investigators.map((i) => ({
     name: i,
     open: open.filter((x) => x.investigator === i).length,
   }));
@@ -154,7 +161,7 @@ function CrimePage() {
           unit="Alerts per week"
           period="W49 2025 to W02 2026"
           source="Synthetic weekly alert counts (demo data; not derived from the alert queue below)"
-          rows={CRIME_TREND}
+          rows={trend}
           columns={[
             { key: "week", header: "Week" },
             { key: "fraud", header: "Fraud alerts" },
@@ -163,7 +170,7 @@ function CrimePage() {
           className="xl:col-span-2"
         >
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={CRIME_TREND}>
+            <BarChart data={trend}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
               <XAxis dataKey="week" {...axisProps} />
               <YAxis {...axisProps} width={35} />
@@ -272,7 +279,7 @@ function CrimePage() {
                   }
                 >
                   <option>Unassigned</option>
-                  {INVESTIGATORS_LIST.map((i) => (
+                  {investigators.map((i) => (
                     <option key={i}>{i}</option>
                   ))}
                 </select>

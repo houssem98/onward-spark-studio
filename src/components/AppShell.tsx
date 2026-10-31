@@ -29,7 +29,7 @@ import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 import { CommandPalette } from "@/components/CommandPalette";
-import { datasetsQuery, financeQuery, modelsQuery } from "@/repo/queries";
+import { crimeQuery, datasetsQuery, financeQuery, modelsQuery } from "@/repo/queries";
 
 export const NAV_GROUPS = [
   {
@@ -127,12 +127,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!text.trim()) return;
     setQ("");
     setOpen(true);
-    const [finance, models, datasets] = await Promise.all([
-      queryClient.ensureQueryData(financeQuery),
-      queryClient.ensureQueryData(modelsQuery),
-      queryClient.ensureQueryData(datasetsQuery),
+    // fetchQuery refetches what a write has made stale; ensureQueryData would not.
+    const [finance, models, datasets, crime] = await Promise.all([
+      queryClient.fetchQuery(financeQuery),
+      queryClient.fetchQuery(modelsQuery),
+      queryClient.fetchQuery(datasetsQuery),
+      queryClient.fetchQuery(crimeQuery),
     ]);
-    setHistory((h) => [{ q: text, a: answer(text, { finance, models, datasets }) }, ...h]);
+    setHistory((h) => [{ q: text, a: answer(text, { finance, models, datasets, crime }) }, ...h]);
   };
   copilotBus.ask = ask;
 

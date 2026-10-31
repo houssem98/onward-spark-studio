@@ -5,7 +5,7 @@ import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { EvidenceBadge, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import type { Action, Investigation } from "@/data/investigations";
 import { investigationsQuery } from "@/repo/queries";
-import { actions, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 
 export const Route = createFileRoute("/investigations/")({
   loader: async ({ context: { queryClient } }) => {
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/investigations/")({
 
 function InvPage() {
   const navigate = useNavigate();
+  const actions = useActions();
   const invs = useStore((s) => s.investigations);
   const acts = useStore((s) => s.actions);
   const { reports } = useSuspenseQuery(investigationsQuery).data;

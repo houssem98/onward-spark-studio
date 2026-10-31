@@ -25,12 +25,12 @@ A front-end proof of concept for the fictional Northstar Bank, built in Lovable.
 |---|---|---|
 | Build, typecheck, lint, tests | not verified: never run here, no `node_modules` | `src/test/app-routing.test.tsx` is the only test |
 | Routes | 11 route files; `/reports/$id` linked 5 times and absent | `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"` |
-| Data | fixtures imported straight into pages | `src/routes/credit.tsx#from "@/data/credit";` |
-| Persistence | browser memory, lost on reload | `src/store/app-store.ts#let state: State = {` |
-| Identity | one hard-coded Chief Risk Officer | `src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },` |
+| Data | fixtures imported straight into pages (behind a demo repository since L2 T4) | `src/repo/demo.ts#export const demoRepo: Repository = {` |
+| Persistence | browser memory, lost on reload | `src/repo/demo.ts#let state: State = {` |
+| Identity | one hard-coded Chief Risk Officer | `src/repo/demo.ts#const USER = { name: "J. Avery", role: "Chief Risk Officer" };` |
 | Evidence states | typed, hand-assigned, VERIFIED included | `src/lib/copilot.ts#state: "VERIFIED",` |
 | AI | canned regex routing, labeled in code only | `src/lib/copilot.ts#no live LLM is connected` |
-| Approvals | the maker approves its own model to Production | `src/store/app-store.ts#decideModel(model: string,` |
+| Approvals | the maker approves its own model to Production | `src/repo/demo.ts#decide: (model, decision, comment) =>` |
 | Reconciliation | exact, untested | `src/lib/calc.ts#export function reconcileBridge(b: Bridge) {` |
 | Exports | unlabeled CSV, no formula neutralization | `src/lib/calc.ts#export function toCSV(` |
 | Synthetic notice | sidebar footer only, hidden when collapsed | `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.` |

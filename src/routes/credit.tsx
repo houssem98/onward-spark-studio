@@ -14,19 +14,7 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import {
-  CHANNELS,
-  CREDIT_TREND,
-  FUNNEL,
-  INDUSTRIES,
-  PRODUCTS,
-  REGIONS,
-  REJECTION_REASONS,
-  RISK_BANDS,
-  SEGMENTS,
-  SLICES,
-  STRESS,
-} from "@/data/credit";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { FilterSelect } from "@/components/DataTable";
 import { StateBoundary } from "@/components/states";
 import {
@@ -43,8 +31,12 @@ import {
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { downloadFile, fmtFixed, fmtM, fmtPct, growth, pct, round, sum } from "@/lib/calc";
+import { creditQuery } from "@/repo/queries";
 
 export const Route = createFileRoute("/credit")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(creditQuery);
+  },
   head: () => ({
     meta: [
       { title: "Credit Intelligence — BankIntelli" },
@@ -73,10 +65,23 @@ function CreditPage() {
   const [industry, setIndustry] = useState("All");
   const [dim, setDim] = useState<"segment" | "product" | "riskBand" | "region">("segment");
   const [stress, setStress] = useState(0);
+  const {
+    segments,
+    regions,
+    riskBands,
+    channels,
+    products: productsBySegment,
+    industries,
+    slices,
+    funnel,
+    rejectionReasons,
+    stress: scenarios,
+    trend,
+  } = useSuspenseQuery(creditQuery).data;
 
   const rows = useMemo(
     () =>
-      SLICES.filter(
+      slices.filter(
         (s) =>
           (segment === "All" || s.segment === segment) &&
           (product === "All" || s.product === product) &&
@@ -85,7 +90,7 @@ function CreditPage() {
           (channel === "All" || s.channel === channel) &&
           (industry === "All" || s.industry === industry),
       ),
-    [segment, product, region, band, channel, industry],
+    [slices, segment, product, region, band, channel, industry],
   );
 
   // A filter pair can match no slice; say so instead of showing 0.00% ratios.
@@ -103,7 +108,7 @@ function CreditPage() {
   const lim = sum(rows.map((r) => r.limit));
   const coll = sum(rows.map((r) => r.collateral));
   const loans = sum(rows.map((r) => r.loans));
-  const sc = STRESS[stress]!;
+  const sc = scenarios[stress]!;
 
   const breakdown = Object.values(
     rows.reduce<Record<string, { key: string; balance: number; revenue: number; npl: number }>>(
@@ -126,7 +131,9 @@ function CreditPage() {
 
   const watch = [...rows].sort((a, b) => b.npl / b.balance - a.npl / a.balance).slice(0, 6);
   const products =
-    segment === "All" ? Object.values(PRODUCTS).flat() : PRODUCTS[segment as keyof typeof PRODUCTS];
+    segment === "All"
+      ? Object.values(productsBySegment).flat()
+      : productsBySegment[segment as keyof typeof productsBySegment];
 
   const report = () => {
     const md = `# Credit performance report (synthetic)\n\nScope: segment=${segment}, product=${product}, region=${region}, band=${band}, channel=${channel}, industry=${industry} · FY2025 · USD M\n\n| Measure | Type | Value |\n|---|---|---|\n| Outstanding balance | Balance | ${bal.toFixed(1)} |\n| Balance growth | Ratio | ${fmtPct(growth(bal, prior))} |\n| Originations | Flow | ${orig.toFixed(1)} |\n| Interest & fee revenue | Flow | ${rev.toFixed(1)} |\n| NPL ratio | Ratio | ${fmtPct(pct(npl, bal), 2)} |\n| ECL (model output) | Accounting | ${ecl.toFixed(1)} |\n| Net write-offs | Flow | ${(wo - rec).toFixed(1)} |\n\nNot for production credit decisions.\n`;
@@ -157,25 +164,25 @@ function CreditPage() {
         <FilterSelect
           label="Segment"
           value={segment}
-          options={[...SEGMENTS]}
+          options={[...segments]}
           onChange={(v) => {
             setSegment(v);
             setProduct("All");
           }}
         />
         <FilterSelect label="Product" value={product} options={products} onChange={setProduct} />
-        <FilterSelect label="Region" value={region} options={[...REGIONS]} onChange={setRegion} />
-        <FilterSelect label="Risk band" value={band} options={[...RISK_BANDS]} onChange={setBand} />
+        <FilterSelect label="Region" value={region} options={[...regions]} onChange={setRegion} />
+        <FilterSelect label="Risk band" value={band} options={[...riskBands]} onChange={setBand} />
         <FilterSelect
           label="Channel"
           value={channel}
-          options={[...CHANNELS]}
+          options={[...channels]}
           onChange={setChannel}
         />
         <FilterSelect
           label="Industry"
           value={industry}
-          options={INDUSTRIES}
+          options={industries}
           onChange={setIndustry}
         />
         <span className="ml-auto self-center text-xs text-muted-foreground">
@@ -235,12 +242,12 @@ function CreditPage() {
           />
           <Kpi
             label="Approval rate"
-            value={fmtPct(pct(FUNNEL[3]!.count, FUNNEL[0]!.count))}
+            value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))}
             definition="Approvals ÷ applications (bank-wide)."
           />
           <Kpi
             label="App → disbursement"
-            value={fmtPct(pct(FUNNEL[6]!.count, FUNNEL[0]!.count))}
+            value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))}
             definition="Disbursements ÷ applications."
           />
           <Kpi
@@ -312,14 +319,14 @@ function CreditPage() {
           unit="USD M"
           period="Q1-24 to Q4-25"
           source="Synthetic finance data (demo data)"
-          rows={CREDIT_TREND}
+          rows={trend}
           columns={[
             { key: "q", header: "Quarter" },
             { key: "revenue", header: "Revenue (USD M)" },
           ]}
         >
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={CREDIT_TREND}>
+            <LineChart data={trend}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
               <XAxis dataKey="q" {...axisProps} />
               <YAxis {...axisProps} domain={["auto", "auto"]} width={35} />
@@ -337,14 +344,14 @@ function CreditPage() {
           unit="Applications (share of previous stage)"
           period="FY2025"
           source="Synthetic origination data (demo data)"
-          rows={FUNNEL}
+          rows={funnel}
           columns={[
             { key: "stage", header: "Stage" },
             { key: "count", header: "Applications" },
           ]}
         >
           <ul className="space-y-1.5">
-            {FUNNEL.map((f, i) => (
+            {funnel.map((f, i) => (
               <li
                 key={f.stage}
                 className="grid grid-cols-[140px_1fr_110px] items-center gap-2 text-xs"
@@ -353,14 +360,14 @@ function CreditPage() {
                 <div className="h-5 rounded bg-muted">
                   <div
                     className="h-5 rounded bg-primary/80"
-                    style={{ width: `${pct(f.count, FUNNEL[0]!.count) ?? 0}%` }}
+                    style={{ width: `${pct(f.count, funnel[0]!.count) ?? 0}%` }}
                   />
                 </div>
                 <span className="num text-right">
                   {f.count.toLocaleString()}{" "}
                   {i > 0 && (
                     <span className="text-muted-foreground">
-                      ({fmtPct(pct(f.count, FUNNEL[i - 1]!.count), 0)})
+                      ({fmtPct(pct(f.count, funnel[i - 1]!.count), 0)})
                     </span>
                   )}
                 </span>
@@ -369,7 +376,7 @@ function CreditPage() {
           </ul>
           <p className="eyebrow mt-4 mb-1">Rejection reasons</p>
           <div className="flex flex-wrap gap-2 text-xs">
-            {REJECTION_REASONS.map((r) => (
+            {rejectionReasons.map((r) => (
               <span key={r.reason} className="rounded border px-2 py-1">
                 {r.reason} <b className="num">{r.share}%</b>
               </span>
@@ -386,7 +393,7 @@ function CreditPage() {
               value={stress}
               onChange={(e) => setStress(+e.target.value)}
             >
-              {STRESS.map((s, i) => (
+              {scenarios.map((s, i) => (
                 <option key={s.scenario} value={i}>
                   {s.scenario}
                 </option>

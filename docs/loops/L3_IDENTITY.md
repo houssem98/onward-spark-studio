@@ -8,9 +8,9 @@ Deciding rule, fixed before T2 starts: T0 to T8 are ticked, `npm run gate` exits
 
 ## Current state (read 2026-10-28; T0 re-verifies)
 
-- There is no backend: `src/server.ts` only wraps the TanStack Start SSR entry and its error page. Every decision lives in browser memory (`src/store/app-store.ts#let state: State = {`) and is lost on reload.
-- Identity is a constant (`src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },`), so audit events name whoever that constant says (`src/store/app-store.ts#actor: state.user.name`).
-- The maker can approve its own work: `src/store/app-store.ts#decideModel(model: string, decision: "Approved" | "Rejected", comment: string) {`.
+- There is no backend: `src/server.ts` only wraps the TanStack Start SSR entry and its error page. Every decision lives in browser memory (`src/repo/demo.ts#let state: State = {`) and is lost on reload.
+- Identity is a constant (`src/repo/demo.ts#const USER = { name: "J. Avery", role: "Chief Risk Officer" };`), so audit events name whoever that constant says (`src/repo/demo.ts#actor: USER.name`).
+- The maker can approve its own work: `src/repo/demo.ts#decide: (model, decision, comment) =>`.
 
 ## Tasks
 

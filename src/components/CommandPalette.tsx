@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/command";
 import type { NAV_GROUPS } from "@/components/AppShell";
 import { useStore } from "@/store/app-store";
-import { MODELS } from "@/data/models";
-import { DATASETS } from "@/data/datasets";
 
 type Page = (typeof NAV_GROUPS)[number]["items"][number];
 
@@ -32,6 +30,8 @@ export function CommandPalette({
   const navigate = useNavigate();
   const investigations = useStore((s) => s.investigations);
   const cases = useStore((s) => s.cases);
+  const models = useStore((s) => s.models);
+  const datasets = useStore((s) => s.datasets);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -91,7 +91,7 @@ export function CommandPalette({
               ))}
             </CommandGroup>
             <CommandGroup heading="Models">
-              {MODELS.map((m) => (
+              {models.map((m) => (
                 <CommandItem
                   key={m.id}
                   value={`${m.id} ${m.name}`}
@@ -119,7 +119,7 @@ export function CommandPalette({
               ))}
             </CommandGroup>
             <CommandGroup heading="Datasets (open the catalog)">
-              {DATASETS.map((d) => (
+              {datasets.map((d) => (
                 <CommandItem
                   key={d.id}
                   value={`${d.id} ${d.name}`}

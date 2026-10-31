@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { PageHeader } from "@/components/kit";
-import { useStore, type AuditEvent } from "@/store/app-store";
+import type { AuditEvent } from "@/repo/types";
+import { useStore } from "@/store/app-store";
 
 export const Route = createFileRoute("/audit")({
   head: () => ({

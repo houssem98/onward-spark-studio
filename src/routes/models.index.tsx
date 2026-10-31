@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { MODELS, type Model } from "@/data/models";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type { Model } from "@/data/models";
+import { modelsQuery } from "@/repo/queries";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { Kpi, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,9 @@ import { useStore } from "@/store/app-store";
 import { downloadFile, toCSV } from "@/lib/calc";
 
 export const Route = createFileRoute("/models/")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(modelsQuery);
+  },
   head: () => ({
     meta: [
       { title: "Model Intelligence Center — BankIntelli" },
@@ -30,6 +35,7 @@ const TODAY = "2026-01-14";
 
 function ModelsPage() {
   const navigate = useNavigate();
+  const { models } = useSuspenseQuery(modelsQuery).data;
   const lifecycle = useStore((s) => s.modelLifecycle);
   const drift = useStore((s) => s.driftAlerts);
   const [tier, setTier] = useState("All");
@@ -39,10 +45,10 @@ function ModelsPage() {
 
   const rows = useMemo(
     () =>
-      MODELS.filter(
+      models.filter(
         (m) => (tier === "All" || m.riskTier === tier) && (dept === "All" || m.department === dept),
       ),
-    [tier, dept],
+    [models, tier, dept],
   );
   const alerts = drift.filter(
     (a) => (sev === "All" || a.severity === sev) && (st === "All" || a.status === st),
@@ -105,7 +111,7 @@ function ModelsPage() {
               downloadFile(
                 "model-inventory.csv",
                 toCSV(
-                  MODELS.map((m) => ({
+                  models.map((m) => ({
                     id: m.id,
                     name: m.name,
                     owner: m.businessOwner,
@@ -125,19 +131,19 @@ function ModelsPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi
           label="Models in inventory"
-          value={String(MODELS.length)}
+          value={String(models.length)}
           definition="Registered models across all environments."
           period="As of 14 Jan 2026"
         />
         <Kpi
           label="Tier 1 models"
-          value={String(MODELS.filter((m) => m.riskTier === "Tier 1").length)}
+          value={String(models.filter((m) => m.riskTier === "Tier 1").length)}
           definition="Highest model risk tier requiring annual independent validation."
           period="As of 14 Jan 2026"
         />
         <Kpi
           label="Overdue reviews"
-          value={String(MODELS.filter((m) => m.nextReview < TODAY).length)}
+          value={String(models.filter((m) => m.nextReview < TODAY).length)}
           definition="Models whose next review date has passed."
           period="As of 14 Jan 2026"
         />
@@ -167,7 +173,7 @@ function ModelsPage() {
             <FilterSelect
               label="Department"
               value={dept}
-              options={[...new Set(MODELS.map((m) => m.department))]}
+              options={[...new Set(models.map((m) => m.department))]}
               onChange={setDept}
             />
           </>

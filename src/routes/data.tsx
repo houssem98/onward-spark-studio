@@ -10,16 +10,9 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import {
-  DATASETS,
-  DQ_DIMENSIONS,
-  DQ_TREND,
-  GLOSSARY,
-  LINEAGE_EDGES,
-  LINEAGE_NODES,
-  type Dataset,
-  type LineageNode,
-} from "@/data/datasets";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type { Dataset, LineageNode } from "@/data/datasets";
+import { datasetsQuery } from "@/repo/queries";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import {
   axisProps,
@@ -39,10 +32,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { actions, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/data")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(datasetsQuery);
+  },
   head: () => ({
     meta: [
       { title: "Data Intelligence Center — BankIntelli" },
@@ -63,13 +59,21 @@ export const Route = createFileRoute("/data")({
 const STEWARDS = ["G. Rossi", "F. Osei", "I. Novak", "Y. Tanaka", "B. Kowalski"];
 
 function DataPage() {
+  const actions = useActions();
+  const {
+    datasets,
+    lineage: { nodes: lineageNodes, edges: lineageEdges },
+    dimensions: dqDimensions,
+    trend: dqTrend,
+    glossary,
+  } = useSuspenseQuery(datasetsQuery).data;
   const cert = useStore((s) => s.certification);
   const issues = useStore((s) => s.issues);
   const reqs = useStore((s) => s.accessRequests);
   const [domain, setDomain] = useState("All");
   const [certF, setCertF] = useState("All");
   const [ds, setDs] = useState<Dataset | null>(null);
-  const [node, setNode] = useState<LineageNode>(LINEAGE_NODES[4]!);
+  const [node, setNode] = useState<LineageNode>(lineageNodes[4]!);
   const [issueId, setIssueId] = useState<string | null>(null);
   const [resolution, setResolution] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -77,11 +81,11 @@ function DataPage() {
 
   const rows = useMemo(
     () =>
-      DATASETS.filter(
+      datasets.filter(
         (d) =>
           (domain === "All" || d.domain === domain) && (certF === "All" || cert[d.id] === certF),
       ),
-    [domain, certF, cert],
+    [datasets, domain, certF, cert],
   );
 
   const cols: Column<Dataset>[] = [
@@ -110,14 +114,14 @@ function DataPage() {
   ];
 
   const upstream = (id: string): string[] =>
-    LINEAGE_EDGES.filter(([, t]) => t === id).flatMap(([s]) => [s, ...upstream(s)]);
+    lineageEdges.filter(([, t]) => t === id).flatMap(([s]) => [s, ...upstream(s)]);
   const downstream = (id: string): string[] =>
-    LINEAGE_EDGES.filter(([s]) => s === id).flatMap(([, t]) => [t, ...downstream(t)]);
+    lineageEdges.filter(([s]) => s === id).flatMap(([, t]) => [t, ...downstream(t)]);
   const up = new Set(upstream(node.id));
   const down = new Set(downstream(node.id));
   const pos = (n: LineageNode) => ({ x: 20 + n.col * 170, y: 30 + n.row * 110 });
 
-  const measurable = DQ_DIMENSIONS.filter((d) => d.score !== null);
+  const measurable = dqDimensions.filter((d) => d.score !== null);
 
   return (
     <div className="space-y-5">
@@ -128,7 +132,7 @@ function DataPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi
           label="Catalogued datasets"
-          value={String(DATASETS.length)}
+          value={String(datasets.length)}
           definition="Datasets registered in the catalog."
           period="As of 14 Jan 2026"
         />
@@ -174,7 +178,7 @@ function DataPage() {
                 <FilterSelect
                   label="Domain"
                   value={domain}
-                  options={[...new Set(DATASETS.map((d) => d.domain))]}
+                  options={[...new Set(datasets.map((d) => d.domain))]}
                   onChange={setDomain}
                 />
                 <FilterSelect
@@ -199,9 +203,9 @@ function DataPage() {
             bodyClass="overflow-x-auto"
           >
             <svg width={1040} height={260} role="group" aria-label="Data lineage graph">
-              {LINEAGE_EDGES.map(([s, t]) => {
-                const a = pos(LINEAGE_NODES.find((n) => n.id === s)!),
-                  b = pos(LINEAGE_NODES.find((n) => n.id === t)!);
+              {lineageEdges.map(([s, t]) => {
+                const a = pos(lineageNodes.find((n) => n.id === s)!),
+                  b = pos(lineageNodes.find((n) => n.id === t)!);
                 const hot =
                   ((s === node.id || up.has(s)) && (t === node.id || up.has(t))) ||
                   ((s === node.id || down.has(s)) && down.has(t));
@@ -215,7 +219,7 @@ function DataPage() {
                   />
                 );
               })}
-              {LINEAGE_NODES.map((n) => {
+              {lineageNodes.map((n) => {
                 const p = pos(n);
                 const sel = n.id === node.id;
                 const rel = up.has(n.id) || down.has(n.id);
@@ -276,10 +280,10 @@ function DataPage() {
               <Field label="Last refresh">{node.refresh}</Field>
               <Field label="Transformation">{node.transform}</Field>
               <Field label="Upstream">
-                {[...up].map((u) => LINEAGE_NODES.find((n) => n.id === u)!.label).join(", ") || "—"}
+                {[...up].map((u) => lineageNodes.find((n) => n.id === u)!.label).join(", ") || "—"}
               </Field>
               <Field label="Downstream / impacted">
-                {[...down].map((u) => LINEAGE_NODES.find((n) => n.id === u)!.label).join(", ") ||
+                {[...down].map((u) => lineageNodes.find((n) => n.id === u)!.label).join(", ") ||
                   "—"}
               </Field>
               <Field label="Quality issues">
@@ -290,19 +294,21 @@ function DataPage() {
                   : "None"}
               </Field>
             </dl>
-            {node.ref?.startsWith("DS-") && DATASETS.find((d) => d.id === node.ref)?.columns && (
+            {node.ref?.startsWith("DS-") && datasets.find((d) => d.id === node.ref)?.columns && (
               <div className="mt-4">
                 <p className="eyebrow mb-1">Column-level lineage</p>
                 <ul className="space-y-1 text-xs">
-                  {DATASETS.find((d) => d.id === node.ref)!.columns!.map((c) => (
-                    <li key={c.name} className="flex justify-between gap-2">
-                      <span className="num">
-                        {c.name}
-                        {c.cde && <span className="ml-1 text-primary">CDE</span>}
-                      </span>
-                      <span className="num text-muted-foreground">← {c.source}</span>
-                    </li>
-                  ))}
+                  {datasets
+                    .find((d) => d.id === node.ref)!
+                    .columns!.map((c) => (
+                      <li key={c.name} className="flex justify-between gap-2">
+                        <span className="num">
+                          {c.name}
+                          {c.cde && <span className="ml-1 text-primary">CDE</span>}
+                        </span>
+                        <span className="num text-muted-foreground">← {c.source}</span>
+                      </li>
+                    ))}
                 </ul>
               </div>
             )}
@@ -317,14 +323,14 @@ function DataPage() {
               unit="Score out of 100 (simulated)"
               period="Week 02"
               source="Simulated quality checks (demo data)"
-              rows={DQ_DIMENSIONS}
+              rows={dqDimensions}
               columns={[
                 { key: "dimension", header: "Dimension" },
                 { key: "score", header: "Score" },
               ]}
             >
               <ul className="space-y-2 text-sm">
-                {DQ_DIMENSIONS.map((d) => (
+                {dqDimensions.map((d) => (
                   <li key={d.dimension}>
                     <div className="flex justify-between">
                       <span>{d.dimension}</span>
@@ -358,9 +364,9 @@ function DataPage() {
               title="Quality score trend"
               description="Average data-quality score across catalogued datasets"
               unit="Score out of 100 (simulated)"
-              period={`${DQ_TREND[0]?.week ?? "?"} to ${DQ_TREND.at(-1)?.week ?? "?"}`}
+              period={`${dqTrend[0]?.week ?? "?"} to ${dqTrend.at(-1)?.week ?? "?"}`}
               source="Simulated quality checks (demo data)"
-              rows={DQ_TREND}
+              rows={dqTrend}
               columns={[
                 { key: "week", header: "Week" },
                 { key: "score", header: "Score" },
@@ -368,7 +374,7 @@ function DataPage() {
               className="lg:col-span-2"
             >
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={DQ_TREND}>
+                <LineChart data={dqTrend}>
                   <CartesianGrid vertical={false} stroke={CHART.grid} />
                   <XAxis dataKey="week" {...axisProps} />
                   <YAxis {...axisProps} domain={[92, 97]} width={35} />
@@ -435,7 +441,7 @@ function DataPage() {
         <TabsContent value="governance" className="mt-4 grid gap-4 lg:grid-cols-2">
           <Panel title="Business glossary & critical data elements">
             <ul className="divide-y text-sm">
-              {GLOSSARY.map((g) => (
+              {glossary.map((g) => (
                 <li key={g.term} className="py-2">
                   <div className="flex justify-between">
                     <b>{g.term}</b>
@@ -597,7 +603,7 @@ function DataPage() {
                 <Field label="Dataset">
                   {issue.dataset} —{" "}
                   <Link to="/data" className="text-primary">
-                    {DATASETS.find((d) => d.id === issue.dataset)?.name}
+                    {datasets.find((d) => d.id === issue.dataset)?.name}
                   </Link>
                 </Field>
                 <label className="block text-xs text-muted-foreground">

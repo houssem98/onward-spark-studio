@@ -16,14 +16,8 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import {
-  DRIFT_FEATURES,
-  FEATURE_IMPORTANCE,
-  FORECAST_SERIES,
-  LGD_SCATTER,
-  MODELS,
-  PERF_HISTORY,
-} from "@/data/models";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { modelsQuery } from "@/repo/queries";
 import {
   axisProps,
   CHART,
@@ -40,7 +34,7 @@ import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { actions, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 import { classificationMetrics, downloadFile, fmtFixed, psi, psiBand } from "@/lib/calc";
 
 const TABS = [
@@ -57,8 +51,9 @@ const TABS = [
 export const Route = createFileRoute("/models/$id")({
   validateSearch: (s: Record<string, unknown>): { tab?: string } =>
     typeof s["tab"] === "string" ? { tab: s["tab"] } : {},
-  loader: ({ params }) => {
-    const m = MODELS.find((x) => x.id === params.id);
+  loader: async ({ params, context: { queryClient } }) => {
+    const { models } = await queryClient.ensureQueryData(modelsQuery);
+    const m = models.find((x) => x.id === params.id);
     if (!m) throw notFound();
     return { id: m.id, name: m.name };
   },
@@ -87,7 +82,10 @@ function ModelDetail() {
   const { tab: asked } = Route.useSearch();
   const tab = asked && TABS.includes(asked) ? asked : "overview";
   const navigate = Route.useNavigate();
-  const m = MODELS.find((x) => x.id === id)!;
+  const actions = useActions();
+  const { models, driftFeatures, perfHistory, forecast, lgdScatter, featureImportance } =
+    useSuspenseQuery(modelsQuery).data;
+  const m = models.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
   const version = useStore((s) => s.modelVersion[id]);
   const decisions = useStore((s) => s.modelDecisions.filter((d) => d.model === id));
@@ -105,11 +103,11 @@ function ModelDetail() {
   const cm = m.confusion
     ? classificationMetrics(m.confusion.tp, m.confusion.fp, m.confusion.fn, m.confusion.tn)
     : null;
-  const driftRows = DRIFT_FEATURES.map((f) => ({ feature: f.feature, psi: psi(f.ref, f.cur) }));
-  const dscBins = DRIFT_FEATURES[0]!.ref.map((r, i) => ({
+  const driftRows = driftFeatures.map((f) => ({ feature: f.feature, psi: psi(f.ref, f.cur) }));
+  const dscBins = driftFeatures[0]!.ref.map((r, i) => ({
     bin: `B${i + 1}`,
     reference: r,
-    current: DRIFT_FEATURES[0]!.cur[i],
+    current: driftFeatures[0]!.cur[i],
   }));
 
   const exportCard = () => {
@@ -241,14 +239,14 @@ function ModelDetail() {
                   </span>
                 </div>
               </Panel>
-              {(PERF_HISTORY[0] as Record<string, unknown>)[m.id] !== undefined && (
+              {(perfHistory[0] as Record<string, unknown>)[m.id] !== undefined && (
                 <ChartFrame
                   title="ROC-AUC history"
                   description="Quarterly monitoring"
                   unit="ROC-AUC, 0 to 1"
                   period="Q1-25 to Q4-25"
                   source="Synthetic model monitoring (demo data)"
-                  rows={PERF_HISTORY.map((p) => ({
+                  rows={perfHistory.map((p) => ({
                     quarter: p.quarter,
                     auc: (p as Record<string, string | number | undefined>)[m.id],
                   }))}
@@ -258,7 +256,7 @@ function ModelDetail() {
                   ]}
                 >
                   <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={PERF_HISTORY}>
+                    <LineChart data={perfHistory}>
                       <CartesianGrid vertical={false} stroke={CHART.grid} />
                       <XAxis dataKey="quarter" {...axisProps} />
                       <YAxis {...axisProps} domain={["auto", "auto"]} width={45} />
@@ -277,7 +275,7 @@ function ModelDetail() {
               unit="USD M"
               period="Q1-25 to Q4-25"
               source="Synthetic finance data and model output (demo data)"
-              rows={FORECAST_SERIES}
+              rows={forecast}
               columns={[
                 { key: "q", header: "Quarter" },
                 { key: "actual", header: "Actual" },
@@ -285,7 +283,7 @@ function ModelDetail() {
               ]}
             >
               <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={FORECAST_SERIES}>
+                <LineChart data={forecast}>
                   <CartesianGrid vertical={false} stroke={CHART.grid} />
                   <XAxis dataKey="q" {...axisProps} />
                   <YAxis {...axisProps} domain={["auto", "auto"]} width={45} />
@@ -309,7 +307,7 @@ function ModelDetail() {
               unit="Loss given default, 0 to 1"
               period="Validation sample"
               source="Synthetic validation sample (demo data)"
-              rows={LGD_SCATTER}
+              rows={lgdScatter}
             >
               <ResponsiveContainer width="100%" height={260}>
                 <ScatterChart>
@@ -330,7 +328,7 @@ function ModelDetail() {
                     width={40}
                   />
                   <Tooltip {...tooltipStyle} />
-                  <Scatter data={LGD_SCATTER} fill={CHART.c1} />
+                  <Scatter data={lgdScatter} fill={CHART.c1} />
                 </ScatterChart>
               </ResponsiveContainer>
             </ChartFrame>
@@ -583,16 +581,16 @@ function ModelDetail() {
             unit="Mean |SHAP|"
             period="Validation sample"
             source="Synthetic validation sample (demo data)"
-            rows={FEATURE_IMPORTANCE[id] ?? []}
+            rows={featureImportance[id] ?? []}
             columns={[
               { key: "feature", header: "Feature" },
               { key: "value", header: "Mean |SHAP|" },
             ]}
-            state={FEATURE_IMPORTANCE[id] ? "success" : "empty"}
+            state={featureImportance[id] ? "success" : "empty"}
             stateNote="Explainability evidence is not available for this model type."
           >
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={FEATURE_IMPORTANCE[id] ?? []} layout="vertical" margin={{ left: 40 }}>
+              <BarChart data={featureImportance[id] ?? []} layout="vertical" margin={{ left: 40 }}>
                 <XAxis type="number" {...axisProps} />
                 <YAxis type="category" dataKey="feature" {...axisProps} width={130} />
                 <Tooltip {...tooltipStyle} />

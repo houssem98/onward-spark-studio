@@ -4,12 +4,15 @@ import { toast } from "sonner";
 import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { actions, getState, useStore } from "@/store/app-store";
+import { useActions, useStore } from "@/store/app-store";
 import type { InvStatus } from "@/data/investigations";
+import { investigationsQuery } from "@/repo/queries";
 
 export const Route = createFileRoute("/investigations/$id")({
-  loader: ({ params }) => {
-    if (!getState().investigations.some((i) => i.id === params.id)) throw notFound();
+  loader: async ({ params, context: { queryClient } }) => {
+    // fetchQuery, not ensureQueryData: an investigation created since the last read must be found.
+    const { investigations } = await queryClient.fetchQuery(investigationsQuery);
+    if (!investigations.some((i) => i.id === params.id)) throw notFound();
   },
   head: ({ params }) => ({
     meta: [
@@ -32,6 +35,7 @@ const OWNERS = ["A. Haddad", "G. Rossi", "T. Ibrahim", "K. Mensah", "F. Leclerc"
 
 function InvDetail() {
   const { id } = Route.useParams();
+  const actions = useActions();
   const inv = useStore((s) => s.investigations.find((i) => i.id === id));
   const acts = useStore((s) => s.actions);
   const [form, setForm] = useState<{

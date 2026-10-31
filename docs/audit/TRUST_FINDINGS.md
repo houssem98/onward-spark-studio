@@ -19,7 +19,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F2 · high · Anyone approves any model straight to Production
-- Evidence: `src/store/app-store.ts#[model]: decision === "Approved" ? "Production" : "Development",`. Retitled in L0 T7: there is no maker or owner concept at all, so the defect is that no validator role or second person exists, not that the maker self-approves.
+- Evidence: `src/repo/demo.ts#[model]: decision === "Approved" ? "Production" : "Development",`. Retitled in L0 T7: there is no maker or owner concept at all, so the defect is that no validator role or second person exists, not that the maker self-approves.
 - Fix: L3 T6
 - Status: open
 
@@ -39,17 +39,17 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L0 T3
 
 ### F6 · high · Identity is a constant, so every audit event names the same person
-- Evidence: `src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },`, `src/store/app-store.ts#actor: state.user.name`
+- Evidence: `src/repo/demo.ts#const USER = { name: "J. Avery", role: "Chief Risk Officer" };`, `src/repo/demo.ts#actor: USER.name`
 - Fix: L3 T2
 - Status: open
 
 ### F7 · medium · Nothing persists past a reload
-- Evidence: in-memory store (`src/store/app-store.ts#let state: State = {`), labeled on the audit page (`src/routes/audit.tsx#Session-only; not persisted.`).
+- Evidence: in-memory state in the demo repository (`src/repo/demo.ts#let state: State = {`), labeled on the audit page (`src/routes/audit.tsx#Session-only; not persisted.`).
 - Fix: L3 T4
 - Status: open
 
 ### F8 · medium · Some state changes write no audit event
-- Evidence: switching the model version shown: `src/store/app-store.ts#set((s) => ({ modelVersion: { ...s.modelVersion, [model]: version } }));`
+- Evidence: switching the model version shown: `src/repo/demo.ts#set((s) => ({ modelVersion: { ...s.modelVersion, [model]: version } }))`
 - Fix: L3 T5
 - Status: open
 
@@ -124,7 +124,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in commit 2c3d9ef
 
 ### F23 · high · The model detail and case workspace pages never render
-- Evidence: selectors return a new array on every call (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`, `src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`) and the store passed the selector's result to React as the snapshot, so React looped until "Maximum update depth exceeded". Found by running the pages in L0 T6 (`docs/audit/VISUAL_BASELINE.md#Two detail pages never render`); present since commit 331ac73. Model approval, drift disposition, case notes and case status live on these two pages, so none of those controls could be used. Fixed by making the stable state the snapshot (`src/store/app-store.ts#return selector(useSyncExternalStore(subscribe, getState, getState));`), guarded by `src/test/store-selector.test.tsx#renders a selector that builds a new array without looping`.
+- Evidence: selectors return a new array on every call (`src/routes/models.$id.tsx#s.modelDecisions.filter((d) => d.model === id)`, `src/routes/crime.$id.tsx#s.audit.filter((a) => a.entity === id)`) and the store passed the selector's result to React as the snapshot, so React looped until "Maximum update depth exceeded". Found by running the pages in L0 T6 (`docs/audit/VISUAL_BASELINE.md#Two detail pages never render`); present since commit 331ac73. Model approval, drift disposition, case notes and case status live on these two pages, so none of those controls could be used. Fixed in L0 T10 by making the stable state the snapshot; since L2 T4 the hook reads a query instead (`src/store/app-store.ts#return selector(useSuspenseQuery(storeQuery).data);`), still guarded by `src/test/store-selector.test.tsx#renders a selector that builds a new array without looping`.
 - Fix: L0 T10
 - Status: fixed in L0 T10
 
@@ -184,7 +184,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L1 T5
 
 ### F35 · medium · The audit trail claims more than it records
-- Evidence: the page said every simulated change was recorded; L1 T11 narrowed it to `src/routes/audit.tsx#Model version switches and exports are not recorded`, which is true, but version changes (F8) and exports (F15) are still not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/store/app-store.ts#export interface AuditEvent {`).
+- Evidence: the page said every simulated change was recorded; L1 T11 narrowed it to `src/routes/audit.tsx#Model version switches and exports are not recorded`, which is true, but version changes (F8) and exports (F15) are still not recorded, seeded events look like session events, and an event has no authority, outcome or correlation id (`src/repo/types.ts#export interface AuditEvent {`).
 - Fix: L3 T5
 - Status: open
 

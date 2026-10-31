@@ -11,6 +11,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { AppShell, NAV_GROUPS } from "@/components/AppShell";
+import { storeQuery } from "@/store/app-store";
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -23,6 +24,7 @@ beforeAll(() => {
 
 async function renderShell() {
   const queryClient = new QueryClient();
+  await queryClient.ensureQueryData(storeQuery);
   const root = createRootRoute({
     component: () => (
       <QueryClientProvider client={queryClient}>
