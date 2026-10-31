@@ -14,15 +14,7 @@ import {
 } from "recharts";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import {
-  BANK,
-  BRIDGES,
-  DEPARTMENTS,
-  PEER_BENCHMARK_NOTE,
-  PEER_HISTORY,
-  PEERS,
-  SCORECARD,
-} from "@/data/finance";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   axisProps,
   CHART,
@@ -52,10 +44,13 @@ import {
   type Bridge,
 } from "@/lib/calc";
 import { actions, useStore } from "@/store/app-store";
-import { INVESTIGATIONS } from "@/data/investigations";
+import { financeQuery } from "@/repo/queries";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/performance")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(financeQuery);
+  },
   head: () => ({
     meta: [
       { title: "Performance & Competitor Intelligence — BankIntelli" },
@@ -115,11 +110,14 @@ const STEPS = [
 function PerformancePage() {
   const navigate = useNavigate();
   const invs = useStore((s) => s.investigations);
-  const a = SCORECARD.FY2025,
-    b = SCORECARD.FY2024;
+  const template = invs.find((i) => i.id === "INV-2025-014")!;
+  const { bank, bridges, departments, peerBenchmarkNote, peerHistory, peers, scorecard } =
+    useSuspenseQuery(financeQuery).data;
+  const a = scorecard.FY2025,
+    b = scorecard.FY2024;
   const rev = a.nii + a.nonInterest;
-  const opex = sum(DEPARTMENTS.map((d) => d.expenses));
-  const priorOpex = sum(DEPARTMENTS.map((d) => d.priorExpenses));
+  const opex = sum(departments.map((d) => d.expenses));
+  const priorOpex = sum(departments.map((d) => d.priorExpenses));
   const nim = pct(a.nii, a.avgEarningAssets);
   const ns = {
     nim,
@@ -131,24 +129,26 @@ function PerformancePage() {
     creditRevenue: 120,
   };
 
-  const [peerSel, setPeerSel] = useState<string[]>(PEERS.map((p) => p.id));
+  const [peerSel, setPeerSel] = useState<string[]>(peers.map((p) => p.id));
   const [metric, setMetric] = useState<(typeof METRICS)[number]["key"]>("nim");
   const [method, setMethod] = useState("peer");
-  const bridge = BRIDGES.find((x) => x.id === method)!;
+  const bridge = bridges.find((x) => x.id === method)!;
   const rec = reconcileBridge(bridge);
 
   const peerChart = useMemo(
     () =>
       [
         { name: "Northstar", value: round(ns[metric], 2), src: "INTERNAL", period: "FY2025" },
-        ...PEERS.filter((p) => peerSel.includes(p.id)).map((p) => ({
-          name: p.name.split(" ")[0],
-          value: p[metric],
-          src: p.source,
-          period: p.period,
-        })),
+        ...peers
+          .filter((p) => peerSel.includes(p.id))
+          .map((p) => ({
+            name: p.name.split(" ")[0],
+            value: p[metric],
+            src: p.source,
+            period: p.period,
+          })),
       ].filter((x) => x.value !== null),
-    [peerSel, metric],
+    [peerSel, metric, peers],
   );
 
   // wizard
@@ -156,13 +156,13 @@ function PerformancePage() {
   const [wq, setWq] = useState("Why did credit revenue grow more slowly than peers?");
   const [wDept, setWDept] = useState("credit");
   const [wBench, setWBench] = useState("peer");
-  const wb = BRIDGES.find((x) => x.id === wBench)!;
+  const wb = bridges.find((x) => x.id === wBench)!;
   const wr = reconcileBridge(wb);
   const [createdId, setCreatedId] = useState<string | null>(null);
 
   const finish = () => {
     const id = `INV-2026-${String(10 + invs.length).padStart(3, "0")}`;
-    const base = INVESTIGATIONS[0]!;
+    const base = template;
     actions.createInvestigation({
       ...base,
       id,
@@ -170,7 +170,7 @@ function PerformancePage() {
       question: wq,
       created: "2026-01-14",
       status: "Draft",
-      department: DEPARTMENTS.find((d) => d.id === wDept)!.name,
+      department: departments.find((d) => d.id === wDept)!.name,
       owner: "J. Avery",
       findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })),
     });
@@ -182,7 +182,7 @@ function PerformancePage() {
     <div className="space-y-5">
       <PageHeader
         title="Enterprise Performance & Competitor Intelligence"
-        description={`${BANK.name} · FY2025 · ${BANK.currency} ${BANK.unit} · ${BANK.basis}. Peers are fictional institutions with illustrative metrics.`}
+        description={`${bank.name} · FY2025 · ${bank.currency} ${bank.unit} · ${bank.basis}. Peers are fictional institutions with illustrative metrics.`}
       />
       <Tabs defaultValue="scorecard">
         <TabsList className="h-auto flex-wrap">
@@ -271,12 +271,14 @@ function PerformancePage() {
             unit="USD M"
             period="FY2024 and FY2025"
             source="Synthetic finance data and budget targets (demo data)"
-            rows={DEPARTMENTS.filter((d) => !d.costCenter).map((d) => ({
-              name: d.name,
-              prior: d.prior,
-              revenue: d.revenue,
-              target: d.target,
-            }))}
+            rows={departments
+              .filter((d) => !d.costCenter)
+              .map((d) => ({
+                name: d.name,
+                prior: d.prior,
+                revenue: d.revenue,
+                target: d.target,
+              }))}
             columns={[
               { key: "name", header: "Department" },
               { key: "prior", header: "FY2024" },
@@ -285,7 +287,7 @@ function PerformancePage() {
             ]}
           >
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}>
+              <BarChart data={departments.filter((d) => !d.costCenter)}>
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
                 <XAxis
                   dataKey="name"
@@ -318,7 +320,7 @@ function PerformancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEPARTMENTS.map((d) => (
+                  {departments.map((d) => (
                     <tr key={d.id} className="border-b last:border-0">
                       <td className="px-3 py-2 font-medium">{d.name}</td>
                       <td className="px-3 py-2">{d.owner}</td>
@@ -353,7 +355,7 @@ function PerformancePage() {
         <TabsContent value="peers" className="mt-4 space-y-4">
           <div className="flex flex-wrap items-center gap-3 rounded-md border bg-card p-3 text-sm">
             <span className="eyebrow">Peer group</span>
-            {PEERS.map((p) => (
+            {peers.map((p) => (
               <label key={p.id} className="flex items-center gap-1.5">
                 <input
                   type="checkbox"
@@ -412,7 +414,7 @@ function PerformancePage() {
               unit="Net interest margin, %"
               period="FY2021 to FY2025"
               source="Internal figures and peer disclosures (synthetic demo data)"
-              rows={PEER_HISTORY}
+              rows={peerHistory}
               columns={[
                 { key: "year", header: "Year" },
                 { key: "northstar", header: "Northstar" },
@@ -422,7 +424,7 @@ function PerformancePage() {
               ]}
             >
               <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={PEER_HISTORY}>
+                <LineChart data={peerHistory}>
                   <CartesianGrid vertical={false} stroke={CHART.grid} />
                   <XAxis dataKey="year" {...axisProps} />
                   <YAxis {...axisProps} domain={["auto", "auto"]} width={40} />
@@ -458,7 +460,7 @@ function PerformancePage() {
                     <td className="px-3 py-2">—</td>
                     <td className="px-3 py-2 text-xs">—</td>
                   </tr>
-                  {PEERS.map((p) => (
+                  {peers.map((p) => (
                     <tr key={p.id} className="border-b last:border-0">
                       <td className="px-3 py-2 font-medium">{p.name}</td>
                       <td className="px-3 py-2">
@@ -507,7 +509,7 @@ function PerformancePage() {
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
               >
-                {BRIDGES.map((x) => (
+                {bridges.map((x) => (
                   <option key={x.id} value={x.id}>
                     {x.method}
                   </option>
@@ -517,8 +519,7 @@ function PerformancePage() {
           >
             <Waterfall bridge={bridge} />
             <p className="mt-2 text-xs text-muted-foreground">
-              Synthetic figures · illustrative calculation.{" "}
-              {method === "peer" && PEER_BENCHMARK_NOTE}
+              Synthetic figures · illustrative calculation. {method === "peer" && peerBenchmarkNote}
             </p>
           </ChartFrame>
           <Panel title="Reconciliation">
@@ -622,11 +623,13 @@ function PerformancePage() {
                       value={wDept}
                       onChange={(e) => setWDept(e.target.value)}
                     >
-                      {DEPARTMENTS.filter((d) => !d.costCenter).map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
+                      {departments
+                        .filter((d) => !d.costCenter)
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
                     </select>
                   </label>
                   <span className="self-center">
@@ -643,7 +646,7 @@ function PerformancePage() {
               )}
               {step === 2 && (
                 <div className="flex gap-2">
-                  {BRIDGES.map((x) => (
+                  {bridges.map((x) => (
                     <Button
                       key={x.id}
                       variant={wBench === x.id ? "default" : "outline"}
@@ -729,7 +732,7 @@ function PerformancePage() {
               )}
               {step === 7 && (
                 <ul className="space-y-2">
-                  {INVESTIGATIONS[0]!.findings.map((f) => (
+                  {template.findings.map((f) => (
                     <li key={f.id} className="flex items-start justify-between gap-2">
                       <span>
                         <StatusBadge
@@ -746,7 +749,7 @@ function PerformancePage() {
               )}
               {step === 8 && (
                 <ul className="list-disc pl-4">
-                  {INVESTIGATIONS[0]!.contradictions.map((c) => (
+                  {template.contradictions.map((c) => (
                     <li key={c}>{c}</li>
                   ))}
                 </ul>

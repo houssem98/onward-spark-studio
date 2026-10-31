@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -21,11 +22,14 @@ beforeAll(() => {
 });
 
 async function renderShell() {
+  const queryClient = new QueryClient();
   const root = createRootRoute({
     component: () => (
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <QueryClientProvider client={queryClient}>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </QueryClientProvider>
     ),
   });
   const paths = [

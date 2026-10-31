@@ -25,7 +25,7 @@ A front-end proof of concept for the fictional Northstar Bank, built in Lovable.
 |---|---|---|
 | Build, typecheck, lint, tests | not verified: never run here, no `node_modules` | `src/test/app-routing.test.tsx` is the only test |
 | Routes | 11 route files; `/reports/$id` linked 5 times and absent | `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"` |
-| Data | fixtures imported straight into pages | `src/routes/index.tsx#import { DEPARTMENTS, quarterlyRevenue } from "@/data/finance";` |
+| Data | fixtures imported straight into pages | `src/routes/credit.tsx#from "@/data/credit";` |
 | Persistence | browser memory, lost on reload | `src/store/app-store.ts#let state: State = {` |
 | Identity | one hard-coded Chief Risk Officer | `src/store/app-store.ts#user: { name: "J. Avery", role: "Chief Risk Officer" },` |
 | Evidence states | typed, hand-assigned, VERIFIED included | `src/lib/copilot.ts#state: "VERIFIED",` |

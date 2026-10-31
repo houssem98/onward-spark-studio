@@ -1,11 +1,16 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { EvidenceBadge, PageHeader, Panel, StatusBadge } from "@/components/kit";
-import { REPORTS, type Action, type Investigation } from "@/data/investigations";
+import type { Action, Investigation } from "@/data/investigations";
+import { investigationsQuery } from "@/repo/queries";
 import { actions, useStore } from "@/store/app-store";
 
 export const Route = createFileRoute("/investigations/")({
+  loader: async ({ context: { queryClient } }) => {
+    await queryClient.ensureQueryData(investigationsQuery);
+  },
   head: () => ({
     meta: [
       { title: "Investigations & Reports — BankIntelli" },
@@ -27,6 +32,7 @@ function InvPage() {
   const navigate = useNavigate();
   const invs = useStore((s) => s.investigations);
   const acts = useStore((s) => s.actions);
+  const { reports } = useSuspenseQuery(investigationsQuery).data;
   const [status, setStatus] = useState("All");
   const [prio, setPrio] = useState("All");
   const [aStatus, setAStatus] = useState("All");
@@ -149,7 +155,7 @@ function InvPage() {
       </div>
       <Panel title="Report library">
         <ul className="divide-y">
-          {REPORTS.map((r) => (
+          {reports.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-3 py-2 text-sm">
               <Link to="/reports/$id" params={{ id: r.id }} className="font-medium hover:underline">
                 {r.title}

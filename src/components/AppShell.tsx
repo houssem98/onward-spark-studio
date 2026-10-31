@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -28,6 +29,7 @@ import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 import { CommandPalette } from "@/components/CommandPalette";
+import { datasetsQuery, financeQuery, modelsQuery } from "@/repo/queries";
 
 export const NAV_GROUPS = [
   {
@@ -120,11 +122,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<{ q: string; a: CopilotAnswer }[]>([]);
   const navigate = useNavigate();
 
-  const ask = (text: string) => {
+  const queryClient = useQueryClient();
+  const ask = async (text: string) => {
     if (!text.trim()) return;
-    setHistory((h) => [{ q: text, a: answer(text) }, ...h]);
     setQ("");
     setOpen(true);
+    const [finance, models, datasets] = await Promise.all([
+      queryClient.ensureQueryData(financeQuery),
+      queryClient.ensureQueryData(modelsQuery),
+      queryClient.ensureQueryData(datasetsQuery),
+    ]);
+    setHistory((h) => [{ q: text, a: answer(text, { finance, models, datasets }) }, ...h]);
   };
   copilotBus.ask = ask;
 

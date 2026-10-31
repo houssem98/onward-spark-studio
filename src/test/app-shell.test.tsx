@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -26,11 +26,14 @@ const SAMPLE_PATHS: Record<string, string> = {
 };
 
 async function renderShellAt(path: string) {
+  const queryClient = new QueryClient();
   const root = createRootRoute({
     component: () => (
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <QueryClientProvider client={queryClient}>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </QueryClientProvider>
     ),
   });
   const pages = paths.map((p) =>

@@ -1,10 +1,8 @@
 // Predefined analytical routing — no live LLM is connected. Answers are composed from deterministic demo data.
-import { DEPARTMENTS, SCORECARD, BRIDGES, PEERS } from "@/data/finance";
-import { MODELS } from "@/data/models";
-import { DATASETS } from "@/data/datasets";
 import { getState } from "@/store/app-store";
 import { diff, fmtFixed, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
 import type { EvidenceState } from "@/data/investigations";
+import type { DatasetsData, FinanceData, ModelsData } from "@/repo/types";
 
 export interface CopilotAnswer {
   intent: string;
@@ -16,14 +14,20 @@ export interface CopilotAnswer {
   links: { label: string; to: string }[];
 }
 
-export function answer(q: string): CopilotAnswer {
+export function answer(
+  q: string,
+  data: { finance: FinanceData; models: ModelsData; datasets: DatasetsData },
+): CopilotAnswer {
+  const { departments, scorecard, bridges } = data.finance;
+  const { models } = data.models;
+  const { datasets } = data.datasets;
   const t = q.toLowerCase();
   const s = getState();
 
   if (/(credit).*(peer|competitor)|competitor|peer/.test(t)) {
-    const b = BRIDGES.find((x) => x.id === "peer")!;
+    const b = bridges.find((x) => x.id === "peer")!;
     const r = reconcileBridge(b);
-    const credit = DEPARTMENTS.find((d) => d.id === "credit")!;
+    const credit = departments.find((d) => d.id === "credit")!;
     return {
       intent: "Credit performance vs peer group",
       scope: "Credit division · FY2025 · USD M · peers: Harborline, Meridian, Cascade",
@@ -54,7 +58,7 @@ export function answer(q: string): CopilotAnswer {
     };
   }
   if (/target|missed|business unit/.test(t)) {
-    const missed = DEPARTMENTS.filter((d) => !d.costCenter && d.revenue < d.target);
+    const missed = departments.filter((d) => !d.costCenter && d.revenue < d.target);
     return {
       intent: "Business units vs revenue target",
       scope: "All revenue-generating units · FY2025 · budget basis",
@@ -63,7 +67,7 @@ export function answer(q: string): CopilotAnswer {
         value: `$${d.revenue}M vs $${d.target}M (${round(d.revenue - d.target)}M)`,
       })),
       summary: [
-        `${missed.length} of ${DEPARTMENTS.filter((d) => !d.costCenter).length} revenue-generating units missed target.`,
+        `${missed.length} of ${departments.filter((d) => !d.costCenter).length} revenue-generating units missed target.`,
       ],
       state: "VERIFIED",
       missing: ["Targets are synthetic budget figures"],
@@ -71,8 +75,8 @@ export function answer(q: string): CopilotAnswer {
     };
   }
   if (/margin|nim/.test(t)) {
-    const a = SCORECARD.FY2025,
-      b = SCORECARD.FY2024;
+    const a = scorecard.FY2025,
+      b = scorecard.FY2024;
     const n1 = pct(a.nii, a.avgEarningAssets),
       n0 = pct(b.nii, b.avgEarningAssets);
     return {
@@ -96,7 +100,7 @@ export function answer(q: string): CopilotAnswer {
     };
   }
   if (/dataset|lineage|affect.*report|executive report/.test(t) && !/quality/.test(t)) {
-    const ds = DATASETS.filter(
+    const ds = datasets.filter(
       (d) => d.downstream.includes("RPT-FY25-PERF") || d.downstream.includes("RPT-RISK-Q4"),
     );
     return {
@@ -134,7 +138,7 @@ export function answer(q: string): CopilotAnswer {
   }
   if (/model|validation|overdue/.test(t)) {
     const today = "2026-01-14";
-    const overdue = MODELS.filter((m) => m.nextReview < today);
+    const overdue = models.filter((m) => m.nextReview < today);
     return {
       intent: "Models with overdue validation",
       scope: `Model inventory · as of ${today}`,
@@ -203,5 +207,3 @@ export const SUGGESTIONS = [
   "Summarize the highest-priority open fraud cases.",
   "Generate a verified year-end department review.",
 ];
-
-export const PEER_IDS = PEERS.map((p) => p.id);

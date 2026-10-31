@@ -13,10 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { DEPARTMENTS, quarterlyRevenue } from "@/data/finance";
-import { MODELS } from "@/data/models";
-import { REPORTS, NEXT_STEPS } from "@/data/investigations";
-import { SLICES } from "@/data/credit";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { costToIncome, diff, fmtFixed, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
 import {
   axisProps,
@@ -34,9 +31,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/app-store";
 import { copilotBus } from "@/lib/copilot-bus";
-import { DQ_DIMENSIONS } from "@/data/datasets";
+import {
+  creditQuery,
+  datasetsQuery,
+  financeQuery,
+  investigationsQuery,
+  modelsQuery,
+} from "@/repo/queries";
 
 export const Route = createFileRoute("/")({
+  loader: async ({ context: { queryClient } }) => {
+    await Promise.all([
+      queryClient.ensureQueryData(financeQuery),
+      queryClient.ensureQueryData(creditQuery),
+      queryClient.ensureQueryData(datasetsQuery),
+      queryClient.ensureQueryData(modelsQuery),
+      queryClient.ensureQueryData(investigationsQuery),
+    ]);
+  },
   head: () => ({
     meta: [
       { title: "Executive Overview — BankIntelli" },
@@ -58,6 +70,11 @@ export const Route = createFileRoute("/")({
 
 function Overview() {
   const navigate = useNavigate();
+  const { departments, quarterlyRevenue } = useSuspenseQuery(financeQuery).data;
+  const { slices } = useSuspenseQuery(creditQuery).data;
+  const { dimensions: dqDimensions } = useSuspenseQuery(datasetsQuery).data;
+  const { models } = useSuspenseQuery(modelsQuery).data;
+  const { reports, nextSteps } = useSuspenseQuery(investigationsQuery).data;
   const [q, setQ] = useState(
     "Why did our credit division revenue grow more slowly than our competitors this year?",
   );
@@ -67,22 +84,22 @@ function Overview() {
   const invs = useStore((s) => s.investigations);
   const actions = useStore((s) => s.actions);
 
-  const rev = sum(DEPARTMENTS.map((d) => d.revenue));
-  const prior = sum(DEPARTMENTS.map((d) => d.prior));
-  const opex = sum(DEPARTMENTS.map((d) => d.expenses));
-  const priorOpex = sum(DEPARTMENTS.map((d) => d.priorExpenses));
+  const rev = sum(departments.map((d) => d.revenue));
+  const prior = sum(departments.map((d) => d.prior));
+  const opex = sum(departments.map((d) => d.expenses));
+  const priorOpex = sum(departments.map((d) => d.priorExpenses));
   const cirChange = diff(costToIncome(opex, rev), costToIncome(priorOpex, prior));
-  const bal = sum(SLICES.map((s) => s.balance));
-  const npl = sum(SLICES.map((s) => s.npl));
+  const bal = sum(slices.map((s) => s.balance));
+  const npl = sum(slices.map((s) => s.npl));
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
   const dqAvg =
-    sum(DQ_DIMENSIONS.filter((d) => d.score !== null).map((d) => d.score!)) /
-    DQ_DIMENSIONS.filter((d) => d.score !== null).length;
+    sum(dqDimensions.filter((d) => d.score !== null).map((d) => d.score!)) /
+    dqDimensions.filter((d) => d.score !== null).length;
   const modelAlerts = drift.filter((d) => d.status !== "Closed").length;
   const critical =
     issues.filter((i) => i.severity === "Critical" && i.status !== "Resolved").length +
     drift.filter((d) => d.severity === "High" && d.status === "Open").length;
-  const q4 = quarterlyRevenue();
+  const q4 = quarterlyRevenue;
 
   return (
     <div className="space-y-5">
@@ -169,7 +186,7 @@ function Overview() {
         />
         <Kpi
           label="Model alerts"
-          value={`${modelAlerts}/${MODELS.length}`}
+          value={`${modelAlerts}/${models.length}`}
           sub={`${critical} critical findings`}
           definition="Open drift/performance alerts over models in inventory."
           period="As of 14 Jan 2026"
@@ -224,7 +241,7 @@ function Overview() {
           </ResponsiveContainer>
         </ChartFrame>
         <Panel title="Latest executive report">
-          {REPORTS.map((r) => (
+          {reports.map((r) => (
             <Link
               key={r.id}
               to="/reports/$id"
@@ -254,11 +271,13 @@ function Overview() {
           unit="USD M"
           period="FY2025"
           source="Synthetic finance data and budget targets (demo data)"
-          rows={DEPARTMENTS.filter((d) => !d.costCenter).map((d) => ({
-            name: d.name,
-            revenue: d.revenue,
-            target: d.target,
-          }))}
+          rows={departments
+            .filter((d) => !d.costCenter)
+            .map((d) => ({
+              name: d.name,
+              revenue: d.revenue,
+              target: d.target,
+            }))}
           columns={[
             { key: "name", header: "Department" },
             { key: "revenue", header: "Actual" },
@@ -267,7 +286,7 @@ function Overview() {
           className="xl:col-span-2"
         >
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={DEPARTMENTS.filter((d) => !d.costCenter)}>
+            <BarChart data={departments.filter((d) => !d.costCenter)}>
               <CartesianGrid vertical={false} stroke={CHART.grid} />
               <XAxis
                 dataKey="name"
@@ -345,7 +364,7 @@ function Overview() {
         </Panel>
         <Panel title="Recommended actions">
           <ul className="divide-y">
-            {NEXT_STEPS.map((n) => (
+            {nextSteps.map((n) => (
               <li key={n.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                 <Link to={n.link} className="hover:underline">
                   {n.text}

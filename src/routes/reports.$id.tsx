@@ -1,10 +1,12 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Notice, PageHeader } from "@/components/kit";
-import { REPORTS } from "@/data/investigations";
+import { investigationsQuery } from "@/repo/queries";
 
 export const Route = createFileRoute("/reports/$id")({
-  loader: ({ params }) => {
-    if (!REPORTS.some((r) => r.id === params.id)) throw notFound();
+  loader: async ({ params, context: { queryClient } }) => {
+    const { reports } = await queryClient.ensureQueryData(investigationsQuery);
+    if (!reports.some((r) => r.id === params.id)) throw notFound();
   },
   head: ({ params }) => ({
     meta: [{ title: `Report ${params.id} — BankIntelli` }],
@@ -14,7 +16,7 @@ export const Route = createFileRoute("/reports/$id")({
 
 function ReportPlaceholder() {
   const { id } = Route.useParams();
-  const report = REPORTS.find((r) => r.id === id)!;
+  const report = useSuspenseQuery(investigationsQuery).data.reports.find((r) => r.id === id)!;
 
   return (
     <div className="space-y-5">
