@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { UNAVAILABLE } from "@/lib/calc";
+import { DEFINITIONS, type Definition, type DefinitionId } from "@/lib/definitions";
+import { repo } from "@/repo/queries";
 import { cn } from "@/lib/utils";
 import type { EvidenceState } from "@/data/investigations";
 import { StateBoundary, type DataState } from "@/components/states";
@@ -269,47 +271,49 @@ export function Panel({
 }
 
 export function Kpi({
-  label,
+  def,
   value,
   sub,
   delta,
   deltaGood,
-  definition,
-  period = "FY2025",
   status,
   state,
   stateNote,
 }: {
-  label: string;
+  def: DefinitionId;
   value: string;
   sub?: string;
   delta?: string;
   deltaGood?: boolean;
-  definition: string;
-  period?: string;
   status?: ReactNode;
   state?: DataState;
   stateNote?: string;
 }) {
+  const d: Definition = DEFINITIONS[def];
+  const caption = sub ?? d.sub;
   return (
-    <div className="rounded-md border bg-card p-3.5">
+    <div className="rounded-md border bg-card p-3.5" data-definition={def}>
       <div className="flex items-start justify-between gap-2">
-        <span className="eyebrow">{label}</span>
+        <span className="eyebrow">{d.label}</span>
         <Tooltip>
           <TooltipTrigger
-            aria-label={`Definition of ${label}`}
+            aria-label={`Definition of ${d.label}`}
             className="text-muted-foreground hover:text-foreground"
           >
             <Info className="h-3.5 w-3.5" />
           </TooltipTrigger>
           <TooltipContent className="max-w-xs text-xs">
-            <p className="font-medium">{label}</p>
-            <p className="mt-0.5">{definition}</p>
-            <p className="mt-1 opacity-70">Period: {period} · Synthetic</p>
+            <p className="font-medium">{d.label}</p>
+            <p className="mt-0.5">{d.definition}</p>
+            <p className="mt-0.5">Formula: {d.formula}</p>
+            <p className="mt-1 opacity-70">
+              {d.unit} · Period: {d.period} · Source: {d.source}
+              {repo.environment === "demo" ? " · Synthetic" : ""}
+            </p>
           </TooltipContent>
         </Tooltip>
       </div>
-      <StateBoundary state={state} label={label} note={stateNote}>
+      <StateBoundary state={state} label={d.label} note={stateNote}>
         <div className="mt-1.5 num text-2xl font-semibold">{value}</div>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {delta && (
@@ -326,7 +330,7 @@ export function Kpi({
               {delta}
             </span>
           )}
-          {sub && <span>{sub}</span>}
+          {caption && <span>{caption}</span>}
           {status}
         </div>
       </StateBoundary>

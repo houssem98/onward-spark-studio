@@ -11,11 +11,10 @@ describe("a value with a zero denominator", () => {
     render(
       <TooltipProvider>
         <Kpi
-          label="NPL ratio"
+          def="npl_ratio"
           value={fmtPct(pct(1, 0), 2)}
           delta={`${fmtPct(growth(1, 0))} YoY`}
           deltaGood
-          definition="Non-performing balance ÷ outstanding balance."
         />
       </TooltipProvider>,
     );

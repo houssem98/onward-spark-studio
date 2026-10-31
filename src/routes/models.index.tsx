@@ -9,6 +9,7 @@ import { Kpi, PageHeader, Panel, StatusBadge } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/app-store";
 import { downloadFile, toCSV } from "@/lib/calc";
+import { DEMO_DATE } from "@/lib/definitions";
 
 export const Route = createFileRoute("/models/")({
   loader: async ({ context: { queryClient } }) => {
@@ -30,8 +31,6 @@ export const Route = createFileRoute("/models/")({
   }),
   component: ModelsPage,
 });
-
-const TODAY = "2026-01-14";
 
 function ModelsPage() {
   const navigate = useNavigate();
@@ -89,9 +88,9 @@ function ModelsPage() {
       key: "nextReview",
       header: "Next review",
       cell: (m) => (
-        <span className={m.nextReview < TODAY ? "num font-medium text-critical" : "num"}>
+        <span className={m.nextReview < DEMO_DATE ? "num font-medium text-critical" : "num"}>
           {m.nextReview}
-          {m.nextReview < TODAY && " · overdue"}
+          {m.nextReview < DEMO_DATE && " · overdue"}
         </span>
       ),
     },
@@ -129,29 +128,18 @@ function ModelsPage() {
         }
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Kpi def="models_in_inventory" value={String(models.length)} />
         <Kpi
-          label="Models in inventory"
-          value={String(models.length)}
-          definition="Registered models across all environments."
-          period="As of 14 Jan 2026"
-        />
-        <Kpi
-          label="Tier 1 models"
+          def="tier1_models"
           value={String(models.filter((m) => m.riskTier === "Tier 1").length)}
-          definition="Highest model risk tier requiring annual independent validation."
-          period="As of 14 Jan 2026"
         />
         <Kpi
-          label="Overdue reviews"
-          value={String(models.filter((m) => m.nextReview < TODAY).length)}
-          definition="Models whose next review date has passed."
-          period="As of 14 Jan 2026"
+          def="overdue_reviews"
+          value={String(models.filter((m) => m.nextReview < DEMO_DATE).length)}
         />
         <Kpi
-          label="Open alerts"
+          def="open_model_alerts"
           value={String(drift.filter((d) => d.status !== "Closed").length)}
-          definition="Drift or performance alerts not yet dispositioned."
-          period="As of 14 Jan 2026"
         />
       </div>
 

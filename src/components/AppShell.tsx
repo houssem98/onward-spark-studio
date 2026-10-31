@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/app-store";
-import { answer, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
+import { answer, metricLabel, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -359,10 +359,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <dl className="divide-y rounded-md border">
                       {a.metrics.map((m) => (
                         <div
-                          key={m.label}
+                          key={metricLabel(m)}
                           className="flex justify-between gap-3 px-2.5 py-1.5 text-xs"
                         >
-                          <dt className="text-muted-foreground">{m.label}</dt>
+                          <dt className="text-muted-foreground">{metricLabel(m)}</dt>
                           <dd className="num text-right font-medium">{m.value}</dd>
                         </div>
                       ))}

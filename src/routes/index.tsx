@@ -136,60 +136,31 @@ function Overview() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
         <Kpi
-          label="Operating income"
+          def="operating_income"
           value={fmtM(rev, 0)}
           delta={`${fmtPct(growth(rev, prior))} YoY`}
           deltaGood
-          definition="Sum of operating income across revenue-generating units."
         />
         <Kpi
-          label="Operating expenses"
+          def="operating_expenses"
           value={fmtM(opex, 0)}
           delta={`${fmtPct(growth(opex, priorOpex))} YoY`}
           deltaGood={false}
-          definition="Total operating expenses including cost centers."
         />
         <Kpi
-          label="Cost-to-income"
+          def="cost_to_income"
           value={fmtPct(costToIncome(opex, rev))}
           delta={fmtFixed(cirChange, 1, "pp")}
           deltaGood={cirChange !== null && cirChange < 0}
-          definition="Operating expenses ÷ operating income."
         />
+        <Kpi def="outstanding_balance" value={fmtM(bal, 0)} />
+        <Kpi def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
+        <Kpi def="open_crime_alerts" value={String(openAlerts.length)} />
+        <Kpi def="dq_dimension_mean" value={dqAvg.toFixed(1)} />
         <Kpi
-          label="Credit exposure"
-          value={fmtM(bal, 0)}
-          sub="balance"
-          definition="Outstanding loan balance (stock) at period end."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="NPL ratio"
-          value={fmtPct(pct(npl, bal), 2)}
-          sub="90+ DPD"
-          definition="Non-performing balance ÷ outstanding balance."
-          period="31 Dec 2025"
-        />
-        <Kpi
-          label="Fin. crime alerts"
-          value={String(openAlerts.length)}
-          sub="open"
-          definition="Open fraud and AML alerts (synthetic)."
-          period="As of 14 Jan 2026"
-        />
-        <Kpi
-          label="Data quality"
-          value={dqAvg.toFixed(1)}
-          sub="simulated score"
-          definition="Mean of measurable dimension scores. Accuracy excluded (not independently measurable). Simulated, not a real measurement."
-          period="Week 02"
-        />
-        <Kpi
-          label="Model alerts"
+          def="open_model_alerts"
           value={`${modelAlerts}/${models.length}`}
           sub={`${critical} critical findings`}
-          definition="Open drift/performance alerts over models in inventory."
-          period="As of 14 Jan 2026"
         />
       </div>
 

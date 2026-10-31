@@ -134,9 +134,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L1 T2
 
 ### F25 · medium · Server and client render different content
-- Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown. Candidate cause, not verified: numbers formatted with `toLocaleString()` and no locale, which can differ between server and browser.
+- Evidence: hydration mismatches on the credit page and, at 390 px, the investigations page (`docs/audit/VISUAL_BASELINE.md#Hydration mismatches.`); the client re-renders the tree, so what the server sent is not what is shown. Cause confirmed in L2 T6: numbers formatted with `toLocaleString()` and no locale render as `12,450` on the server (en-US) and `12 450` in a French-locale browser; at the previous commit, French-locale Chrome on /credit logged `Hydration failed because the server rendered text didn't match the client`. Those five numbers now use `src/lib/calc.ts#export const fmtNum = (v: number) => v.toLocaleString("en-US");`, and afterwards French-locale Chrome at 390 and 1440 px on /credit, /crime, /crime/CASE-0917, /data and /investigations, and English-locale Chrome at 390 px on /investigations and /credit, logged no hydration error.
 - Fix: L2 T6 (L1 T2 was named too but did not fix it; recorded by the L1 T7 council)
-- Status: open
+- Status: fixed in L2 T6
 
 ### F26 · high · A VERIFIED drift claim contradicts the app's own calculation
 - Evidence: the fixture claims `src/data/investigations.ts#debt_service_coverage PSI exceeds 0.10 vs approved reference period.` and marks it VERIFIED, but the app's own `psi` over the same bins gives 0.0900, and every feature stays under 0.10 (maker probe: `debt_service_coverage=0.0900 sector_code=0.0471 years_in_business=0.0013 revenue_band=0.0010 utilization_rate=0.0731`), so the drift tab shows every band "Stable" beside a High alert seeded as "PSI threshold exceeded". The finance fixture cited a test file that did not exist (`src/data/finance.ts#see calc.test.ts`); L2 T1 added it, and it checks that every demo bridge reconciles (`src/test/calc.test.ts#reconciles every demo bridge`).
@@ -169,7 +169,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F32 · medium · Figures that do not reconcile
-- Evidence: the data-quality KPI shows 96.1 for week 02 while its own trend has `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; the only Critical quality issue is inside its own tolerance (`src/data/datasets.ts#± 0.05%` against `src/data/datasets.ts#0.025% of control`); the peer benchmark is described as the mean of `src/data/finance.ts#mean credit revenue of high-comparability peers` while including Cascade, rated Medium (maker probe: `Cascade Federal:Medium`); the copilot's bridge text is a literal (`src/lib/copilot.ts#Measured: volume −$18.0M`) beside the claim that arithmetic is computed; "critical notifications", the overview's model alerts and the inventory's open alerts are three different counts; the investigations register's "Open issues" column shows a typed-in number, not a count (`src/data/investigations.ts#outstanding: 3,`).
+- Evidence: the data-quality KPI shows 96.1 for week 02 while its own trend has `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; the only Critical quality issue is inside its own tolerance (`src/data/datasets.ts#± 0.05%` against `src/data/datasets.ts#0.025% of control`); the peer benchmark is described as the mean of `src/data/finance.ts#mean credit revenue of high-comparability peers` while including Cascade, rated Medium (maker probe: `Cascade Federal:Medium`); the copilot's bridge text is a literal (`src/lib/copilot.ts#Measured: volume −$18.0M`) beside the claim that arithmetic is computed; "critical notifications", the overview's model alerts and the inventory's open alerts are three different counts; the investigations register's "Open issues" column shows a typed-in number, not a count (`src/data/investigations.ts#outstanding: 3,`). Since L2 T6 the two data-quality figures carry different names (F41), the overview's and the inventory's open model-alert counts share one definition (`src/lib/definitions.ts#formula: "Count of drift alerts whose status is not Closed",`), and the peer benchmark's definition says one of its three peers has medium comparability; the rest stays with L4 T2.
 - Fix: L2 T6, L4 T2
 - Status: open
 
@@ -204,7 +204,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F37 · low · Small truth gaps
-- Evidence: a frozen date drives "overdue" (`src/routes/models.index.tsx#const TODAY = "2026-01-14";`) while audit times use the real clock; the copilot's `src/lib/copilot.ts#/margin|nim/` also matches "minimum"; the table CSV writes amounts without their currency while alerts mix EUR and USD.
+- Evidence: a frozen date drives "overdue" while audit times use the real clock; since L2 T6 that date is one named constant the definitions state (`src/lib/definitions.ts#export const DEMO_DATE = "2026-01-14";`), so the overdue count says what it is measured against. The copilot's margin pattern also matched "minimum"; L2 T6 made it match whole words (`src/lib/copilot.ts#\bmargin\b|\bnim\b`). Still open, for L2 T7: the table CSV writes amounts without their currency while alerts mix EUR and USD.
 - Fix: L2 T6, L2 T7
 - Status: open
 
@@ -214,11 +214,11 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F41 · low · Two data-quality scores for the same week disagree
-- Evidence: the KPI `src/routes/data.tsx#label="Avg quality score"` averages the dimension scores to 96.1 for Week 02, while the trend chart on the same page ends at `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; two definitions share one name. Found by the L1 T7 council.
+- Evidence: the KPI averaged the dimension scores to 96.1 for Week 02 under the name "Avg quality score", while the trend chart on the same page ends at `src/data/datasets.ts#{ week: "W02", score: 93.9 },`; two definitions shared one name. Found by the L1 T7 council. L2 T6 gave the KPI its own definition and name (`src/lib/definitions.ts#label: "Mean dimension score",`), which says it is not the dataset average the trend plots; the overview's data-quality tile uses the same definition, and `src/test/definitions.test.tsx#names each metric once` fails when two definitions share a label.
 - Fix: L2 T6
-- Status: open
+- Status: fixed in L2 T6
 
-### F42 · low · A KPI shows its period only on hover and names no source
-- Evidence: `src/components/kit.tsx#Period: {period} · Synthetic` sits inside the KPI's tooltip, and the KPI takes no source; charts gained unit, period and source in L1 T9, KPIs did not. Found by the L1 T7 council.
+### F42 · low · A KPI shows its period and source only on hover
+- Evidence: the KPI's tooltip held its period and named no source. Since L2 T6 the tooltip shows unit, period and source from the definitions registry (`src/components/kit.tsx#Period: {d.period} · Source: {d.source}`), but still only on hover; charts show theirs in a caption since L1 T9. Found by the L1 T7 council.
 - Fix: L4 T5
 - Status: open

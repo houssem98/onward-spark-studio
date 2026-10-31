@@ -15,9 +15,7 @@ const show = (ui: ReactElement) => render(<TooltipProvider>{ui}</TooltipProvider
 const subjects: Record<string, { content: RegExp; ui: (s: DataState) => ReactElement }> = {
   Kpi: {
     content: /42\.0%/,
-    ui: (s) => (
-      <Kpi label="Approval rate" value="42.0%" definition="Approvals ÷ applications" state={s} />
-    ),
+    ui: (s) => <Kpi def="approval_rate" value="42.0%" state={s} />,
   },
   DataTable: {
     content: /Row A/,

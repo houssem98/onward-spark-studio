@@ -1,12 +1,20 @@
 // Predefined analytical routing — no live LLM is connected. Answers are composed from deterministic demo data.
-import { diff, fmtFixed, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
+import { diff, fmtFixed, fmtM, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
+import { DEFINITIONS, DEMO_DATE, type DefinitionId } from "@/lib/definitions";
 import type { EvidenceState } from "@/data/investigations";
 import type { CrimeData, DatasetsData, FinanceData, ModelsData } from "@/repo/types";
+
+// A figure names its definition; a list entry (a dataset, a case) carries its own label.
+export type CopilotMetric =
+  { def: DefinitionId; period?: string; value: string } | { label: string; value: string };
+
+export const metricLabel = (m: CopilotMetric) =>
+  "def" in m ? `${DEFINITIONS[m.def].label}${m.period ? ` ${m.period}` : ""}` : m.label;
 
 export interface CopilotAnswer {
   intent: string;
   scope: string;
-  metrics: { label: string; value: string }[];
+  metrics: CopilotMetric[];
   summary: string[];
   state: EvidenceState;
   missing: string[];
@@ -35,12 +43,12 @@ export function answer(
       intent: "Credit performance vs peer group",
       scope: "Credit division · FY2025 · USD M · peers: Harborline, Meridian, Cascade",
       metrics: [
-        { label: "Credit revenue FY2025", value: `$${credit.revenue}M` },
-        { label: "YoY growth", value: fmtPct(growth(credit.revenue, credit.prior)) },
-        { label: "Peer benchmark", value: `$${b.base}M` },
+        { def: "credit_revenue", period: "FY2025", value: fmtM(credit.revenue) },
+        { def: "credit_revenue_growth", value: fmtPct(growth(credit.revenue, credit.prior)) },
+        { def: "peer_benchmark", value: fmtM(b.base) },
         {
-          label: "Gap (reconciled)",
-          value: `$${r.gap}M · ${r.reconciles ? "reconciles" : "does not reconcile"}`,
+          def: "revenue_gap",
+          value: `${fmtM(r.gap)} · ${r.reconciles ? "reconciles" : "does not reconcile"}`,
         },
       ],
       summary: [
@@ -77,7 +85,7 @@ export function answer(
       links: [{ label: "Department performance", to: "/performance" }],
     };
   }
-  if (/margin|nim/.test(t)) {
+  if (/\bmargin\b|\bnim\b/.test(t)) {
     const a = scorecard.FY2025,
       b = scorecard.FY2024;
     const n1 = pct(a.nii, a.avgEarningAssets),
@@ -86,10 +94,10 @@ export function answer(
       intent: "Net interest margin change",
       scope: "Bank-wide · FY2025 vs FY2024",
       metrics: [
-        { label: "NIM FY2025", value: fmtPct(n1, 2) },
-        { label: "NIM FY2024", value: fmtPct(n0, 2) },
+        { def: "nim", period: "FY2025", value: fmtPct(n1, 2) },
+        { def: "nim", period: "FY2024", value: fmtPct(n0, 2) },
         {
-          label: "Avg earning assets growth",
+          def: "earning_assets_growth",
           value: fmtPct(growth(a.avgEarningAssets, b.avgEarningAssets)),
         },
       ],
@@ -140,7 +148,7 @@ export function answer(
     };
   }
   if (/model|validation|overdue/.test(t)) {
-    const today = "2026-01-14";
+    const today = DEMO_DATE;
     const overdue = models.filter((m) => m.nextReview < today);
     return {
       intent: "Models with overdue validation",

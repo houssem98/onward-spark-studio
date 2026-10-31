@@ -26,6 +26,7 @@ import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import type { CrimeAlert } from "@/data/crime";
+import { fmtNum } from "@/lib/calc";
 import { crimeQuery } from "@/repo/queries";
 import { useActions, useStore } from "@/store/app-store";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -113,45 +114,22 @@ function CrimePage() {
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi
-          label="Open fraud alerts"
+          def="open_fraud_alerts"
           value={String(open.filter((x) => x.type === "Fraud").length)}
-          definition="Fraud alerts not closed."
-          period="As of 14 Jan 2026"
         />
+        <Kpi def="open_aml_alerts" value={String(open.filter((x) => x.type === "AML").length)} />
         <Kpi
-          label="Open AML alerts"
-          value={String(open.filter((x) => x.type === "AML").length)}
-          definition="AML alerts not closed."
-          period="As of 14 Jan 2026"
-        />
-        <Kpi
-          label="Critical cases"
+          def="critical_cases"
           value={String(
             cases.filter((c) => c.priority === "Critical" && c.status !== "Closed").length,
           )}
-          definition="Open cases with Critical priority."
-          period="As of 14 Jan 2026"
         />
         <Kpi
-          label="Avg alert age"
+          def="avg_alert_age"
           value={`${(open.reduce((s, x) => s + x.ageDays, 0) / Math.max(open.length, 1)).toFixed(1)}d`}
-          definition="Mean days since alert generation for open alerts."
-          period="As of 14 Jan 2026"
         />
-        <Kpi
-          label="SLA breaches"
-          value={String(open.filter((x) => x.ageDays > 10).length)}
-          sub=">10 days"
-          definition="Open alerts older than the 10-day triage SLA."
-          period="As of 14 Jan 2026"
-        />
-        <Kpi
-          label="False-positive rate"
-          value="N/A"
-          sub="labels unreliable"
-          definition="Not shown: confirmed outcomes are unavailable for most alerts."
-          period="—"
-        />
+        <Kpi def="sla_breaches" value={String(open.filter((x) => x.ageDays > 10).length)} />
+        <Kpi def="false_positive_rate" value="N/A" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -250,7 +228,7 @@ function CrimePage() {
                 <div>
                   <dt className="eyebrow">Amount</dt>
                   <dd className="num">
-                    {a.amount.toLocaleString()} {a.currency}
+                    {fmtNum(a.amount)} {a.currency}
                   </dd>
                 </div>
                 <div>

@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { Dataset, LineageNode } from "@/data/datasets";
+import { fmtNum } from "@/lib/calc";
 import { datasetsQuery } from "@/repo/queries";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import {
@@ -130,30 +131,18 @@ function DataPage() {
         description="Catalog, lineage and data quality for datasets that feed reports and models. Lineage is illustrative, not harvested from live systems."
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Kpi def="catalogued_datasets" value={String(datasets.length)} />
         <Kpi
-          label="Catalogued datasets"
-          value={String(datasets.length)}
-          definition="Datasets registered in the catalog."
-          period="As of 14 Jan 2026"
-        />
-        <Kpi
-          label="Certified"
+          def="certified_datasets"
           value={String(Object.values(cert).filter((c) => c === "Certified").length)}
-          definition="Datasets certified by owner and steward."
-          period="As of 14 Jan 2026"
         />
         <Kpi
-          label="Open DQ issues"
+          def="open_dq_issues"
           value={String(issues.filter((i) => i.status !== "Resolved").length)}
-          definition="Failed quality rules not yet resolved."
-          period="As of 14 Jan 2026"
         />
         <Kpi
-          label="Avg quality score"
+          def="dq_dimension_mean"
           value={(measurable.reduce((a, d) => a + d.score!, 0) / measurable.length).toFixed(1)}
-          sub="simulated"
-          definition="Mean of measurable dimension scores. Simulated, not a real bank measurement."
-          period="Week 02"
         />
       </div>
 
@@ -422,7 +411,7 @@ function DataPage() {
                         <div className="text-xs text-muted-foreground">{i.dataset}</div>
                       </td>
                       <td className="px-3 py-2">{i.dimension}</td>
-                      <td className="num px-3 py-2 text-right">{i.affected.toLocaleString()}</td>
+                      <td className="num px-3 py-2 text-right">{fmtNum(i.affected)}</td>
                       <td className="px-3 py-2">
                         <StatusBadge value={i.severity} />
                       </td>
@@ -598,7 +587,7 @@ function DataPage() {
                 </Field>
                 <Field label="Detail">{issue.detail}</Field>
                 <Field label="Affected records">
-                  <span className="num">{issue.affected.toLocaleString()}</span>
+                  <span className="num">{fmtNum(issue.affected)}</span>
                 </Field>
                 <Field label="Dataset">
                   {issue.dataset} —{" "}

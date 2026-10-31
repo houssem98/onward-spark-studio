@@ -30,7 +30,7 @@ import {
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { downloadFile, fmtFixed, fmtM, fmtPct, growth, pct, round, sum } from "@/lib/calc";
+import { downloadFile, fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
 import { creditQuery } from "@/repo/queries";
 
 export const Route = createFileRoute("/credit")({
@@ -193,81 +193,29 @@ function CreditPage() {
       <StateBoundary state={empty} label="portfolio slices">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
           <Kpi
-            label="Outstanding balance"
+            def="outstanding_balance"
             value={fmtM(bal, 0)}
             delta={`${fmtPct(growth(bal, prior))} YoY`}
             deltaGood
-            sub="balance"
-            definition="Stock of outstanding principal at period end."
-            period="31 Dec 2025"
           />
+          <Kpi def="new_originations" value={fmtM(orig, 0)} />
+          <Kpi def="interest_fee_revenue" value={fmtM(rev)} />
+          <Kpi def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
+          <Kpi def="dpd30_rate" value={fmtPct(pct(dpd, bal), 2)} />
+          <Kpi def="ecl" value={fmtM(ecl)} />
           <Kpi
-            label="New originations"
-            value={fmtM(orig, 0)}
-            sub="flow"
-            definition="Principal disbursed during the year."
-          />
-          <Kpi
-            label="Interest & fee revenue"
-            value={fmtM(rev)}
-            sub="flow"
-            definition="Interest and fee income recognized in the year."
-          />
-          <Kpi
-            label="NPL ratio"
-            value={fmtPct(pct(npl, bal), 2)}
-            sub="ratio"
-            definition="Non-performing balance ÷ outstanding balance (observed)."
-            period="31 Dec 2025"
-          />
-          <Kpi
-            label="30+ DPD rate"
-            value={fmtPct(pct(dpd, bal), 2)}
-            sub="ratio"
-            definition="Balance 30+ days past due ÷ balance."
-            period="31 Dec 2025"
-          />
-          <Kpi
-            label="Expected credit loss"
-            value={fmtM(ecl)}
-            sub="model output"
-            definition="IFRS 9 ECL stock — model estimate, not observed loss."
-            period="31 Dec 2025"
-          />
-          <Kpi
-            label="Net write-offs"
+            def="net_write_offs"
             value={fmtM(wo - rec)}
             sub={`WO ${wo.toFixed(1)} · Rec ${rec.toFixed(1)}`}
-            definition="Write-offs less recoveries (observed flow)."
           />
+          <Kpi def="approval_rate" value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))} />
+          <Kpi def="app_to_disbursement" value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))} />
           <Kpi
-            label="Approval rate"
-            value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))}
-            definition="Approvals ÷ applications (bank-wide)."
-          />
-          <Kpi
-            label="App → disbursement"
-            value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))}
-            definition="Disbursements ÷ applications."
-          />
-          <Kpi
-            label="Avg loan size"
+            def="avg_loan_size"
             value={`$${((bal * 1e6) / Math.max(loans, 1) / 1000).toFixed(1)}k`}
-            definition="Balance ÷ number of loans."
-            period="31 Dec 2025"
           />
-          <Kpi
-            label="Limit utilization"
-            value={fmtPct(pct(bal, lim))}
-            definition="Balance ÷ committed limits."
-            period="31 Dec 2025"
-          />
-          <Kpi
-            label="Collateral coverage"
-            value={fmtPct(pct(coll, bal), 0)}
-            definition="Collateral value ÷ balance (simulated valuations)."
-            period="31 Dec 2025"
-          />
+          <Kpi def="limit_utilization" value={fmtPct(pct(bal, lim))} />
+          <Kpi def="collateral_coverage" value={fmtPct(pct(coll, bal), 0)} />
         </div>
       </StateBoundary>
 
@@ -364,7 +312,7 @@ function CreditPage() {
                   />
                 </div>
                 <span className="num text-right">
-                  {f.count.toLocaleString()}{" "}
+                  {fmtNum(f.count)}{" "}
                   {i > 0 && (
                     <span className="text-muted-foreground">
                       ({fmtPct(pct(f.count, funnel[i - 1]!.count), 0)})
@@ -404,16 +352,14 @@ function CreditPage() {
           <StateBoundary state={empty} label="portfolio slices">
             <div className="grid grid-cols-2 gap-3">
               <Kpi
-                label="Stressed ECL"
+                def="stressed_ecl"
                 value={fmtM(ecl * sc.eclMultiplier)}
                 delta={`×${sc.eclMultiplier}`}
-                definition="Model ECL × scenario multiplier (illustrative)."
               />
               <Kpi
-                label="Stressed NPL ratio"
+                def="stressed_npl_ratio"
                 value={fmtPct(nplRatio === null ? null : nplRatio + sc.nplShift, 2)}
                 delta={`+${sc.nplShift}pp`}
-                definition="Observed NPL ratio + scenario shift."
               />
             </div>
           </StateBoundary>

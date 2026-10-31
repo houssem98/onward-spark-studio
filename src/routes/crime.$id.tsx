@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useActions, useStore } from "@/store/app-store";
-import { downloadFile } from "@/lib/calc";
+import { downloadFile, fmtNum } from "@/lib/calc";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/crime/$id")({
@@ -158,7 +158,7 @@ function CasePage() {
                     <td className="num px-3 py-2 text-xs">{t.date}</td>
                     <td className="px-3 py-2">{t.direction}</td>
                     <td className="num px-3 py-2 text-right">
-                      {t.amount.toLocaleString()} {t.currency}
+                      {fmtNum(t.amount)} {t.currency}
                     </td>
                     <td className="px-3 py-2">{t.counterparty}</td>
                     <td className="px-3 py-2">

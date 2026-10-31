@@ -45,6 +45,7 @@ import {
 } from "@/lib/calc";
 import { useActions, useStore } from "@/store/app-store";
 import { financeQuery } from "@/repo/queries";
+import { DEMO_DATE } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/performance")({
@@ -169,7 +170,7 @@ function PerformancePage() {
       id,
       title: wq,
       question: wq,
-      created: "2026-01-14",
+      created: DEMO_DATE,
       status: "Draft",
       department: departments.find((d) => d.id === wDept)!.name,
       owner: "J. Avery",
@@ -197,67 +198,40 @@ function PerformancePage() {
         <TabsContent value="scorecard" className="mt-4 space-y-3">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             <Kpi
-              label="Total operating income"
+              def="operating_income"
               value={fmtM(rev, 0)}
               delta={`${fmtPct(growth(rev, b.nii + b.nonInterest))} YoY`}
               deltaGood
-              definition="NII + non-interest income. Source: DS-009 Finance reporting."
             />
             <Kpi
-              label="Net interest income"
+              def="net_interest_income"
               value={fmtM(a.nii, 0)}
               delta={fmtPct(growth(a.nii, b.nii))}
               deltaGood
-              definition="Interest income − interest expense. Source: DS-001 GL."
             />
             <Kpi
-              label="Net interest margin"
+              def="nim"
               value={fmtPct(nim, 2)}
               delta={fmtFixed(diff(nim, pct(b.nii, b.avgEarningAssets)), 2, "pp")}
               deltaGood={false}
-              definition="NII ÷ average earning assets."
             />
             <Kpi
-              label="Non-interest income"
+              def="non_interest_income"
               value={fmtM(a.nonInterest, 0)}
               delta={fmtPct(growth(a.nonInterest, b.nonInterest))}
               deltaGood
-              definition="Fees, commissions, trading and other income."
             />
             <Kpi
-              label="Operating expenses"
+              def="operating_expenses"
               value={fmtM(opex, 0)}
               delta={fmtPct(growth(opex, priorOpex))}
               deltaGood={false}
-              definition="Total operating expenses across all units."
             />
-            <Kpi
-              label="Cost-to-income"
-              value={fmtPct(ns.cir)}
-              definition="Operating expenses ÷ total operating income."
-            />
-            <Kpi
-              label="Return on assets"
-              value={fmtPct(ns.roa, 2)}
-              definition="Net income ÷ average total assets."
-            />
-            <Kpi
-              label="Return on equity"
-              value={fmtPct(ns.roe)}
-              definition="Net income ÷ average shareholders' equity."
-            />
-            <Kpi
-              label="Credit growth"
-              value={fmtPct(ns.creditGrowth)}
-              definition="Change in period-end gross loans."
-              period="FY2025 vs FY2024"
-            />
-            <Kpi
-              label="Deposit growth"
-              value={fmtPct(ns.depositGrowth)}
-              definition="Change in period-end customer deposits."
-              period="FY2025 vs FY2024"
-            />
+            <Kpi def="cost_to_income" value={fmtPct(ns.cir)} />
+            <Kpi def="roa" value={fmtPct(ns.roa, 2)} />
+            <Kpi def="roe" value={fmtPct(ns.roe)} />
+            <Kpi def="credit_growth" value={fmtPct(ns.creditGrowth)} />
+            <Kpi def="deposit_growth" value={fmtPct(ns.depositGrowth)} />
           </div>
           <Notice>
             Market share is not shown: no comparable market-size data source is available.

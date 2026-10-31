@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useActions, useStore } from "@/store/app-store";
 import { classificationMetrics, downloadFile, fmtFixed, psi, psiBand } from "@/lib/calc";
+import { MODEL_METRICS } from "@/lib/definitions";
 
 const TABS = [
   "overview",
@@ -204,13 +205,7 @@ function ModelDetail() {
         <TabsContent value="performance" className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {Object.entries(v.metrics).map(([k, x]) => (
-              <Kpi
-                key={k}
-                label={k.toUpperCase()}
-                value={String(x)}
-                definition={`${k} for version ${v.version} on the holdout set.`}
-                period="Validation sample"
-              />
+              <Kpi key={k} def={MODEL_METRICS[k]!} value={String(x)} />
             ))}
           </div>
           {m.kind === "classification" && cm && (
