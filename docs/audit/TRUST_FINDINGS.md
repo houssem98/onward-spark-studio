@@ -74,14 +74,14 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L2 T1
 
 ### F13 · medium · CSV export does not neutralize formulas
-- Evidence: the escaper quotes commas, quotes and newlines only (`src/lib/calc.ts#const esc = (v: unknown) => {`), so a cell starting with `=`, `+`, `-` or `@` runs as a formula in a spreadsheet.
+- Evidence: the escaper quoted commas, quotes and newlines only (`src/lib/calc.ts#const esc = (v: unknown) => {`), so a cell starting with `=`, `+`, `-` or `@` ran as a formula in a spreadsheet. Since L2 T7 a text cell starting with `=`, `+`, `-`, `@`, tab or carriage return gets a leading apostrophe and a number stays a number (`src/lib/calc.ts#Text that starts like a formula stays text in a spreadsheet`), checked for each character by `src/test/exports.test.tsx#keeps CSV cells a spreadsheet would run as formulas as text`.
 - Fix: L2 T7
-- Status: open
+- Status: fixed in L2 T7
 
 ### F14 · medium · Two CSV exports carry no synthetic label
-- Evidence: the table export's toast says synthetic and the file does not (`src/components/DataTable.tsx#synthetic records`); the inventory CSV has no label (`src/routes/models.index.tsx#"model-inventory.csv",`).
+- Evidence: the table export's toast said synthetic and the file did not (`src/components/DataTable.tsx#synthetic records`); the inventory CSV had no label (`src/routes/models.index.tsx#"model-inventory.csv",`). Since L2 T7 every downloaded file opens with the environment and synthetic line (`src/lib/calc.ts#Every downloaded file states its environment on its first line.`), checked by `src/test/exports.test.tsx#puts the environment and synthetic line first in CSV and Markdown files`, and no other code builds a download (`src/test/exports.test.tsx#builds every download through downloadFile`).
 - Fix: L2 T7
-- Status: open
+- Status: fixed in L2 T7
 
 ### F15 · medium · Exports are neither audited nor permission-checked
 - Evidence: `src/lib/calc.ts#export function downloadFile(`
@@ -189,9 +189,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F36 · medium · The model card can describe a version that is not in production
-- Evidence: the card prints the picker's version (`src/routes/models.$id.tsx#- Version: ${version}`), which may be a candidate, beside the model's lifecycle, while its classification metrics come from the model rather than that version.
+- Evidence: the card printed the picker's version, which may be a candidate, beside the model's lifecycle, as if that version were the one in use. Since L2 T7 it names the version it describes with that version's status, and the model's lifecycle with its active version (`src/routes/models.$id.tsx#- Version described: ${v.version} (${v.status})`); its metrics section was already the described version's. Checked by `src/test/exports.test.tsx#says which version a model card describes and that version's status`.
 - Fix: L2 T7
-- Status: open
+- Status: fixed in L2 T7
 
 ### F38 · medium · Missing drift data is shown as an all-clear
 - Evidence: every model without drift data shows `src/routes/models.$id.tsx#No feature-level drift beyond thresholds for this model in the current period.`, including a model with an open drift alert; the roadmap requires unavailable to look unavailable.
@@ -204,9 +204,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F37 · low · Small truth gaps
-- Evidence: a frozen date drives "overdue" while audit times use the real clock; since L2 T6 that date is one named constant the definitions state (`src/lib/definitions.ts#export const DEMO_DATE = "2026-01-14";`), so the overdue count says what it is measured against. The copilot's margin pattern also matched "minimum"; L2 T6 made it match whole words (`src/lib/copilot.ts#\bmargin\b|\bnim\b`). Still open, for L2 T7: the table CSV writes amounts without their currency while alerts mix EUR and USD.
+- Evidence: a frozen date drives "overdue" while audit times use the real clock; since L2 T6 that date is one named constant the definitions state (`src/lib/definitions.ts#export const DEMO_DATE = "2026-01-14";`), so the overdue count says what it is measured against. The copilot's margin pattern also matched "minimum"; L2 T6 made it match whole words (`src/lib/copilot.ts#\bmargin\b|\bnim\b`). The table CSV wrote amounts without their currency while alerts mix EUR and USD; since L2 T7 the alerts export writes each amount with its currency (`src/test/exports.test.tsx#exports alert amounts with their currency`).
 - Fix: L2 T6, L2 T7
-- Status: open
+- Status: fixed in L2 T7
 
 ### F40 · medium · The crime trend is not derived from the queue it cites
 - Evidence: the trend chart named the alert queue as its source; since L1 T11 it says `src/routes/crime.index.tsx#not derived from the alert queue below`, which is true but leaves the gap: the queue is `src/data/crime.ts#export const ALERTS: CrimeAlert[] = Array.from({ length: 36 }` alerts dated 1 to 14 Jan 2026, while the plotted series starts at `src/data/crime.ts#{ week: "W49", fraud: 412, aml: 96 },`; found by the L1 T7 council.

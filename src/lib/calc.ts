@@ -1,6 +1,8 @@
 // Deterministic financial arithmetic. All AI narrative must reference values produced here.
 // A value with a zero denominator is unavailable: null, never 0 or NaN.
 
+import { repo } from "@/repo/queries";
+
 export const UNAVAILABLE = "Unavailable";
 
 // Half away from zero; toPrecision(15) drops binary noise, so 1.005 rounds to 1.01.
@@ -120,14 +122,23 @@ export function toCSV(rows: Record<string, unknown>[]) {
   if (!first) return "";
   const keys = Object.keys(first);
   const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    let s = v == null ? "" : String(v);
+    // Text that starts like a formula stays text in a spreadsheet; a number stays a number.
+    if (typeof v !== "number" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [keys.join(","), ...rows.map((r) => keys.map((k) => esc(r[k])).join(","))].join("\n");
 }
 
+export const exportNotice = () =>
+  repo.environment === "demo"
+    ? "Demo environment · synthetic data: every figure belongs to the fictional Northstar Bank."
+    : "Production environment";
+
+// Every downloaded file states its environment on its first line.
 export function downloadFile(name: string, content: string, type = "text/csv") {
-  const blob = new Blob([content], { type });
+  const notice = type === "text/markdown" ? `> ${exportNotice()}\n` : exportNotice();
+  const blob = new Blob([`${notice}\n${content}`], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

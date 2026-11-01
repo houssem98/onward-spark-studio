@@ -12,6 +12,7 @@ export interface Column<T> {
   header: string;
   cell?: (row: T) => ReactNode;
   value?: (row: T) => string | number;
+  csv?: (row: T) => string | number;
   align?: "left" | "right";
   className?: string;
 }
@@ -83,7 +84,9 @@ export function DataTable<T extends object>({
   const visible = filtered.slice(p * pageSize, p * pageSize + pageSize);
 
   const exportCsv = () => {
-    const data = filtered.map((r) => Object.fromEntries(columns.map((c) => [c.header, val(r, c)])));
+    const data = filtered.map((r) =>
+      Object.fromEntries(columns.map((c) => [c.header, c.csv ? c.csv(r) : val(r, c)])),
+    );
     downloadFile(`${exportName}.csv`, toCSV(data));
     toast.success(`Exported ${data.length} synthetic records`);
   };

@@ -92,6 +92,7 @@ function CrimePage() {
       key: "amount",
       header: "Amount",
       align: "right",
+      csv: (r) => `${r.amount} ${r.currency}`,
       cell: (r) =>
         `${r.amount.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${r.currency}`,
     },

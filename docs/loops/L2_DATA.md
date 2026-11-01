@@ -23,7 +23,7 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
 - [x] T4 Migrate the rest. needs: T3. Credit, crime, data, models, audit and the store read and write through the repository. Evidence: the T2 test passes with an empty exemption list.
 - [x] T5 Environment. needs: T2. The repository reports `environment: "demo" | "production"`; every demo record carries `synthetic: true`; the production adapter throws "not configured" rather than returning anything; the L1 banner reads the environment from here. Evidence: tests: all demo records are synthetic; the production adapter returns no data.
 - [x] T6 Definitions registry. needs: T2. One registry holds each metric's definition, unit, currency, period basis, formula and source; KPI tiles and the copilot take a definition id, not inline unit strings. Evidence: a test fails when a rendered KPI has no registry id.
-- [ ] T7 Safe exports. needs: T5. Every export (CSV, HTML, Markdown, print) carries an environment and synthetic line; CSV cells starting with `=`, `+`, `-`, `@`, tab or CR are neutralized. Evidence: tests for each format and each leading character.
+- [x] T7 Safe exports. needs: T5. Every export (CSV, HTML, Markdown, print) carries an environment and synthetic line; CSV cells starting with `=`, `+`, `-`, `@`, tab or CR are neutralized. Evidence: tests for each format and each leading character.
 - [ ] T8 Independent check. needs: T1, T4, T6, T7. A different model, in at least 3 independent runs, applies the numbers, synthetic and exports attacks. Evidence: findings quoted in the Journal; `npm run gate` exits 0.
 - [ ] T9 (human) Signoff. needs: T8. Evidence: the signoff line in the Journal.
 
@@ -118,3 +118,16 @@ Deciding rule, fixed before T1 starts: T0 to T8 are ticked, `npm run gate` exits
   - **Docs:** F25 and F41 fixed; F32 records what the registry settled and leaves the rest to L4 T2; F37 and F42 re-pointed and narrowed.
   - **Direction:** goal unchanged; every KPI and copilot figure now has one written definition, which L4's evidence links need.
   - **Next:** L2 T7 safe exports.
+- 2026-11-01 · L2/T7 · started T7
+- 2026-11-01 · L2/T7 · passed · gate green (`GATE EXIT 0`, `Test Files  28 passed (28)`, `Tests  133 passed (133)`, `gate-guard: clean · HEAD..working tree`) · commit see `git log --grep "loop(L2/T7)"` · tick 8 of 15.
+  - **Failing checks first.** `src/test/exports.test.tsx`: `4 failed | 1 passed (5)`. Formula-like cells came out raw (`"=SUM(A1:A9)"`, `"+1+1"`, `"-1+1"`, `"@cmd"`, tab and carriage return); a downloaded CSV started with its header, not an environment line; the alerts CSV wrote bare amounts (`expected 'Alert,Time,Category,Amount,Channel,Sc…' to match /(^|,)\d+ (EUR|USD)(,|$)/m`); the card for MDL-001's candidate version lacked `Version described: 3.3.0-rc1 (Candidate)`. The fifth check, that no code builds a download outside `downloadFile`, already held.
+  - **Changes.**
+    - Every downloaded file opens with the environment line from the repository (`src/lib/calc.ts#Every downloaded file states its environment on its first line.`): a plain line in CSV, a quote line in Markdown.
+    - CSV: a text cell starting with `=`, `+`, `-`, `@`, tab or carriage return gets a leading apostrophe; numbers, negative ones included, stay numbers; a carriage return now also forces quoting.
+    - Table exports take an optional CSV value per column (`src/components/DataTable.tsx#csv?: (row: T) => string | number;`), so the alerts table exports each amount with its currency without changing how the column sorts.
+    - The model card names the version it describes and that version's status, then the model's lifecycle with its active version.
+  - **Formats:** CSV and Markdown as above. No HTML export exists; the server's only HTML is its error page. Print keeps the environment banner, which `src/test/app-shell.test.tsx#shows the synthetic-data banner on every real route and the 404` checks against print-hiding classes.
+  - **Findings:** F13, F14, F36 and F37 fixed. The matrix's export rows say what changed and stay partial, because exports are neither audited nor permission-checked (F15, L3 T5).
+  - **Correction to the T5 entry**, which stays as written: table CSVs export the columns shown (`src/components/DataTable.tsx#Object.fromEntries(columns.map((c) => [c.header, c.csv ? c.csv(r) : val(r, c)])),`), not raw rows, so the synthetic flag never reached them; the inventory CSV and the Markdown files build their own content too.
+  - **Direction:** goal unchanged; a file that leaves the app now says it is demo data, and opening it in a spreadsheet cannot run a formula.
+  - **Next:** L2 T8 independent check, run as a council.
