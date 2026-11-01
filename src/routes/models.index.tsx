@@ -140,6 +140,7 @@ function ModelsPage() {
         <Kpi
           def="open_model_alerts"
           value={String(drift.filter((d) => d.status !== "Closed").length)}
+          sub={`${drift.filter((d) => d.status !== "Closed" && d.severity === "High").length} rated High, not closed`}
         />
       </div>
 

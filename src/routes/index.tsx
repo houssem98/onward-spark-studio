@@ -39,7 +39,6 @@ import { Button } from "@/components/ui/button";
 import { revenueGapInvestigation, useStore } from "@/store/app-store";
 import { copilotBus } from "@/lib/copilot-bus";
 import { creditQuery, datasetsQuery, financeQuery, investigationsQuery } from "@/repo/queries";
-import skyline from "@/assets/skyline.jpg";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context: { queryClient } }) => {
@@ -95,10 +94,6 @@ function Overview() {
   const npl = sum(slices.map((s) => s.npl));
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
   const dqAvg = mean(dqDimensions.flatMap((d) => (d.score === null ? [] : [d.score])));
-  const modelAlerts = drift.filter((d) => d.status !== "Closed").length;
-  const highModelAlerts = drift.filter(
-    (d) => d.status !== "Closed" && d.severity === "High",
-  ).length;
   const series = range === "8q" ? quarterlyRevenue : quarterlyRevenue.slice(4);
   const col = (k: string) => quarterlyRevenue.map((x) => Number(x[k]));
   const cirSpark = quarterlyRevenue.flatMap((x) => {
@@ -214,88 +209,93 @@ function Overview() {
 
   return (
     <div className="space-y-section">
-      <section className="card-surface relative overflow-hidden">
-        <img
-          src={skyline}
-          alt=""
-          aria-hidden
-          width={1600}
-          height={544}
-          className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-none select-none object-cover opacity-90 md:block"
-        />
-        <div className="relative flex flex-col gap-5 p-6 md:p-8">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
           <div className="flex flex-wrap items-center gap-2">
             <SyntheticTag />
             <span className="text-xs text-muted-foreground">
               Northstar Bank (fictional) · FY2025 · USD millions · IFRS basis (synthetic)
             </span>
           </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Executive Overview</h1>
-            <p className="mt-1.5 text-muted-foreground">
-              Welcome back, {user.name.split(" ")[0]}. Here is your bank's performance and risk
-              overview.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => navigate({ to: "/investigations/$id", params: { id: gapInv.id } })}
-            >
-              Open investigation <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-card"
-              onClick={() =>
-                copilotBus.ask(
-                  "Why did our credit division revenue grow more slowly than our competitors this year?",
-                )
-              }
-            >
-              <Search className="h-4 w-4" /> Ask about credit vs peers
-            </Button>
-          </div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Executive Overview</h1>
+          <p className="mt-1.5 text-muted-foreground">
+            Welcome back, {user.name.split(" ")[0]}. What needs attention first, then how the bank
+            is performing.
+          </p>
         </div>
-      </section>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="bg-card"
+            onClick={() =>
+              copilotBus.ask(
+                "Why did our credit division revenue grow more slowly than our competitors this year?",
+              )
+            }
+          >
+            <Search className="h-4 w-4" /> Ask about credit vs peers
+          </Button>
+          <Button
+            onClick={() => navigate({ to: "/investigations/$id", params: { id: gapInv.id } })}
+          >
+            Open investigation <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Panel
+        title="Needs attention"
+        subtitle={`${intel.length} items · from records in this workspace · not live AI output`}
+        bodyClass="p-0"
+      >
+        <ul className="grid md:grid-cols-2 xl:grid-cols-3">
+          {intel.map((i) => (
+            <li
+              key={i.key}
+              className="relative border-b px-5 py-3.5 transition-colors hover:bg-accent/40"
+            >
+              {i.link}
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm font-medium leading-snug">{i.title}</span>
+                <span className="relative">{i.badge}</span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{i.text}</p>
+              <p className="mt-1.5 text-caption text-muted-foreground">
+                <span className="num">{i.date}</span> · {i.module}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+
+      <section
+        aria-label="Decision KPIs"
+        className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 xl:grid-cols-5"
+      >
+        <div className="sm:col-span-2 xl:col-span-1">
+          <Kpi
+            flat
+            basis
+            def="operating_income"
+            value={fmtM(rev, 0)}
+            delta={`${fmtPct(growth(rev, prior))} YoY`}
+            deltaGood
+            spark={col("total")}
+          />
+        </div>
         <Kpi
-          size="lg"
-          def="operating_income"
-          value={fmtM(rev, 0)}
-          delta={`${fmtPct(growth(rev, prior))} YoY`}
-          deltaGood
-          spark={col("total")}
-        />
-        <Kpi
-          size="lg"
-          def="operating_expenses"
-          value={fmtM(opex, 0)}
-          delta={`${fmtPct(growth(opex, priorOpex))} YoY`}
-          deltaGood={false}
-          spark={col("expenses")}
-        />
-        <Kpi
-          size="lg"
+          flat
+          basis
           def="cost_to_income"
           value={fmtPct(costToIncome(opex, rev))}
           delta={fmtFixed(cirChange, 1, "pp")}
           deltaGood={cirChange !== null && cirChange < 0}
           spark={cirSpark}
         />
-        <Kpi size="lg" def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <Kpi def="outstanding_balance" value={fmtM(bal, 0)} />
-        <Kpi def="open_crime_alerts" value={String(openAlerts.length)} />
-        <Kpi def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
-        <Kpi
-          def="open_model_alerts"
-          value={String(modelAlerts)}
-          sub={`${highModelAlerts} rated High, not closed`}
-        />
-      </div>
+        <Kpi flat basis def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
+        <Kpi flat basis def="outstanding_balance" value={fmtM(bal, 0)} />
+        <Kpi flat basis def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-3">
         <ChartFrame
@@ -377,25 +377,29 @@ function Overview() {
             </AreaChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <Panel
-          title="Latest intelligence"
-          subtitle="From records in this workspace · not live AI output"
-          bodyClass="p-0"
-        >
-          <ul className="divide-y">
-            {intel.map((i) => (
-              <li key={i.key} className="relative px-5 py-3.5 transition-colors hover:bg-accent/40">
-                {i.link}
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-medium leading-snug">{i.title}</span>
-                  <span className="relative">{i.badge}</span>
-                </div>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{i.text}</p>
-                <p className="mt-1.5 text-caption text-muted-foreground">
-                  <span className="num">{i.date}</span> · {i.module}
-                </p>
-              </li>
-            ))}
+        <Panel title="Risk & control overview" bodyClass="p-0">
+          <ul className="divide-y text-sm">
+            {issues
+              .filter((i) => i.status !== "Resolved")
+              .slice(0, 3)
+              .map((i) => (
+                <li key={i.id} className="flex items-start justify-between gap-2 px-5 py-3">
+                  <Link to="/data" className="hover:text-primary">
+                    {i.id} · {i.title}
+                  </Link>
+                  <StatusBadge value={i.severity} />
+                </li>
+              ))}
+            {drift
+              .filter((d) => d.status !== "Closed")
+              .map((d) => (
+                <li key={d.id} className="flex items-start justify-between gap-2 px-5 py-3">
+                  <Link to="/models/$id" params={{ id: d.model }} className="hover:text-primary">
+                    {d.model} · {d.title}
+                  </Link>
+                  <StatusBadge value={d.status} />
+                </li>
+              ))}
           </ul>
         </Panel>
       </div>
@@ -470,34 +474,31 @@ function Overview() {
             </BarChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <Panel title="Risk & control overview" bodyClass="p-0">
-          <ul className="divide-y text-sm">
-            {issues
-              .filter((i) => i.status !== "Resolved")
-              .slice(0, 3)
-              .map((i) => (
-                <li key={i.id} className="flex items-start justify-between gap-2 px-5 py-3">
-                  <Link to="/data" className="hover:text-primary">
-                    {i.id} · {i.title}
-                  </Link>
-                  <StatusBadge value={i.severity} />
-                </li>
-              ))}
-            {drift
-              .filter((d) => d.status !== "Closed")
-              .map((d) => (
-                <li key={d.id} className="flex items-start justify-between gap-2 px-5 py-3">
-                  <Link to="/models/$id" params={{ id: d.model }} className="hover:text-primary">
-                    {d.model} · {d.title}
-                  </Link>
-                  <StatusBadge value={d.status} />
-                </li>
-              ))}
-          </ul>
+        <Panel title="Latest executive report" bodyClass="space-y-3">
+          {reports.map((r) => (
+            <Link
+              key={r.id}
+              to="/reports/$id"
+              params={{ id: r.id }}
+              className="card-lift block rounded-lg border p-3.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm font-medium">{r.title}</span>
+                <EvidenceBadge state={r.state} />
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {r.id} · {r.period} · {r.status}
+              </div>
+            </Link>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            Report states here come from the demo data. No verification workflow or reviewer
+            sign-off exists yet.
+          </p>
         </Panel>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-5 xl:grid-cols-2">
         <Panel
           title="Recent investigations"
           actions={
@@ -543,28 +544,6 @@ function Overview() {
               </li>
             ))}
           </ul>
-        </Panel>
-        <Panel title="Latest executive report" bodyClass="space-y-3">
-          {reports.map((r) => (
-            <Link
-              key={r.id}
-              to="/reports/$id"
-              params={{ id: r.id }}
-              className="card-lift block rounded-lg border p-3.5"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-medium">{r.title}</span>
-                <EvidenceBadge state={r.state} />
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {r.id} · {r.period} · {r.status}
-              </div>
-            </Link>
-          ))}
-          <p className="text-xs text-muted-foreground">
-            Report states here come from the demo data. No verification workflow or reviewer
-            sign-off exists yet.
-          </p>
         </Panel>
       </div>
     </div>

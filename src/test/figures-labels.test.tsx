@@ -21,7 +21,8 @@ describe("figures say what they are", () => {
     ).toEqual([]);
   });
 
-  describe("the overview's open model alerts tile", () => {
+  // On the model inventory since L9 T6 moved it off the overview.
+  describe("the open model alerts tile", () => {
     const reopen: (() => Promise<void>)[] = [];
     afterEach(async () => {
       while (reopen.length) await reopen.pop()!();
@@ -36,7 +37,7 @@ describe("figures say what they are", () => {
       const after = (await demoRepo.models.read()).driftAlerts;
       const open_ = after.filter((a) => a.status !== "Closed");
 
-      await open("/");
+      await open("/models");
       const text = tile("open_model_alerts")!;
       expect(text).not.toMatch(/\d+\/\d+/);
       expect(text).toContain(`Open model alerts${open_.length}`);

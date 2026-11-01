@@ -281,6 +281,8 @@ export function Kpi({
   stateNote,
   spark,
   size = "md",
+  flat = false,
+  basis = false,
 }: {
   def: DefinitionId;
   value: string;
@@ -292,6 +294,10 @@ export function Kpi({
   stateNote?: string;
   spark?: number[];
   size?: "md" | "lg";
+  /** Sits inside a shared panel instead of its own card. */
+  flat?: boolean;
+  /** States unit, period and source in the tile, not only in the tooltip. */
+  basis?: boolean;
 }) {
   const d: Definition = DEFINITIONS[def];
   const caption = sub ?? d.sub;
@@ -301,7 +307,7 @@ export function Kpi({
       : deltaGood;
   return (
     <div
-      className={cn("card-surface card-lift", size === "lg" ? "p-5" : "p-4")}
+      className={cn(flat ? "bg-card" : "card-surface card-lift", size === "lg" ? "p-5" : "p-4")}
       data-definition={def}
     >
       <div className="flex items-start justify-between gap-2">
@@ -355,6 +361,11 @@ export function Kpi({
           {caption && <span>{caption}</span>}
           {status}
         </div>
+        {basis && (
+          <p className="mt-2 text-caption text-muted-foreground">
+            {d.unit} · {d.period} · {d.source}
+          </p>
+        )}
       </StateBoundary>
     </div>
   );
