@@ -7,9 +7,6 @@
 @theme inline {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-  --text-micro: 0.625rem;
-  --text-caption: 0.6875rem;
-  --text-ui: 0.8125rem;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
@@ -58,46 +55,48 @@
 }
 
 :root {
-  --radius: 0.375rem;
-  --background: oklch(0.975 0.006 264);
-  --foreground: oklch(0.25 0.03 258);
+  --radius: 0.625rem;
+  --background: oklch(0.975 0.008 260);
+  --foreground: oklch(0.26 0.045 262);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.25 0.03 258);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.25 0.03 258);
-  --primary: oklch(0.546 0.215 262.9);
+  --primary: oklch(0.54 0.17 260);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.955 0.01 260);
   --secondary-foreground: oklch(0.25 0.03 258);
   --muted: oklch(0.955 0.01 260);
-  --muted-foreground: oklch(0.554 0.046 257);
+  --muted-foreground: oklch(0.6 0.035 258);
   --accent: oklch(0.94 0.025 255);
   --accent-foreground: oklch(0.3 0.08 262);
-  --destructive: oklch(0.505 0.19 27.5);
+  --destructive: oklch(0.6 0.17 20);
   --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.511 0.086 186);
-  --warning: oklch(0.555 0.146 49);
-  --critical: oklch(0.505 0.19 27.5);
-  --cyan: oklch(0.715 0.126 215);
-  --ink: oklch(0.17 0.03 260);
+  --success: oklch(0.65 0.12 180);
+  --warning: oklch(0.6 0.14 65);
+  --critical: oklch(0.6 0.17 20);
+  --cyan: oklch(0.73 0.11 220);
+  --ink: oklch(0.22 0.05 265);
   --ink-2: oklch(0.22 0.04 262);
   --ink-foreground: oklch(0.93 0.01 258);
   --ink-muted: oklch(0.65 0.03 258);
-  --border: oklch(0.917 0.014 258);
+  --border: oklch(0.925 0.012 258);
+  --shadow-card: 0 1px 2px oklch(0.26 0.045 262 / 4%), 0 4px 16px -6px oklch(0.26 0.045 262 / 8%);
+  --shadow-lift: 0 2px 4px oklch(0.26 0.045 262 / 5%), 0 14px 32px -12px oklch(0.26 0.045 262 / 18%);
   --input: oklch(0.89 0.016 258);
   --ring: oklch(0.546 0.215 262.9);
-  --chart-1: oklch(0.546 0.215 262.9);
-  --chart-2: oklch(0.715 0.126 215);
+  --chart-1: oklch(0.54 0.17 260);
+  --chart-2: oklch(0.65 0.12 180);
   --chart-3: oklch(0.35 0.06 260);
   --chart-4: oklch(0.7 0.12 75);
   --chart-5: oklch(0.6 0.09 186);
-  --sidebar: oklch(0.17 0.03 260);
+  --sidebar: oklch(0.22 0.05 265);
   --sidebar-foreground: oklch(0.85 0.015 258);
   --sidebar-primary: oklch(0.546 0.215 262.9);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.24 0.04 262);
+  --sidebar-accent: oklch(0.29 0.06 264);
   --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.27 0.035 260);
+  --sidebar-border: oklch(0.3 0.05 264);
   --sidebar-ring: oklch(0.715 0.126 215);
 }
 
@@ -113,21 +112,6 @@
     color: var(--color-foreground);
     font-feature-settings: "tnum" 1;
     -webkit-font-smoothing: antialiased;
-  }
-  :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
   }
 }
 
@@ -152,4 +136,32 @@
   body {
     background: white;
   }
+}
+
+@utility card-surface {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+@utility card-lift {
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+  &:hover {
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-1px);
+  }
+}
+
+@utility page-enter {
+  animation: page-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
