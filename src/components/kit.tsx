@@ -70,7 +70,7 @@ export function SyntheticTag({ label = "Synthetic demo data" }: { label?: string
 
 export function PageHeader({ title, description, actions, crumbs, tag = true }: { title: string; description?: string; actions?: ReactNode; crumbs?: { label: string; to?: string }[]; tag?: boolean }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b pb-4">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {crumbs && (
           <nav aria-label="Breadcrumb" className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
@@ -83,7 +83,7 @@ export function PageHeader({ title, description, actions, crumbs, tag = true }: 
           </nav>
         )}
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {tag && <SyntheticTag />}
         </div>
         {description && <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>}
@@ -95,9 +95,9 @@ export function PageHeader({ title, description, actions, crumbs, tag = true }: 
 
 export function Panel({ title, subtitle, actions, children, className, bodyClass }: { title?: ReactNode; subtitle?: string; actions?: ReactNode; children: ReactNode; className?: string; bodyClass?: string }) {
   return (
-    <section className={cn("rounded-md border bg-card", className)}>
+    <section className={cn("card-surface", className)}>
       {(title || actions) && (
-        <header className="flex items-start justify-between gap-3 border-b px-4 py-2.5">
+        <header className="flex items-start justify-between gap-3 border-b px-5 py-3.5">
           <div>
             {title && <h2 className="text-sm font-semibold">{title}</h2>}
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
@@ -105,14 +105,14 @@ export function Panel({ title, subtitle, actions, children, className, bodyClass
           {actions}
         </header>
       )}
-      <div className={cn("p-4", bodyClass)}>{children}</div>
+      <div className={cn("p-5", bodyClass)}>{children}</div>
     </section>
   );
 }
 
-export function Kpi({ label, value, sub, delta, deltaGood, definition, period = "FY2025", status }: { label: string; value: string; sub?: string; delta?: string; deltaGood?: boolean; definition: string; period?: string; status?: ReactNode }) {
+export function Kpi({ label, value, sub, delta, deltaGood, definition, period = "FY2025", status, spark, size = "md" }: { label: string; value: string; sub?: string; delta?: string; deltaGood?: boolean; definition: string; period?: string; status?: ReactNode; spark?: number[]; size?: "md" | "lg" }) {
   return (
-    <div className="rounded-md border bg-card p-3.5">
+    <div className={cn("card-surface card-lift", size === "lg" ? "p-5" : "p-4")}>
       <div className="flex items-start justify-between gap-2">
         <span className="eyebrow">{label}</span>
         <Tooltip>
@@ -126,13 +126,34 @@ export function Kpi({ label, value, sub, delta, deltaGood, definition, period = 
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="mt-1.5 num text-2xl font-semibold">{value}</div>
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        {delta && <span className={cn("num font-medium", deltaGood === undefined ? "" : deltaGood ? "text-success" : "text-critical")}>{delta}</span>}
+      <div className="flex items-end justify-between gap-3">
+        <div className={cn("mt-2 num font-semibold tracking-tight", size === "lg" ? "text-[1.75rem]" : "text-2xl")}>{value}</div>
+        {spark && spark.length > 1 && <Sparkline data={spark} good={deltaGood} />}
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        {delta && (
+          <span className={cn("num inline-flex items-center rounded-full px-1.5 py-0.5 font-medium", deltaGood === undefined ? "bg-muted" : deltaGood ? "bg-success/10 text-success" : "bg-critical/10 text-critical")}>
+            {deltaGood === undefined ? "" : deltaGood ? "▲ " : "▼ "}{delta}
+          </span>
+        )}
         {sub && <span>{sub}</span>}
         {status}
       </div>
     </div>
+  );
+}
+
+export function Sparkline({ data, good }: { data: number[]; good?: boolean }) {
+  const w = 84, h = 30;
+  const min = Math.min(...data), max = Math.max(...data);
+  const pts = data.map((v, i) => [(i / (data.length - 1)) * w, h - 2 - ((v - min) / (max - min || 1)) * (h - 4)]);
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const stroke = good === false ? "var(--critical)" : good ? "var(--success)" : "var(--primary)";
+  return (
+    <svg width={w} height={h} aria-hidden className="shrink-0">
+      <path d={`${d} L${w},${h} L0,${h} Z`} fill={stroke} opacity={0.08} />
+      <path d={d} fill="none" stroke={stroke} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
