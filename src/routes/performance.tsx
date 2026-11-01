@@ -67,7 +67,7 @@ function PerformancePage() {
   const finish = () => {
     const id = `INV-2026-${String(10 + invs.length).padStart(3, "0")}`;
     const base = INVESTIGATIONS[0];
-    actions.createInvestigation({ ...base, id, title: wq, question: wq, created: "2026-01-14", status: "Draft", department: DEPARTMENTS.find((d) => d.id === wDept)!.name, owner: "J. Avery", findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })) });
+    actions.createInvestigation({ ...base, id, title: wq, question: wq, created: "2026-01-14", status: "Draft", department: DEPARTMENTS.find((d) => d.id === wDept)!.name, owner: "Sarah Mitchell", findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })) });
     setCreatedId(id);
     toast.success(`${id} created`);
   };

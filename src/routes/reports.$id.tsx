@@ -85,7 +85,7 @@ function ReportPage() {
       {!signoff && (
         <Panel title="Reviewer sign-off" className="no-print">
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reviewer comment (required)" />
-          <Button size="sm" className="mt-2" disabled={!note.trim()} onClick={() => { const s = { by: "J. Avery", at: new Date().toISOString().slice(0, 16).replace("T", " "), note }; setSignoff(s); actions.log("Investigations", r.id, "Reviewer sign-off", note); toast.success("Sign-off recorded (demo)"); }}>Record sign-off</Button>
+          <Button size="sm" className="mt-2" disabled={!note.trim()} onClick={() => { const s = { by: "Sarah Mitchell", at: new Date().toISOString().slice(0, 16).replace("T", " "), note }; setSignoff(s); actions.log("Investigations", r.id, "Reviewer sign-off", note); toast.success("Sign-off recorded (demo)"); }}>Record sign-off</Button>
           <p className="mt-1 text-xs text-muted-foreground">Sign-off alone does not mark the report Verified while findings remain partially verified.</p>
         </Panel>
       )}

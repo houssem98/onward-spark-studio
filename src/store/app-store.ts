@@ -55,7 +55,7 @@ interface State {
 const now = () => new Date().toISOString().slice(0, 16).replace("T", " ");
 
 let state: State = {
-  user: { name: "J. Avery", role: "Chief Risk Officer" },
+  user: { name: "Sarah Mitchell", role: "Chief Risk Officer" },
   modelLifecycle: Object.fromEntries(MODELS.map((m) => [m.id, m.lifecycle])),
   modelDecisions: [{ model: "MDL-002", decision: "Approved", by: "Model Risk Committee", at: "2024-10-15 14:00", comment: "Approved v2.4.1 with reference period H1-24." }],
   modelVersion: Object.fromEntries(MODELS.map((m) => [m.id, m.version])),
