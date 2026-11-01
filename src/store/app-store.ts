@@ -35,6 +35,12 @@ export type State = Awaited<ReturnType<typeof readState>>;
 
 export const storeQuery = queryOptions({ queryKey: ["store"], queryFn: readState });
 
+// The credit revenue-gap investigation: the earliest Performance one, which the wizard copies.
+export const revenueGapInvestigation = (s: State) =>
+  s.investigations
+    .filter((i) => i.module === "Performance")
+    .reduce((a, b) => (b.created < a.created ? b : a));
+
 export function useStore<T>(selector: (s: State) => T): T {
   return selector(useSuspenseQuery(storeQuery).data);
 }

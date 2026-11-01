@@ -136,7 +136,8 @@ export function quarterlyRevenue() {
     }
     row["total"] = Math.round(total * 10) / 10;
     row["expenses"] = Math.round(exp * 10) / 10;
-    row["profit"] = Math.round((total - exp) * 10) / 10;
+    // From the rounded figures, so the table foots at the decimal it shows.
+    row["profit"] = (Math.round(total * 10) - Math.round(exp * 10)) / 10;
     return row;
   });
 }

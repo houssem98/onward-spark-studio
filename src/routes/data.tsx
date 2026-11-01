@@ -12,7 +12,7 @@ import {
 import { toast } from "sonner";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { Dataset, LineageNode } from "@/data/datasets";
-import { fmtNum } from "@/lib/calc";
+import { fmtFixed, fmtNum, mean } from "@/lib/calc";
 import { datasetsQuery } from "@/repo/queries";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import {
@@ -140,10 +140,7 @@ function DataPage() {
           def="open_dq_issues"
           value={String(issues.filter((i) => i.status !== "Resolved").length)}
         />
-        <Kpi
-          def="dq_dimension_mean"
-          value={(measurable.reduce((a, d) => a + d.score!, 0) / measurable.length).toFixed(1)}
-        />
+        <Kpi def="dq_dimension_mean" value={fmtFixed(mean(measurable.map((d) => d.score!)))} />
       </div>
 
       <Tabs defaultValue="catalog">

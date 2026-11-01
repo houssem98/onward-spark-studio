@@ -12,6 +12,7 @@ import {
   fmtPct,
   fmtSigned,
   growth,
+  mean,
   pct,
   psi,
   psiBand,
@@ -38,6 +39,8 @@ describe("zero denominators are unavailable, never 0 or NaN", () => {
   it("returns null from pct, growth and costToIncome", () => {
     expect(pct(5, 0)).toBeNull();
     expect(pct(0, 0)).toBeNull();
+    expect(mean([])).toBeNull();
+    expect(mean([1, 2, 6])).toBe(3);
     expect(growth(5, 0)).toBeNull();
     expect(growth(0, 0)).toBeNull();
     expect(costToIncome(60, 0)).toBeNull();

@@ -31,11 +31,15 @@ import {
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { downloadFile, fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
-import { creditQuery } from "@/repo/queries";
+import { creditQuery, financeQuery } from "@/repo/queries";
+import { revenueGapInvestigation, useStore } from "@/store/app-store";
 
 export const Route = createFileRoute("/credit")({
   loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(creditQuery);
+    await Promise.all([
+      queryClient.ensureQueryData(creditQuery),
+      queryClient.ensureQueryData(financeQuery),
+    ]);
   },
   head: () => ({
     meta: [
@@ -78,6 +82,11 @@ function CreditPage() {
     stress: scenarios,
     trend,
   } = useSuspenseQuery(creditQuery).data;
+  const division = useSuspenseQuery(financeQuery).data.departments.find((d) => d.id === "credit")!;
+  const gapInv = useStore(revenueGapInvestigation);
+  // Control: the whole portfolio, not the filtered rows, against the division it belongs to.
+  const portfolioRev = sum(slices.map((s) => s.revenue));
+  const portfolioGap = round(portfolioRev - division.revenue, 1);
 
   const rows = useMemo(
     () =>
@@ -152,7 +161,7 @@ function CreditPage() {
               <Download className="h-3.5 w-3.5" /> Generate report
             </Button>
             <Button size="sm" asChild>
-              <Link to="/investigations/$id" params={{ id: "INV-2025-014" }}>
+              <Link to="/investigations/$id" params={{ id: gapInv.id }}>
                 Investigate revenue gap
               </Link>
             </Button>
@@ -212,12 +221,19 @@ function CreditPage() {
           <Kpi def="app_to_disbursement" value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))} />
           <Kpi
             def="avg_loan_size"
-            value={`$${((bal * 1e6) / Math.max(loans, 1) / 1000).toFixed(1)}k`}
+            value={loans ? `$${((bal * 1e6) / loans / 1000).toFixed(1)}k` : fmtFixed(null)}
           />
           <Kpi def="limit_utilization" value={fmtPct(pct(bal, lim))} />
           <Kpi def="collateral_coverage" value={fmtPct(pct(coll, bal), 0)} />
         </div>
       </StateBoundary>
+      <p className="text-xs text-muted-foreground">
+        Control: interest and fee revenue across all slices, {fmtM(portfolioRev)},{" "}
+        {portfolioGap === 0
+          ? "reconciles to"
+          : `does not reconcile (difference ${fmtM(portfolioGap)}) to`}{" "}
+        the {division.name} division's operating income, {fmtM(division.revenue)} (FY2025).
+      </p>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartFrame

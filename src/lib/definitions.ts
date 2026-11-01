@@ -14,7 +14,8 @@ export interface Definition {
 export const DEMO_DATE = "2026-01-14";
 const AS_OF = "As of 14 Jan 2026";
 const PERIOD_END = "31 Dec 2025";
-const FINANCE = "DS-009 Finance reporting";
+export const FINANCE_DATASET = "DS-009";
+const FINANCE = `${FINANCE_DATASET} Finance reporting`;
 const PORTFOLIO = "Credit portfolio";
 const FUNNEL = "Origination funnel";
 const ALERTS = "Alert queue";
@@ -109,7 +110,8 @@ export const DEFINITIONS = {
   },
   credit_revenue: {
     label: "Credit revenue",
-    definition: "Revenue of the credit division.",
+    definition:
+      "Operating income of the credit division. The credit page checks it equals interest & fee revenue summed over every portfolio slice.",
     formula: "Credit department revenue",
     unit: "USD M",
     currency: "USD",
@@ -173,7 +175,8 @@ export const DEFINITIONS = {
   },
   interest_fee_revenue: {
     label: "Interest & fee revenue",
-    definition: "Interest and fee income recognized in the year.",
+    definition:
+      "Interest and fee income recognized in the year. Over every slice it should equal the credit division's operating income (credit revenue); the page shows the check.",
     formula: "Sum of slice revenue",
     unit: "USD M",
     currency: "USD",

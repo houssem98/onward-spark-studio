@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { costToIncome, diff, fmtFixed, fmtM, fmtPct, growth, pct, sum } from "@/lib/calc";
+import { costToIncome, diff, fmtFixed, fmtM, fmtPct, growth, mean, pct, sum } from "@/lib/calc";
 import {
   axisProps,
   CHART,
@@ -29,7 +29,7 @@ import {
 import { ChartFrame } from "@/components/charts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/store/app-store";
+import { revenueGapInvestigation, useStore } from "@/store/app-store";
 import { copilotBus } from "@/lib/copilot-bus";
 import {
   creditQuery,
@@ -82,6 +82,7 @@ function Overview() {
   const alerts = useStore((s) => s.alerts);
   const drift = useStore((s) => s.driftAlerts);
   const invs = useStore((s) => s.investigations);
+  const gapInv = useStore(revenueGapInvestigation);
   const actions = useStore((s) => s.actions);
 
   const rev = sum(departments.map((d) => d.revenue));
@@ -92,9 +93,7 @@ function Overview() {
   const bal = sum(slices.map((s) => s.balance));
   const npl = sum(slices.map((s) => s.npl));
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
-  const dqAvg =
-    sum(dqDimensions.filter((d) => d.score !== null).map((d) => d.score!)) /
-    dqDimensions.filter((d) => d.score !== null).length;
+  const dqAvg = mean(dqDimensions.flatMap((d) => (d.score === null ? [] : [d.score])));
   const modelAlerts = drift.filter((d) => d.status !== "Closed").length;
   const critical =
     issues.filter((i) => i.severity === "Critical" && i.status !== "Resolved").length +
@@ -128,7 +127,7 @@ function Overview() {
         <Button
           type="button"
           variant="secondary"
-          onClick={() => navigate({ to: "/investigations/$id", params: { id: "INV-2025-014" } })}
+          onClick={() => navigate({ to: "/investigations/$id", params: { id: gapInv.id } })}
         >
           Open investigation
         </Button>
@@ -156,7 +155,7 @@ function Overview() {
         <Kpi def="outstanding_balance" value={fmtM(bal, 0)} />
         <Kpi def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
         <Kpi def="open_crime_alerts" value={String(openAlerts.length)} />
-        <Kpi def="dq_dimension_mean" value={dqAvg.toFixed(1)} />
+        <Kpi def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
         <Kpi
           def="open_model_alerts"
           value={`${modelAlerts}/${models.length}`}

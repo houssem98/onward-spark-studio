@@ -43,9 +43,9 @@ import {
   sum,
   type Bridge,
 } from "@/lib/calc";
-import { useActions, useStore } from "@/store/app-store";
+import { revenueGapInvestigation, useActions, useStore } from "@/store/app-store";
 import { financeQuery } from "@/repo/queries";
-import { DEMO_DATE } from "@/lib/definitions";
+import { DEMO_DATE, FINANCE_DATASET } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/performance")({
@@ -94,6 +94,9 @@ const BRIDGE_COLUMNS = [
   { key: "value", header: "USD M" },
 ];
 
+const shortName = (p: { name: string }) => p.name.split(" ")[0]!;
+const PEER_LINES = [CHART.c2, CHART.c4, CHART.c3];
+
 const STEPS = [
   "Select question",
   "Define scope",
@@ -112,7 +115,9 @@ function PerformancePage() {
   const navigate = useNavigate();
   const actions = useActions();
   const invs = useStore((s) => s.investigations);
-  const template = invs.find((i) => i.id === "INV-2025-014")!;
+  const template = useStore(revenueGapInvestigation);
+  const financeData = useStore((s) => s.datasets.find((d) => d.id === FINANCE_DATASET)!);
+  const issues = useStore((s) => s.issues);
   const { bank, bridges, departments, peerBenchmarkNote, peerHistory, peers, scorecard } =
     useSuspenseQuery(financeQuery).data;
   const a = scorecard.FY2025,
@@ -128,7 +133,7 @@ function PerformancePage() {
     roa: pct(a.netIncome, a.avgAssets),
     creditGrowth: growth(a.loans, a.priorLoans),
     depositGrowth: growth(a.deposits, a.priorDeposits),
-    creditRevenue: 120,
+    creditRevenue: departments.find((d) => d.id === "credit")!.revenue,
   };
 
   const [peerSel, setPeerSel] = useState<string[]>(peers.map((p) => p.id));
@@ -136,15 +141,25 @@ function PerformancePage() {
   const [method, setMethod] = useState("peer");
   const bridge = bridges.find((x) => x.id === method)!;
   const rec = reconcileBridge(bridge);
+  const historyPeers = peers.filter((p) => peerHistory[0] && p.id in peerHistory[0]);
+  const templateSources = [...new Set(template.findings.flatMap((f) => f.source.split("; ")))];
+  const openReconciliation = issues
+    .filter((i) => i.dimension === "Reconciliation" && i.status !== "Resolved")
+    .map((i) => `${i.id} open`)
+    .join(", ");
+  const unlike = peers
+    .filter((p) => p.comparability !== "High" && p.source !== "NOT_AVAILABLE")
+    .map(shortName)
+    .join(", ");
 
   const peerChart = useMemo(
     () =>
       [
-        { name: "Northstar", value: round(ns[metric], 2), src: "INTERNAL", period: "FY2025" },
+        { name: bank.short, value: round(ns[metric], 2), src: "INTERNAL", period: "FY2025" },
         ...peers
           .filter((p) => peerSel.includes(p.id))
           .map((p) => ({
-            name: p.name.split(" ")[0],
+            name: shortName(p),
             value: p[metric],
             src: p.source,
             period: p.period,
@@ -235,7 +250,8 @@ function PerformancePage() {
           </div>
           <Notice>
             Market share is not shown: no comparable market-size data source is available.
-            Freshness: finance reporting refreshed 2026-01-08.
+            Freshness: {financeData.name.toLowerCase()} refreshed{" "}
+            {financeData.lastRefresh.slice(0, 10)}.
           </Notice>
         </TabsContent>
 
@@ -385,17 +401,15 @@ function PerformancePage() {
             </ChartFrame>
             <ChartFrame
               title="NIM history"
-              description="Northstar against three peers"
+              description={`${bank.short} against ${historyPeers.length} peers`}
               unit="Net interest margin, %"
               period="FY2021 to FY2025"
               source="Internal figures and peer disclosures (synthetic demo data)"
               rows={peerHistory}
               columns={[
                 { key: "year", header: "Year" },
-                { key: "northstar", header: "Northstar" },
-                { key: "harborline", header: "Harborline" },
-                { key: "meridian", header: "Meridian" },
-                { key: "cascade", header: "Cascade" },
+                { key: "northstar", header: bank.short },
+                ...historyPeers.map((p) => ({ key: p.id, header: shortName(p) })),
               ]}
             >
               <ResponsiveContainer width="100%" height={240}>
@@ -406,9 +420,14 @@ function PerformancePage() {
                   <Tooltip {...tooltipStyle} />
                   <Legend wrapperStyle={{ fontSize: TYPE.caption }} />
                   <Line dataKey="northstar" stroke={CHART.c1} strokeWidth={2.5} />
-                  <Line dataKey="harborline" stroke={CHART.c2} />
-                  <Line dataKey="meridian" stroke={CHART.c4} />
-                  <Line dataKey="cascade" stroke={CHART.c3} />
+                  {historyPeers.map((p, i) => (
+                    <Line
+                      key={p.id}
+                      dataKey={p.id}
+                      name={shortName(p)}
+                      stroke={PEER_LINES[i % PEER_LINES.length]}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </ChartFrame>
@@ -427,7 +446,7 @@ function PerformancePage() {
                 </thead>
                 <tbody>
                   <tr className="border-b">
-                    <td className="px-3 py-2 font-medium">Northstar Bank</td>
+                    <td className="px-3 py-2 font-medium">{bank.name}</td>
                     <td className="px-3 py-2">
                       <StatusBadge value="INTERNAL" tone="info" icon={false} />
                     </td>
@@ -635,11 +654,14 @@ function PerformancePage() {
               )}
               {step === 3 && (
                 <ul className="list-disc pl-4">
-                  <li>DS-009 Finance reporting — credit revenue, yields</li>
-                  <li>DS-002 Loan portfolio — average balances</li>
-                  <li>DS-010 Curated credit dataset — segment mix</li>
+                  {templateSources.map((s) => (
+                    <li key={s}>{s}</li>
+                  ))}
                   {wBench === "peer" && (
-                    <li>DS-011 Competitor metrics — 3 of 5 peers have permitted data</li>
+                    <li>
+                      {peers.filter((p) => p.creditRevenue !== null).length} of {peers.length} peers
+                      report credit revenue
+                    </li>
                   )}
                 </ul>
               )}
@@ -666,8 +688,8 @@ function PerformancePage() {
                         <span className="text-xs text-muted-foreground">
                           —{" "}
                           {l === "Reconciled to GL controls"
-                            ? "DQ-101 open"
-                            : "Ironwood 9M annualized; Cascade includes leasing"}
+                            ? openReconciliation || "not run in this demo"
+                            : `not like-for-like: ${unlike}`}
                         </span>
                       )}
                     </li>
@@ -741,14 +763,18 @@ function PerformancePage() {
                       {createdId}
                     </Link>{" "}
                     created.{" "}
-                    <Link
-                      to="/reports/$id"
-                      params={{ id: "RPT-FY25-PERF" }}
-                      className="text-primary underline"
-                    >
-                      Preview linked report
-                    </Link>
-                    .
+                    {template.report && (
+                      <>
+                        <Link
+                          to="/reports/$id"
+                          params={{ id: template.report }}
+                          className="text-primary underline"
+                        >
+                          Preview linked report
+                        </Link>
+                        .
+                      </>
+                    )}
                   </p>
                 ) : (
                   <Button onClick={finish}>Create investigation</Button>
@@ -761,7 +787,7 @@ function PerformancePage() {
                     onClick={() =>
                       navigate({
                         to: "/investigations/$id",
-                        params: { id: createdId ?? "INV-2025-014" },
+                        params: { id: createdId ?? template.id },
                       })
                     }
                   >

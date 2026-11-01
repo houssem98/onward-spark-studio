@@ -61,7 +61,7 @@ export function CommandPalette({
             placeholder="Search pages, investigations, models, cases, datasets…"
           />
           <CommandList>
-            <CommandEmpty>Nothing matches. Try an id such as MDL-002 or CASE-0917.</CommandEmpty>
+            <CommandEmpty>Nothing matches. Try a page name or a record id.</CommandEmpty>
             <CommandGroup heading="Pages">
               {pages.map((p) => (
                 <CommandItem

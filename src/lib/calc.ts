@@ -16,6 +16,8 @@ export function round(v: number | null, dp = 1) {
 
 export const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 
+export const mean = (xs: number[]) => (xs.length ? sum(xs) / xs.length : null);
+
 export const pct = (num: number, den: number) => (den === 0 ? null : (num / den) * 100);
 
 export const growth = (current: number, prior: number) =>
