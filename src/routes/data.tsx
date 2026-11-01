@@ -144,7 +144,7 @@ function DataPage() {
       </div>
 
       <Tabs defaultValue="catalog">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="catalog">Catalog</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>
           <TabsTrigger value="quality">Data quality</TabsTrigger>

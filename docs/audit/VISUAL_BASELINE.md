@@ -58,4 +58,4 @@ Captured at commit 68b6fa6 with the same scratchpad `playwright-core` 1.64.1 dri
 | `src/routes/audit.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
 | `src/routes/reports.$id.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
 
-Two overflows remain, both at widths L1 never measured. At 768 px the investigation page's evidence badge does not wrap (a leaf `span` with `whitespace-nowrap` reading "Partially verified" ends at 808 px). At 360 px the data page's tab list does not wrap: the "Governance" tab ends at 368 px. L9 T2's sweep fails on both until they are fixed.
+Two overflows remain, both at widths L1 never measured. At 768 px the investigation page's evidence badge does not wrap (a leaf `span` with `whitespace-nowrap` reading "Partially verified" ends at 808 px). At 360 px the data page's tab list does not wrap: the "Governance" tab ends at 368 px. L9 T2's sweep failed on both, and T2 fixed them: the investigation fields take three columns between the md and lg breakpoints, and the data tab list wraps like the others.

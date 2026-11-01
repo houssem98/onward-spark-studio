@@ -19,7 +19,7 @@ Read every tick together with the active ledger. The global rules in `~/.claude/
 
 ## Gate
 
-`npm run gate` runs graph-lint, typecheck, lint, tests, build and gate-guard, in that order. Until the gate is first fully green (L0 T1), a task may be ticked when the gate fails only with failures recorded in the L0 T0 baseline and no more of them. L0 cannot close until the gate is fully green, and after that every tick needs it green.
+`npm run gate` runs graph-lint, typecheck, lint, tests, build, the browser sweep (`npm run e2e`, since L9 T2) and gate-guard, in that order. Until the gate is first fully green (L0 T1), a task may be ticked when the gate fails only with failures recorded in the L0 T0 baseline and no more of them. L0 cannot close until the gate is fully green, and after that every tick needs it green.
 
 If the rtk hook mangles `npm` output, run the same command through `rtk proxy` and quote the raw output.
 

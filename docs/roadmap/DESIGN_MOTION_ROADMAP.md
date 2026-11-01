@@ -93,7 +93,7 @@ Contract (L11 T1), served through the repository like every other figure: per mo
 - Visual regression: `toHaveScreenshot` at 1440 and 390 per route with `reducedMotion: "reduce"` and the fixed demo date (`src/lib/definitions.ts#export const DEMO_DATE = "2026-01-14";`); a snapshot changes only in a task whose intent is that visual change, and its Journal names the routes.
 - Motion is tested separately with motion on: final values, CLS, interaction within 500 ms, long tasks during transitions.
 - Synchronize on visible states and roles, never on fixed sleeps.
-- The e2e command joins `npm run gate` only when gate plus e2e fits the tool timeout; until then it is each design task's Evidence command and the Journal says so.
+- The e2e command joins `npm run gate` only when gate plus e2e fits the tool timeout. Measured in L9 T2: gate 97 s plus sweep 2.7 min, 215 s together, under the 600 s cap, so it joined the gate there.
 
 ## Phase 9 --- Craft: art direction, browser proof and premium surfaces
 

@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "graph": "node scripts/graph-lint.mjs",
-    "gate": "node scripts/graph-lint.mjs && npm run typecheck && npm run lint && npm test && node scripts/bundle-scan.mjs production && npm run build && node scripts/bundle-scan.mjs demo && node scripts/gate-guard.mjs"
+    "gate": "node scripts/graph-lint.mjs && npm run typecheck && npm run lint && npm test && node scripts/bundle-scan.mjs production && npm run build && node scripts/bundle-scan.mjs demo && npm run e2e && node scripts/gate-guard.mjs",
+    "e2e": "playwright test"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -76,6 +77,7 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.26.5",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
     "@types/node": "^22.16.5",

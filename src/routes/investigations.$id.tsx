@@ -77,7 +77,7 @@ function InvDetail() {
       />
 
       <Panel title="Scope">
-        <dl className="grid grid-cols-2 gap-4 md:grid-cols-6">
+        <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           <Field label="Module">{inv.module}</Field>
           <Field label="Department">{inv.department}</Field>
           <Field label="Owner">{inv.owner}</Field>
