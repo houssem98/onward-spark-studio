@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "graph": "node scripts/graph-lint.mjs",
-    "gate": "node scripts/graph-lint.mjs && npm run typecheck && npm run lint && npm test && npm run build && node scripts/gate-guard.mjs"
+    "gate": "node scripts/graph-lint.mjs && npm run typecheck && npm run lint && npm test && node scripts/bundle-scan.mjs production && npm run build && node scripts/bundle-scan.mjs demo && node scripts/gate-guard.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

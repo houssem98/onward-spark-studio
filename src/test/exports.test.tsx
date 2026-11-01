@@ -44,7 +44,34 @@ const walk = (dir: string): string[] =>
     return statSync(join(root, p)).isDirectory() ? walk(p) : [p];
   });
 
+const select = (label: string) =>
+  [...document.querySelectorAll("label")]
+    .find((l) => l.firstElementChild?.textContent === label)!
+    .querySelector("select")!;
+
 describe("exports", () => {
+  it("quotes and neutralizes header cells like values", () => {
+    expect(toCSV([{ "=1+1": 1, "a,b": 2, plain: 3 }]).split("\n")[0]).toBe(`'=1+1,"a,b",plain`);
+  });
+
+  it("does not offer the credit report when the selection matches no slice", async () => {
+    await open("/credit");
+    const report = screen.getByRole("button", { name: /Generate report/ });
+    expect(report).toBeEnabled();
+    // Corporate loans only ever use the Relationship channel, so this pair matches nothing.
+    await act(async () => {
+      fireEvent.change(select("Segment"), { target: { value: "Corporate" } });
+    });
+    await act(async () => {
+      fireEvent.change(select("Channel"), { target: { value: "Digital" } });
+    });
+    expect(report).toBeDisabled();
+    await act(async () => {
+      fireEvent.click(report);
+    });
+    expect(files).toEqual([]);
+  });
+
   it("keeps CSV cells a spreadsheet would run as formulas as text", () => {
     const csv = toCSV(
       ["=SUM(A1:A9)", "+1+1", "-1+1", "@cmd", "\tx", "\rx", -30, "net"].map((v) => ({ v })),

@@ -1,11 +1,15 @@
 import { queryOptions } from "@tanstack/react-query";
 
-import { demoRepo } from "./demo";
 import { productionRepo } from "./production";
 import type { Repository } from "./types";
 
+// Fails closed: only an unset, empty or "demo" source serves fixtures. The demo adapter is
+// imported on that branch alone, and the build replaces each `import.meta.env.VITE_DATA_SOURCE`
+// with its value, so a production build drops the branch and never contains the fixtures.
 export const repo: Repository =
-  import.meta.env["VITE_DATA_SOURCE"] === "production" ? productionRepo : demoRepo;
+  !import.meta.env.VITE_DATA_SOURCE || import.meta.env.VITE_DATA_SOURCE === "demo"
+    ? (await import("./demo")).demoRepo
+    : productionRepo;
 
 export const financeQuery = queryOptions({
   queryKey: ["finance"],

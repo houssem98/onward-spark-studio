@@ -127,7 +127,9 @@ export function toCSV(rows: Record<string, unknown>[]) {
     if (typeof v !== "number" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  return [keys.join(","), ...rows.map((r) => keys.map((k) => esc(r[k])).join(","))].join("\n");
+  return [keys.map(esc).join(","), ...rows.map((r) => keys.map((k) => esc(r[k])).join(","))].join(
+    "\n",
+  );
 }
 
 export const exportNotice = () =>

@@ -67,6 +67,34 @@ describe("environment", () => {
     expect((await import("@/repo/queries")).repo.environment).toBe("demo");
   });
 
+  it("fails closed: only an unset, empty or demo source serves the demo adapter", async () => {
+    const served: Record<string, string> = {};
+    for (const v of [
+      undefined,
+      "",
+      "demo",
+      "production",
+      "Production",
+      "prod",
+      "production ",
+      "staging",
+    ]) {
+      vi.resetModules();
+      vi.stubEnv("VITE_DATA_SOURCE", v);
+      served[String(v)] = (await import("@/repo/queries")).repo.environment;
+    }
+    expect(served).toEqual({
+      undefined: "demo",
+      "": "demo",
+      demo: "demo",
+      production: "production",
+      Production: "production",
+      prod: "production",
+      "production ": "production",
+      staging: "production",
+    });
+  });
+
   it("labels the banner from the environment", () => {
     const { unmount } = render(<EnvironmentBanner environment="demo" />);
     expect(screen.getByRole("note", { name: "Environment" })).toHaveTextContent(

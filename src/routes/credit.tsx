@@ -148,7 +148,7 @@ function CreditPage() {
         description="Portfolio performance, revenue and credit quality. Not approved for production underwriting decisions."
         actions={
           <>
-            <Button size="sm" variant="outline" onClick={report}>
+            <Button size="sm" variant="outline" onClick={report} disabled={!rows.length}>
               <Download className="h-3.5 w-3.5" /> Generate report
             </Button>
             <Button size="sm" asChild>
