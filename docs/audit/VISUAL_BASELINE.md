@@ -38,3 +38,24 @@ Captured in L0 T6 (2026-10-28) with Playwright (`playwright-core` 1.64.1, run fr
 | `src/routes/audit.tsx` | 390 | 200 | 63 | 0 | Audit Trail & Activity | Sideways scroll. |
 | `src/routes/reports.$id.tsx` | 1440 | 200 | 0 | 0 | FY2025 Full-Year Performance Review | Placeholder from L0 T3 renders with breadcrumb and warning; an unknown id renders "Report NO-SUCH-REPORT" and says no report has that id. |
 | `src/routes/reports.$id.tsx` | 390 | 200 | 53 | 0 | FY2025 Full-Year Performance Review | Sideways scroll. |
+
+## Six widths (L9 T0, 2026-11-01)
+
+Captured at commit 68b6fa6 with the same scratchpad `playwright-core` 1.64.1 driving installed Chrome headless against `vite dev`, reduced motion on, default views only. Every one of the 72 page loads (12 routes, 6 widths) returned HTTP 200 with exactly one h1 and no console or page error; the hydration mismatches above did not recur. Cells are horizontal overflow in px (document width minus viewport width); one row per route, one column per width. Screenshots at 1440 and 390 stay in the scratchpad.
+
+| route | 1440×900 | 1280×800 | 1024×768 | 768×1024 | 390×844 | 360×800 |
+|---|---|---|---|---|---|---|
+| `src/routes/index.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/performance.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/credit.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/crime.index.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/crime.$id.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/data.tsx` | 0 | 0 | 0 | 0 | 0 | 12 |
+| `src/routes/models.index.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/models.$id.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/investigations.index.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/investigations.$id.tsx` | 0 | 0 | 0 | 40 | 0 | 0 |
+| `src/routes/audit.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `src/routes/reports.$id.tsx` | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Two overflows remain, both at widths L1 never measured. At 768 px the investigation page's evidence badge does not wrap (a leaf `span` with `whitespace-nowrap` reading "Partially verified" ends at 808 px). At 360 px the data page's tab list does not wrap: the "Governance" tab ends at 368 px. L9 T2's sweep fails on both until they are fixed.
