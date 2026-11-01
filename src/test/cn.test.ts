@@ -21,4 +21,14 @@ describe("cn", () => {
   it("still lets a later size replace an earlier one", () => {
     expect(cn("text-micro", "text-sm")).toBe("text-sm");
   });
+
+  const spacing = [
+    ...readFileSync(join(process.cwd(), "src/styles.css"), "utf8").matchAll(/--spacing-([\w-]+):/g),
+  ].map((m) => m[1]!);
+
+  it.each(spacing)("treats the %s density token as spacing", (name) => {
+    expect(cn(`px-${name}`, "px-2")).toBe("px-2");
+    expect(cn(`py-${name}`, "text-warning")).toBe(`py-${name} text-warning`);
+    expect(cn(`space-y-${name}`, "space-y-2")).toBe("space-y-2");
+  });
 });

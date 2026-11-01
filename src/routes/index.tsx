@@ -213,7 +213,7 @@ function Overview() {
   ];
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-section">
       <section className="card-surface relative overflow-hidden">
         <img
           src={skyline}

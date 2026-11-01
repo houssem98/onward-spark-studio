@@ -44,7 +44,7 @@ function AuditPage() {
     { key: "detail", header: "Detail", cell: (a) => <span className="text-xs">{a.detail}</span> },
   ];
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Audit Trail & Activity"
         description="Sample events and simulated decisions from this session, newest first. Model version switches and exports are not recorded. Session-only; not persisted."

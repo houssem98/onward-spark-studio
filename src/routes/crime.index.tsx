@@ -108,7 +108,7 @@ function CrimePage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Fraud, AML & Financial Crime"
         description="All customers, transactions and entities are fictional. Alerts indicate suspicious activity for review; they are not determinations of wrongdoing."

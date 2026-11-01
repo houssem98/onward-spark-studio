@@ -128,7 +128,7 @@ export function DataTable<T extends object>({
                     <th
                       key={c.key}
                       className={cn(
-                        "whitespace-nowrap px-3 py-2 text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
+                        "whitespace-nowrap px-cell-x py-cell-y text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
                         c.align === "right" && "text-right",
                       )}
                     >
@@ -192,7 +192,7 @@ export function DataTable<T extends object>({
                         : undefined
                     }
                     className={cn(
-                      "border-b last:border-0",
+                      "h-row border-b last:border-0",
                       rowAction && "cursor-pointer hover:bg-accent/50",
                       selectedKey === k && "bg-accent",
                     )}
@@ -201,7 +201,7 @@ export function DataTable<T extends object>({
                       <td
                         key={c.key}
                         className={cn(
-                          "px-3 py-2 align-middle",
+                          "px-cell-x py-cell-y align-middle",
                           c.align === "right" && "num text-right",
                           c.className,
                         )}

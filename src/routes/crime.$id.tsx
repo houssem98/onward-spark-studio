@@ -64,7 +64,7 @@ function CasePage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         crumbs={[{ label: "Fraud, AML & Fin. Crime", to: "/crime" }, { label: c.id }]}
         title={c.title}

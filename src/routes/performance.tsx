@@ -197,7 +197,7 @@ function PerformancePage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Enterprise Performance & Competitor Intelligence"
         description={`${bank.name} · FY2025 · ${bank.currency} ${bank.unit} · ${bank.basis}. Peers are fictional institutions with illustrative metrics.`}

@@ -19,7 +19,7 @@ function ReportPlaceholder() {
   const report = useSuspenseQuery(investigationsQuery).data.reports.find((r) => r.id === id)!;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title={report.title}
         description={`${report.id} · ${report.period} · ${report.status}`}

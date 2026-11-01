@@ -48,7 +48,7 @@ function InvDetail() {
   if (!inv) return null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         crumbs={[{ label: "Investigations & Reports", to: "/investigations" }, { label: inv.id }]}
         title={inv.title}

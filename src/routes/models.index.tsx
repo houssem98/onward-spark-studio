@@ -98,7 +98,7 @@ function ModelsPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="AI, Machine Learning & Model Governance"
         description="Registry, monitoring and model risk management for all AI/ML models in scope."

@@ -151,7 +151,7 @@ function CreditPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Credit Intelligence"
         description="Portfolio performance, revenue and credit quality. Not approved for production underwriting decisions."

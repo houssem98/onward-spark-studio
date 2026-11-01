@@ -109,7 +109,7 @@ function InvPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Investigations & Reports"
         description="Shared evidence and investigation framework across all modules."

@@ -125,7 +125,7 @@ function DataPage() {
   const measurable = dqDimensions.filter((d) => d.score !== null);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         title="Data Governance & Data Intelligence"
         description="Catalog, lineage and data quality for datasets that feed reports and models. Lineage is illustrative, not harvested from live systems."

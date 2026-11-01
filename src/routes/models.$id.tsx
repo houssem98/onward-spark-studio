@@ -124,7 +124,7 @@ function ModelDetail() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-section">
       <PageHeader
         crumbs={[{ label: "AI & Model Governance", to: "/models" }, { label: m.id }]}
         title={m.name}
