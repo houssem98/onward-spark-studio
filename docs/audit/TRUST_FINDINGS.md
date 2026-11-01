@@ -39,7 +39,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L0 T3
 
 ### F6 · high · Identity is a constant, so every audit event names the same person
-- Evidence: `src/repo/demo.ts#const USER = { name: "J. Avery", role: "Chief Risk Officer" };`, `src/repo/demo.ts#actor: USER.name`
+- Evidence: `src/repo/demo.ts#const USER = { name: "Sarah Mitchell", role: "Chief Risk Officer" };`, `src/repo/demo.ts#actor: USER.name`
 - Fix: L3 T2
 - Status: open
 
@@ -129,7 +129,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L0 T10
 
 ### F24 · medium · Every page scrolls sideways at phone width
-- Evidence: 53 to 380 px of horizontal overflow at 390 px on every page (L0 T6 said 356, before the case page rendered); the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported`). L1 T2 hid the sidebar below the md breakpoint behind a menu drawer (`src/components/AppShell.tsx#aria-label="Open navigation"`), let panels shrink in grids (`src/components/kit.tsx#min-w-0 rounded-md border bg-card`) and put the five bare tables in scroll containers; a Playwright pass then measured `worst overflow at 390px: 0px` across all 13 page loads.
+- Evidence: 53 to 380 px of horizontal overflow at 390 px on every page (L0 T6 said 356, before the case page rendered); the sidebar keeps its width (`docs/audit/VISUAL_BASELINE.md#Phone width is not supported`). L1 T2 hid the sidebar below the md breakpoint behind a menu drawer (`src/components/AppShell.tsx#aria-label="Open navigation"`), let panels shrink in grids (`src/components/kit.tsx#min-w-0 card-surface`) and put the five bare tables in scroll containers; a Playwright pass then measured `worst overflow at 390px: 0px` across all 13 page loads.
 - Fix: L1 T2
 - Status: fixed in L1 T2
 

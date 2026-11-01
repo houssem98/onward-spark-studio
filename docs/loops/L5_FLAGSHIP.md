@@ -11,6 +11,7 @@ Deciding rule, fixed before T1 starts: T0 to T7 are ticked, `npm run gate` exits
 - The performance page has the guided wizard and bridge method switcher; its last step links a report that has no page: `src/routes/performance.tsx#Preview linked report`.
 - Reconciliation exists and, since L2 T1, decides at 4 dp on the difference rounded once: `src/lib/calc.ts#reconciles: difference === 0,`.
 - The report is planned with 14 sections and a Verified rule: `.lovable/plan/finish-the-bankintelli-poc-2026-10-28.md#Verified label only when all findings are verified and reviewer signs off`.
+- Lovable drafted all 14 sections in commit 9ba20d3 (read it with git show on that commit's src/routes/reports.$id.tsx). It was not merged on 2026-11-01: it imports the data modules directly, hard-codes the bridge figures, and its HTML and Markdown exports carry neither the environment line nor escaping. T3 may start from it.
 
 ## Tasks
 

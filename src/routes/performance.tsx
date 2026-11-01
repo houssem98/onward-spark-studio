@@ -115,6 +115,7 @@ function PerformancePage() {
   const navigate = useNavigate();
   const actions = useActions();
   const invs = useStore((s) => s.investigations);
+  const user = useStore((s) => s.user);
   const template = useStore(revenueGapInvestigation);
   const financeData = useStore((s) => s.datasets.find((d) => d.id === FINANCE_DATASET)!);
   const issues = useStore((s) => s.issues);
@@ -188,7 +189,7 @@ function PerformancePage() {
       created: DEMO_DATE,
       status: "Draft",
       department: departments.find((d) => d.id === wDept)!.name,
-      owner: "J. Avery",
+      owner: user.name,
       findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })),
     });
     setCreatedId(id);

@@ -17,7 +17,7 @@ import type {
   Repository,
 } from "./types";
 
-const USER = { name: "J. Avery", role: "Chief Risk Officer" };
+const USER = { name: "Sarah Mitchell", role: "Chief Risk Officer" };
 
 interface State {
   modelLifecycle: Record<string, Lifecycle>;

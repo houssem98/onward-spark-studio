@@ -205,7 +205,7 @@ export function PageHeader({
   tag?: boolean;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b pb-4">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {crumbs && (
           <nav
@@ -227,7 +227,7 @@ export function PageHeader({
           </nav>
         )}
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {tag && <SyntheticTag />}
         </div>
         {description && (
@@ -255,9 +255,9 @@ export function Panel({
   bodyClass?: string;
 }) {
   return (
-    <section className={cn("min-w-0 rounded-md border bg-card", className)}>
+    <section className={cn("min-w-0 card-surface", className)}>
       {(title || actions) && (
-        <header className="flex items-start justify-between gap-3 border-b px-4 py-2.5">
+        <header className="flex items-start justify-between gap-3 border-b px-5 py-3.5">
           <div>
             {title && <h2 className="text-sm font-semibold">{title}</h2>}
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
@@ -265,7 +265,7 @@ export function Panel({
           {actions}
         </header>
       )}
-      <div className={cn("p-4", bodyClass)}>{children}</div>
+      <div className={cn("p-5", bodyClass)}>{children}</div>
     </section>
   );
 }
@@ -279,6 +279,8 @@ export function Kpi({
   status,
   state,
   stateNote,
+  spark,
+  size = "md",
 }: {
   def: DefinitionId;
   value: string;
@@ -288,11 +290,20 @@ export function Kpi({
   status?: ReactNode;
   state?: DataState;
   stateNote?: string;
+  spark?: number[];
+  size?: "md" | "lg";
 }) {
   const d: Definition = DEFINITIONS[def];
   const caption = sub ?? d.sub;
+  const tone =
+    delta === undefined || deltaGood === undefined || delta.startsWith(UNAVAILABLE)
+      ? undefined
+      : deltaGood;
   return (
-    <div className="rounded-md border bg-card p-3.5" data-definition={def}>
+    <div
+      className={cn("card-surface card-lift", size === "lg" ? "p-5" : "p-4")}
+      data-definition={def}
+    >
       <div className="flex items-start justify-between gap-2">
         <span className="eyebrow">{d.label}</span>
         <Tooltip>
@@ -314,19 +325,30 @@ export function Kpi({
         </Tooltip>
       </div>
       <StateBoundary state={state} label={d.label} note={stateNote}>
-        <div className="mt-1.5 num text-2xl font-semibold">{value}</div>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-end justify-between gap-3">
+          <div
+            className={cn(
+              "mt-2 num font-semibold tracking-tight",
+              size === "lg" ? "text-3xl" : "text-2xl",
+            )}
+          >
+            {value}
+          </div>
+          {spark && spark.length > 1 && <Sparkline data={spark} good={deltaGood} />}
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {delta && (
             <span
               className={cn(
-                "num font-medium",
-                deltaGood === undefined || delta.startsWith(UNAVAILABLE)
-                  ? ""
-                  : deltaGood
-                    ? "text-success"
-                    : "text-critical",
+                "num inline-flex items-center rounded-full px-1.5 py-0.5 font-medium",
+                tone === undefined
+                  ? "bg-muted"
+                  : tone
+                    ? "bg-success/10 text-success"
+                    : "bg-critical/10 text-critical",
               )}
             >
+              {tone === undefined ? "" : tone ? "▲ " : "▼ "}
               {delta}
             </span>
           )}
@@ -335,6 +357,34 @@ export function Kpi({
         </div>
       </StateBoundary>
     </div>
+  );
+}
+
+export function Sparkline({ data, good }: { data: number[]; good?: boolean | undefined }) {
+  const w = 84,
+    h = 30;
+  const min = Math.min(...data),
+    max = Math.max(...data);
+  const d = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4);
+      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const stroke = good === false ? "var(--critical)" : good ? "var(--success)" : "var(--primary)";
+  return (
+    <svg width={w} height={h} aria-hidden className="shrink-0">
+      <path d={`${d} L${w},${h} L0,${h} Z`} fill={stroke} opacity={0.08} />
+      <path
+        d={d}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

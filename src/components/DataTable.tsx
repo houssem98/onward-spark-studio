@@ -92,7 +92,7 @@ export function DataTable<T extends object>({
   };
 
   return (
-    <div className="rounded-md border bg-card">
+    <div className="card-surface overflow-hidden">
       <div className="flex flex-wrap items-center gap-2 border-b p-2.5">
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -121,7 +121,7 @@ export function DataTable<T extends object>({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
+              <tr className="border-b bg-muted/60">
                 {columns.map((c) => {
                   const active = sort?.key === c.key;
                   return (

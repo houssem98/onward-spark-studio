@@ -7,7 +7,7 @@ Written in L0 T4 (2026-10-28) from reading every file in src/routes, the store, 
 From `BankIntelli_Elite_Premium_Design_Roadmap.md#Classify every feature as implemented, partial, mocked, broken,`. Rules used here:
 
 - implemented: does what it claims, and a named test proves it. Today no row qualifies.
-- partial: works inside one browser session (in-memory store, client-written audit event) but is not persisted, permissioned or attributable to a real user (`src/repo/demo.ts#let state: State = {`, `src/repo/demo.ts#const USER = { name: "J. Avery", role: "Chief Risk Officer" };`).
+- partial: works inside one browser session (in-memory store, client-written audit event) but is not persisted, permissioned or attributable to a real user (`src/repo/demo.ts#let state: State = {`, `src/repo/demo.ts#const USER = { name: "Sarah Mitchell", role: "Chief Risk Officer" };`).
 - mocked: shows synthetic fixture data, or looks live and changes nothing or invents content.
 - broken: does not work as presented.
 - absent: linked or planned, no code. A placeholder that says the feature is not built counts as absent.
@@ -26,7 +26,7 @@ History: L0 T4 wrote 32 rows (partial 17, mocked 13, broken 1, absent 1). L0 T3 
 | kind | id | status | evidence | known by |
 |---|---|---|---|---|
 | route | `src/routes/__root.tsx` | partial | Shell, 404 and error boundary work; since L1 T6 the page meta describes a proof of concept on synthetic data instead of claiming verification (`src/routes/__root.tsx#Banking intelligence proof of concept on synthetic data`) | read |
-| route | `src/routes/index.tsx` | mocked | Executive overview built from fixtures, read through the demo repository since L2 T3: `src/routes/index.tsx#const { departments, quarterlyRevenue } = useSuspenseQuery(financeQuery).data;` | read; run: `docs/audit/VISUAL_BASELINE.md`; routing only: `src/test/app-routing.test.tsx#matches a page for / instead of falling back to not found` |
+| route | `src/routes/index.tsx` | mocked | Executive overview built from fixtures, read through the demo repository since L2 T3: `src/routes/index.tsx#const { departments, quarterlyRevenue, peers } = useSuspenseQuery(financeQuery).data;` | read; run: `docs/audit/VISUAL_BASELINE.md`; routing only: `src/test/app-routing.test.tsx#matches a page for / instead of falling back to not found` |
 | route | `src/routes/performance.tsx` | mocked | Scorecard, peers and bridge from fixtures, read through the demo repository since L2 T3: `src/routes/performance.tsx#await queryClient.ensureQueryData(financeQuery);` | read; run |
 | route | `src/routes/credit.tsx` | mocked | Portfolio slices from fixtures, read through the demo repository since L2 T4: `src/routes/credit.tsx#} = useSuspenseQuery(creditQuery).data;` | read; run |
 | route | `src/routes/crime.index.tsx` | mocked | Alert queue seeded from fixtures in the demo repository since L2 T4: `src/repo/demo.ts#alerts: crime.ALERTS.map((a) => ({ ...a })),` | read; run |
