@@ -17,6 +17,7 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 3. If no such task exists in the active loop, try the next unticked loop whose needs are all ticked. If none has an agent task, stop and escalate, naming the (human) tasks that block.
 4. Only the human ticks a loop line, after that loop's signoff task is ticked and `npm run gate` passes.
 5. A loop's budget is ticks (entries in its Journal) or spend, whichever runs out first. The author picked these defaults; they are not cost estimates. Edit them here.
+6. Tracks. L0 to L8 are the trust program; L9 to L11 are the design track from `docs/roadmap/DESIGN_MOTION_ROADMAP.md`. `BANKINTELLI_LOOP.md` applies rules 1 to 3 over every loop; `BANKINTELLI_DESIGN_LOOP.md` applies them over L9 to L11 only and, when none has an agent task, stops and escalates instead of crossing into the trust program. Run one driver at a time: both write to the same tree and index.
 
 ## Loops
 
@@ -29,6 +30,9 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 - [ ] L6 Integrations. ledger: `docs/loops/L6_INTEGRATIONS.md` · needs: L5. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 6 --- Domain integrations`
 - [ ] L7 AI. ledger: `docs/loops/L7_AI.md` · needs: L5. · budget 15 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 7 --- Controlled AI orchestration`
 - [ ] L8 Enterprise. ledger: `docs/loops/L8_ENTERPRISE.md` · needs: L6, L7. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 8 --- Enterprise readiness`
+- [ ] L9 Craft. ledger: `docs/loops/L9_CRAFT.md` · needs: L1, L2. · budget 22 ticks or $25 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 9 --- Craft: art direction, browser proof and premium surfaces`
+- [ ] L10 Motion. ledger: `docs/loops/L10_MOTION.md` · needs: L9. · budget 18 ticks or $20 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 10 --- Motion: tokens, primitives and choreography`
+- [ ] L11 Explain. ledger: `docs/loops/L11_EXPLAIN.md` · needs: L10. · budget 15 ticks or $20 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 11 --- Explain: reconciling, animated model explanations`
 
 One edge per line below; graph-lint compares these edges with the `needs:` above.
 
@@ -45,6 +49,10 @@ flowchart LR
   L5 --> L7[L7 AI]
   L6 --> L8[L8 Enterprise]
   L7 --> L8
+  L1 --> L9[L9 Craft]
+  L2 --> L9
+  L9 --> L10[L10 Motion]
+  L10 --> L11[L11 Explain]
 ```
 
-Critical path: L0 → L2 → L3 → L5 → L7 → L8. Ticks are sequential; branches matter because a loop waiting on a (human) task does not block its sibling (driver rule 3), so L1 work fills L2/L3 waits and L6 fills L7 waits.
+Design track: L9 → L10 → L11, sequential, open now because L1 and L2 are ticked. Critical path: L0 → L2 → L3 → L5 → L7 → L8. Ticks are sequential; branches matter because a loop waiting on a (human) task does not block its sibling (driver rule 3), so L1 work fills L2/L3 waits and L6 fills L7 waits.

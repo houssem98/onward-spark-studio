@@ -1,0 +1,30 @@
+# L9 Craft
+
+Phase 9 of `docs/roadmap/DESIGN_MOTION_ROADMAP.md`, "Craft: art direction, browser proof and premium surfaces". Needs L1 and L2. Budget in `docs/LOOP_GRAPH.md`; rules in `docs/LOOP_CONVENTIONS.md`; driver `BANKINTELLI_DESIGN_LOOP.md`.
+
+Target: `docs/roadmap/DESIGN_MOTION_ROADMAP.md#one art direction chosen by the human and applied through tokens;`
+
+Deciding rule, fixed before T1 starts: T0 to T9 are ticked, `npm run gate` exits 0, `npm run e2e` exits 0, and the human's signoff line (T10), naming the widths, the keyboard walk and the direction checked, is in the Journal.
+
+## Current state (read 2026-11-01; T0 re-verifies)
+
+- Tokens, type scale and chart palette live in `src/styles.css`; surfaces use `src/components/kit.tsx#card-surface card-lift`; the type is IBM Plex with tabular figures everywhere (`src/styles.css#font-feature-settings: "tnum" 1;`).
+- Browser checks so far ran Chrome from the session scratchpad, not from the repository (`docs/audit/VISUAL_BASELINE.md#not a repository dependency`); nothing in the gate opens a browser.
+- The overview shows more KPIs than the roadmap's 4 to 6 (`docs/audit/VISUAL_BASELINE.md#8 KPI tiles where the roadmap asks for 4 to 6`) and registers wrap identifiers mid-token (`docs/audit/VISUAL_BASELINE.md#Identifiers wrap mid-token`).
+- Density has no token (`docs/loops/L1_DESIGN.md#density has no token`).
+
+## Tasks
+
+- [ ] T0 Re-verify. needs: none. Run graph-lint, refresh citations L3 to L8 changed, and capture every page route at the six widths of `docs/roadmap/DESIGN_MOTION_ROADMAP.md#1440×900, 1280×800, 1024×768, 768×1024, 390×844 and 360×800` with the scratchpad Chrome, adding a dated six-width section (overflow, page errors, h1) to `docs/audit/VISUAL_BASELINE.md`. Evidence: graph-lint exits 0; the section's table has a row per route and width.
+- [ ] T1 (human) Browser runner. needs: T0. Approve `@playwright/test` as a dev dependency that drives the installed Chrome, which also answers `docs/loops/L8_ENTERPRISE.md#T2 (human) Browser E2E.` Evidence: the decision line in the Journal.
+- [ ] T2 Browser sweep. needs: T1. `playwright.config.ts` (new), `e2e/routes.spec.ts` (new) and an `e2e` npm script: every page route, taken from the route files so a new route without a sample id fails, at the six widths: HTTP 200, one h1, no page or console error, 0 px horizontal overflow; screenshots at 1440 and 390 with reduced motion. Stops the dev server it started. Evidence: `npm run e2e` exits 0, quoted; a mutation probe (one route given a 2000 px wide element) quoted failing, then restored.
+- [ ] T3 Three directions. needs: T0. `docs/design/ART_DIRECTION.md` (new) states three directions as token deltas only (palette, surface and shadow, radius, density, type scale, motion personality): Institutional Intelligence, Modern Financial Intelligence, Premium Banking Operations. Each is previewed on the Executive Overview at 1440 and 390 by a temporary CSS-variable override that is never committed; the frontend-design and impeccable skills critique each; the doc recommends one with reasons tied to the roadmap's desired feel. Evidence: graph-lint exits 0; the doc lists six screenshots and three critiques.
+- [ ] T4 (human) Direction. needs: T3. The human picks a direction, keeps or changes the font, and allows or refuses OpenDesign and UI UX Pro Max exploration outside the repository. Evidence: the decision line.
+- [ ] T5 Apply the direction. needs: T4. The chosen deltas land as tokens in `src/styles.css`, density included (row height, cell padding, section gap). A test pins the chosen token values and fails before the change; a contrast test computes WCAG 2.2 ratios from the token colours (oklch to sRGB in the test, no dependency): body text and its background, muted text, primary, each semantic colour on its surface, 4.5:1 for text and 3:1 for focus rings and large figures. Evidence: both tests quoted failing before and passing after; `npm run e2e` exits 0.
+- [ ] T6 Benchmark overview. needs: T5. The Executive Overview leads with a needs-attention queue and 4 to 6 decision KPIs, each with unit, period and source; KPIs that leave move to their module page, none is deleted. Evidence: a test counting overview KPIs between 4 and 6, each framed; a test that every removed KPI renders on its module route.
+- [ ] T7 Registers. needs: T5. Identifiers and dates never wrap mid-token, numeric columns are right-aligned with tabular figures, headers stick inside scroll containers, row hover and selected states come from tokens. Evidence: a Playwright check that every id cell on every register is one line at 1440 and 390, quoted failing before and passing after; vitest for the alignment.
+- [ ] T8 Module pass. needs: T6, T7. Performance, credit, crime, data, models, investigations, audit and reports share the overview's header rhythm and section spacing, group related figures in one panel instead of one card per fact, and keep every figure, state and label they have. Evidence: `npm run e2e` exits 0 at six widths; screenshot snapshots updated with the routes named in the Journal; `npm test` shows no figure or label test changed.
+- [ ] T9 Independent check. needs: T2, T8. Council per `docs/LOOP_CONVENTIONS.md#Council protocol` with the links, numbers, states, accessibility and design attacks, against the screenshots and the code. Evidence: findings quoted in the Journal; `npm run gate` exits 0.
+- [ ] T10 (human) Signoff. needs: T9. The human walks every route at 1440 px and 390 px and keyboard-only, and confirms the direction reads as chosen. Evidence: the signoff line naming what was checked.
+
+## Journal

@@ -23,6 +23,8 @@ Read every tick together with the active ledger. The global rules in `~/.claude/
 
 If the rtk hook mangles `npm` output, run the same command through `rtk proxy` and quote the raw output.
 
+Two causes turn the gate red with no code fault: a working directory spelled with a lowercase drive letter (Vitest loads twice and every suite dies with "Vitest failed to find the runner"), so never `cd` before the gate; and the machine near its memory limit (workers die with "Zone Allocation failed"), so check free memory and disk and retry once before counting it toward Stall. After a browser check, stop the dev server the tick started, found by its port, and only that one.
+
 ## Commits
 
 After a task is ticked, stage only the files that task changed, commit locally with the message `loop(L<n>/T<n>): <what changed>`, and put the short hash in the Journal entry. Never push, never amend, never rebase: this repo syncs to Lovable on push (`AGENTS.md#Avoid rewriting`). The human pushes.
@@ -56,7 +58,7 @@ Each tick starts from disk: the ledger and git. Write `started T<n>` in the Jour
 
 ## Drift
 
-The prompt restates the goal every tick and each Journal entry ends with a Direction line. It is drift when ticks keep choosing cosmetic tasks while a trust task waits, when a claim is deleted only to turn the gate green, when visual polish lands on a page whose numbers are not yet computed, or when work starts on a feature no ledger task names.
+The prompt restates the goal every tick and each Journal entry ends with a Direction line. It is drift when ticks keep choosing cosmetic tasks while a trust task waits (unless the human started `BANKINTELLI_DESIGN_LOOP.md`, which is the human choosing the design track; there, drift is polish no ledger task names, or motion that delays reading), when a claim is deleted only to turn the gate green, when visual polish lands on a page whose numbers are not yet computed, or when work starts on a feature no ledger task names.
 
 ## Judged steps
 
@@ -95,4 +97,7 @@ A failed gate is a real result. If a claim cannot be made true at reasonable cos
 - persistence: reload loses a decision; two concurrent edits; corrupt row at load
 - states: loading, empty, error, permission denied, stale, partial, success and disabled each render distinctly
 - accessibility: an icon-only button with no name; a control unreachable by keyboard; motion with reduced-motion set; a chart with no table alternative
+- motion (L10): an animated figure whose accessible text is not the final value; a tween on first render; an axis or baseline that animates; anything moving under reduced motion, JavaScript charts included; a click lost during a transition; layout shift on a route change; an idle loop or pulse
+- explanation (L11): a waterfall that does not reconcile to the output; importance that does not match the observation rows; causal wording; an explanation without the synthetic label; increase and decrease told apart by colour alone; a beeswarm point not at its contribution
+- design (L9): a figure, label or state lost in a restyle; a colour or size outside the tokens; text under 4.5:1; an identifier wrapping mid-token; a page that differs in rhythm from the overview without a reason in the ledger
 - AI (L7): a source document that carries instructions; a tool call outside the user's permissions; customer data sent to an external model
