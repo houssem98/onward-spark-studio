@@ -12,7 +12,7 @@ import { actions, useStore } from "@/store/app-store";
 import { classificationMetrics, downloadFile, psi, psiBand } from "@/lib/calc";
 
 export const Route = createFileRoute("/models/$id")({
-  validateSearch: (s: Record<string, unknown>) => ({ tab: typeof s.tab === "string" ? s.tab : "overview" }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } => (typeof s.tab === "string" ? { tab: s.tab } : {}),
   loader: ({ params }) => {
     const m = MODELS.find((x) => x.id === params.id);
     if (!m) throw notFound();
@@ -33,7 +33,7 @@ const OWNERS = ["T. Ibrahim", "E. Varga", "N. Petrov", "H. Kim", "Model Validati
 
 function ModelDetail() {
   const { id } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const tab = Route.useSearch().tab ?? "overview";
   const navigate = Route.useNavigate();
   const m = MODELS.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
