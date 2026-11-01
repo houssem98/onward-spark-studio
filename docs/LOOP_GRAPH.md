@@ -21,8 +21,8 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 ## Loops
 
 - [x] L0 Truth. ledger: `docs/loops/L0_TRUTH.md` · needs: none. · budget 12 ticks or $15 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 0 --- Baseline and design audit`
-- [ ] L1 Design. ledger: `docs/loops/L1_DESIGN.md` · needs: L0. · budget 20 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 1 --- Design system and shell`
-- [ ] L2 Data. ledger: `docs/loops/L2_DATA.md` · needs: L0. · budget 15 ticks or $15 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 2 --- Data boundaries and safe demo mode`
+- [x] L1 Design. ledger: `docs/loops/L1_DESIGN.md` · needs: L0. · budget 20 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 1 --- Design system and shell`
+- [x] L2 Data. ledger: `docs/loops/L2_DATA.md` · needs: L0. · budget 15 ticks or $15 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 2 --- Data boundaries and safe demo mode`
 - [ ] L3 Identity. ledger: `docs/loops/L3_IDENTITY.md` · needs: L2. · budget 20 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 3 --- Identity, authorization and persistence`
 - [ ] L4 Evidence. ledger: `docs/loops/L4_EVIDENCE.md` · needs: L1, L2. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 4 --- Evidence and source registry`
 - [ ] L5 Flagship. ledger: `docs/loops/L5_FLAGSHIP.md` · needs: L3, L4. · budget 20 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 5 --- Complete flagship investigation`
