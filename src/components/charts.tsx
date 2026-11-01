@@ -11,7 +11,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { ReactNode } from "react";
-import { UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
+import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
 import { StateBoundary, type DataState } from "@/components/states";
 import { cn } from "@/lib/utils";
@@ -109,10 +109,7 @@ export function Waterfall({ bridge, height = 280 }: { bridge: Bridge; height?: n
         <CartesianGrid vertical={false} stroke={CHART.grid} />
         <XAxis dataKey="name" {...axisProps} interval={0} />
         <YAxis {...axisProps} width={40} />
-        <Tooltip
-          {...tooltipStyle}
-          formatter={(_v, _n, p) => [`$${(p.payload as { signed: number }).signed}M`, "Value"]}
-        />
+        <Tooltip {...tooltipStyle} formatter={stepTooltip} />
         <ReferenceLine y={0} stroke={CHART.grid} />
         <Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="value" stackId="a" isAnimationActive={false}>

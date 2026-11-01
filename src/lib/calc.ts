@@ -116,6 +116,12 @@ export const fmtFixed = (v: number | null, dp = 1, unit = "") =>
   v === null ? UNAVAILABLE : `${v.toFixed(dp)}${unit}`;
 export const fmtPct = (v: number | null, dp = 1) => fmtFixed(v, dp, "%");
 export const fmtNum = (v: number) => v.toLocaleString("en-US");
+// A stacked bar's own value is the stack top, so the tooltip reads the signed step.
+export const stepTooltip = (_v: unknown, _n: unknown, p: { payload?: unknown }) => [
+  fmtM((p.payload as { signed: number }).signed),
+  "Value",
+];
+
 export const fmtSigned = (v: number, dp = 1) =>
   `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(dp)}`;
 

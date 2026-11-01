@@ -215,7 +215,7 @@ function CreditPage() {
           <Kpi
             def="net_write_offs"
             value={fmtM(wo - rec)}
-            sub={`WO ${wo.toFixed(1)} · Rec ${rec.toFixed(1)}`}
+            sub={`WO ${fmtM(wo)} · Rec ${fmtM(rec)}`}
           />
           <Kpi def="approval_rate" value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))} />
           <Kpi def="app_to_disbursement" value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))} />
@@ -397,7 +397,7 @@ function CreditPage() {
                 <th className="px-3 py-2">Segment / product</th>
                 <th className="px-3 py-2">Region</th>
                 <th className="px-3 py-2">Band</th>
-                <th className="px-3 py-2 text-right">Balance</th>
+                <th className="px-3 py-2 text-right">Balance (USD M)</th>
                 <th className="px-3 py-2 text-right">NPL %</th>
                 <th className="px-3 py-2">Signal</th>
               </tr>

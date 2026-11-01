@@ -31,13 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { revenueGapInvestigation, useStore } from "@/store/app-store";
 import { copilotBus } from "@/lib/copilot-bus";
-import {
-  creditQuery,
-  datasetsQuery,
-  financeQuery,
-  investigationsQuery,
-  modelsQuery,
-} from "@/repo/queries";
+import { creditQuery, datasetsQuery, financeQuery, investigationsQuery } from "@/repo/queries";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context: { queryClient } }) => {
@@ -45,7 +39,6 @@ export const Route = createFileRoute("/")({
       queryClient.ensureQueryData(financeQuery),
       queryClient.ensureQueryData(creditQuery),
       queryClient.ensureQueryData(datasetsQuery),
-      queryClient.ensureQueryData(modelsQuery),
       queryClient.ensureQueryData(investigationsQuery),
     ]);
   },
@@ -73,7 +66,6 @@ function Overview() {
   const { departments, quarterlyRevenue } = useSuspenseQuery(financeQuery).data;
   const { slices } = useSuspenseQuery(creditQuery).data;
   const { dimensions: dqDimensions } = useSuspenseQuery(datasetsQuery).data;
-  const { models } = useSuspenseQuery(modelsQuery).data;
   const { reports, nextSteps } = useSuspenseQuery(investigationsQuery).data;
   const [q, setQ] = useState(
     "Why did our credit division revenue grow more slowly than our competitors this year?",
@@ -95,9 +87,9 @@ function Overview() {
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
   const dqAvg = mean(dqDimensions.flatMap((d) => (d.score === null ? [] : [d.score])));
   const modelAlerts = drift.filter((d) => d.status !== "Closed").length;
-  const critical =
-    issues.filter((i) => i.severity === "Critical" && i.status !== "Resolved").length +
-    drift.filter((d) => d.severity === "High" && d.status === "Open").length;
+  const highModelAlerts = drift.filter(
+    (d) => d.status !== "Closed" && d.severity === "High",
+  ).length;
   const q4 = quarterlyRevenue;
 
   return (
@@ -158,8 +150,8 @@ function Overview() {
         <Kpi def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
         <Kpi
           def="open_model_alerts"
-          value={`${modelAlerts}/${models.length}`}
-          sub={`${critical} critical findings`}
+          value={String(modelAlerts)}
+          sub={`${highModelAlerts} rated High, not closed`}
         />
       </div>
 

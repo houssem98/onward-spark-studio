@@ -1,5 +1,5 @@
 // Predefined analytical routing — no live LLM is connected. Answers are composed from deterministic demo data.
-import { diff, fmtFixed, fmtM, fmtPct, growth, reconcileBridge, pct, round } from "@/lib/calc";
+import { diff, fmtFixed, fmtM, fmtPct, growth, reconcileBridge, pct } from "@/lib/calc";
 import { DEFINITIONS, DEMO_DATE, type DefinitionId } from "@/lib/definitions";
 import type { EvidenceState } from "@/data/investigations";
 import type { CrimeData, DatasetsData, FinanceData, ModelsData } from "@/repo/types";
@@ -75,7 +75,7 @@ export function answer(
       scope: "All revenue-generating units · FY2025 · budget basis",
       metrics: missed.map((d) => ({
         label: d.name,
-        value: `$${d.revenue}M vs $${d.target}M (${round(d.revenue - d.target)}M)`,
+        value: `${fmtM(d.revenue)} vs ${fmtM(d.target)} (${fmtM(d.revenue - d.target)})`,
       })),
       summary: [
         `${missed.length} of ${departments.filter((d) => !d.costCenter).length} revenue-generating units missed target.`,
