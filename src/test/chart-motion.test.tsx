@@ -71,9 +71,13 @@ function reduceMotion(on: boolean) {
   }));
 }
 
-/** Every route, and every tab on it, so charts on tabs other than the first are seen too. */
+/**
+ * Every route, and every tab on it, so charts on tabs other than the first are seen too. Fails on
+ * a React key warning, since handing series their settings rebuilds the chart's children.
+ */
 async function walk() {
   seen.series.length = 0;
+  const error = vi.spyOn(console, "error");
   for (const path of PATHS) {
     cleanup();
     seen.where = path;
@@ -84,6 +88,9 @@ async function walk() {
       await clickTab(tab);
     }
   }
+  expect(
+    error.mock.calls.map((c) => String(c[0])).filter((m) => m.includes('unique "key"')),
+  ).toEqual([]);
   return seen.series.map((s) => ({ ...s, label: `${s.where}: ${s.type} ${s.props["dataKey"]}` }));
 }
 

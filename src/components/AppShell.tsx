@@ -113,7 +113,7 @@ function NavList({
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-ui font-medium transition-colors",
                     active
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm [view-transition-name:nav-active]"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     collapsed && "justify-center px-0",
                   )}

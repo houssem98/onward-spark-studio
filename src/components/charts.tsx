@@ -13,7 +13,7 @@ import {
   YAxis,
   ReferenceLine,
 } from "recharts";
-import { cloneElement, isValidElement, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactNode } from "react";
 import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
@@ -27,7 +27,7 @@ const SERIES: unknown[] = [Area, Bar, Line, Scatter];
  * so the elements are cloned rather than wrapped; axes, grids and tooltips are left as they are.
  */
 function withMotion(node: ReactNode, motion: Record<string, unknown>): ReactNode {
-  if (Array.isArray(node)) return node.map((n) => withMotion(n, motion));
+  if (Array.isArray(node)) return Children.map(node, (n) => withMotion(n, motion));
   if (!isValidElement<{ children?: ReactNode; [prop: string]: unknown }>(node)) return node;
   const series = SERIES.includes(node.type);
   const kids = node.props.children;

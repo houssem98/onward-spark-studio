@@ -151,6 +151,27 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* A route change swaps the page at once and lets its entrance play; only the active nav item
+   travels. The page stays clickable while it does. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(nav-active) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-standard);
 }
 
 @utility num {
