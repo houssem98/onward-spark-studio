@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useActions, useStore } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 
 export const Route = createFileRoute("/data")({
   loader: async ({ context: { queryClient } }) => {
@@ -372,17 +373,17 @@ function DataPage() {
             </ChartFrame>
           </div>
           <Panel title="Failed rules & issues" bodyClass="p-0">
-            <div className="overflow-x-auto">
+            <div className={REGISTER_BOX}>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                    <th className="px-3 py-2">ID</th>
-                    <th className="px-3 py-2">Issue</th>
-                    <th className="px-3 py-2">Dimension</th>
-                    <th className="px-3 py-2 text-right">Affected</th>
-                    <th className="px-3 py-2">Severity</th>
-                    <th className="px-3 py-2">Owner</th>
-                    <th className="px-3 py-2">Status</th>
+                  <tr>
+                    <th className={REGISTER_TH}>ID</th>
+                    <th className={REGISTER_TH}>Issue</th>
+                    <th className={REGISTER_TH}>Dimension</th>
+                    <th className={cn(REGISTER_TH, "text-right")}>Affected</th>
+                    <th className={REGISTER_TH}>Severity</th>
+                    <th className={REGISTER_TH}>Owner</th>
+                    <th className={REGISTER_TH}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -403,18 +404,18 @@ function DataPage() {
                         }
                       }}
                     >
-                      <td className="num px-3 py-2 text-xs">{i.id}</td>
-                      <td className="px-3 py-2">
+                      <td className="num px-cell-x py-cell-y text-xs">{i.id}</td>
+                      <td className="px-cell-x py-cell-y">
                         {i.title}
                         <div className="text-xs text-muted-foreground">{i.dataset}</div>
                       </td>
-                      <td className="px-3 py-2">{i.dimension}</td>
-                      <td className="num px-3 py-2 text-right">{fmtNum(i.affected)}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-cell-x py-cell-y">{i.dimension}</td>
+                      <td className="num px-cell-x py-cell-y text-right">{fmtNum(i.affected)}</td>
+                      <td className="px-cell-x py-cell-y">
                         <StatusBadge value={i.severity} />
                       </td>
-                      <td className="px-3 py-2">{i.owner}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-cell-x py-cell-y">{i.owner}</td>
+                      <td className="px-cell-x py-cell-y">
                         <StatusBadge value={i.status} />
                       </td>
                     </tr>

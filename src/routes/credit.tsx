@@ -34,6 +34,8 @@ import { Button } from "@/components/ui/button";
 import { downloadFile, fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
 import { creditQuery, financeQuery } from "@/repo/queries";
 import { revenueGapInvestigation, useStore } from "@/store/app-store";
+import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/credit")({
   loader: async ({ context: { queryClient } }) => {
@@ -390,31 +392,33 @@ function CreditPage() {
       </div>
 
       <Panel title="Watchlist — highest NPL ratio slices" bodyClass="p-0">
-        <div className="overflow-x-auto">
+        <div className={REGISTER_BOX}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                <th className="px-3 py-2">Slice</th>
-                <th className="px-3 py-2">Segment / product</th>
-                <th className="px-3 py-2">Region</th>
-                <th className="px-3 py-2">Band</th>
-                <th className="px-3 py-2 text-right">Balance (USD M)</th>
-                <th className="px-3 py-2 text-right">NPL %</th>
-                <th className="px-3 py-2">Signal</th>
+              <tr>
+                <th className={REGISTER_TH}>Slice</th>
+                <th className={REGISTER_TH}>Segment / product</th>
+                <th className={REGISTER_TH}>Region</th>
+                <th className={REGISTER_TH}>Band</th>
+                <th className={cn(REGISTER_TH, "text-right")}>Balance (USD M)</th>
+                <th className={cn(REGISTER_TH, "text-right")}>NPL %</th>
+                <th className={REGISTER_TH}>Signal</th>
               </tr>
             </thead>
             <tbody>
               {watch.map((w) => (
                 <tr key={w.id} className="border-b last:border-0">
-                  <td className="num whitespace-nowrap px-3 py-2 text-xs">{w.id}</td>
-                  <td className="px-3 py-2">
+                  <td className="num whitespace-nowrap px-cell-x py-cell-y text-xs">{w.id}</td>
+                  <td className="px-cell-x py-cell-y">
                     {w.segment} · {w.product}
                   </td>
-                  <td className="px-3 py-2">{w.region}</td>
-                  <td className="px-3 py-2">{w.riskBand}</td>
-                  <td className="num px-3 py-2 text-right">{w.balance.toFixed(0)}</td>
-                  <td className="num px-3 py-2 text-right">{fmtFixed(pct(w.npl, w.balance), 2)}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-cell-x py-cell-y">{w.region}</td>
+                  <td className="px-cell-x py-cell-y">{w.riskBand}</td>
+                  <td className="num px-cell-x py-cell-y text-right">{w.balance.toFixed(0)}</td>
+                  <td className="num px-cell-x py-cell-y text-right">
+                    {fmtFixed(pct(w.npl, w.balance), 2)}
+                  </td>
+                  <td className="px-cell-x py-cell-y">
                     <StatusBadge value={w.riskBand === "D" ? "High" : "Watch"} />
                   </td>
                 </tr>

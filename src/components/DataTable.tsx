@@ -6,10 +6,7 @@ import { cn } from "@/lib/utils";
 import { downloadFile, toCSV } from "@/lib/calc";
 import { toast } from "sonner";
 import { StateBoundary, type DataState } from "@/components/states";
-
-// Identifiers (prefix-number, e.g. ABC-123) and dates are read as one token; they never wrap.
-const WHOLE =
-  /^(?:[A-Z][A-Z0-9]{0,6}(?:-[A-Z0-9]+)+|\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?)$/;
+import { isWhole, REGISTER_BOX, REGISTER_HEAD } from "@/lib/register";
 
 export interface Column<T> {
   key: string;
@@ -122,17 +119,18 @@ export function DataTable<T extends object>({
         </div>
       </div>
       <StateBoundary state={state} label="records" note={stateNote}>
-        <div className="max-h-[70vh] overflow-auto">
+        <div className={REGISTER_BOX}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
+              <tr>
                 {columns.map((c) => {
                   const active = sort?.key === c.key;
                   return (
                     <th
                       key={c.key}
                       className={cn(
-                        "sticky top-0 z-10 whitespace-nowrap bg-muted px-cell-x py-cell-y text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
+                        REGISTER_HEAD,
+                        "px-cell-x py-cell-y",
                         c.align === "right" && "text-right",
                       )}
                     >
@@ -185,6 +183,7 @@ export function DataTable<T extends object>({
                     key={k}
                     onClick={rowAction ? () => rowAction(r) : undefined}
                     tabIndex={rowAction ? 0 : undefined}
+                    aria-selected={selectedKey === undefined ? undefined : selectedKey === k}
                     onKeyDown={
                       rowAction
                         ? (e) => {
@@ -206,8 +205,8 @@ export function DataTable<T extends object>({
                         key={c.key}
                         className={cn(
                           "px-cell-x py-cell-y align-middle",
-                          c.align === "right" && "num text-right",
-                          WHOLE.test(String(val(r, c) ?? "")) && "whitespace-nowrap",
+                          c.align === "right" && "num whitespace-nowrap text-right",
+                          isWhole(String(val(r, c) ?? "")) && "whitespace-nowrap",
                           c.className,
                         )}
                       >

@@ -21,6 +21,7 @@ import {
 import { useActions, useStore } from "@/store/app-store";
 import { downloadFile, fmtNum } from "@/lib/calc";
 import { cn } from "@/lib/utils";
+import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 
 export const Route = createFileRoute("/crime/$id")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -139,29 +140,29 @@ function CasePage() {
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Panel title="Supporting transactions" className="xl:col-span-2" bodyClass="p-0">
-          <div className="overflow-x-auto">
+          <div className={REGISTER_BOX}>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50 text-left text-caption uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">Txn</th>
-                  <th className="px-3 py-2">Date</th>
-                  <th className="px-3 py-2">Dir</th>
-                  <th className="px-3 py-2 text-right">Amount</th>
-                  <th className="px-3 py-2">Counterparty</th>
-                  <th className="px-3 py-2">Flag</th>
+                <tr>
+                  <th className={REGISTER_TH}>Txn</th>
+                  <th className={REGISTER_TH}>Date</th>
+                  <th className={REGISTER_TH}>Dir</th>
+                  <th className={cn(REGISTER_TH, "text-right")}>Amount</th>
+                  <th className={REGISTER_TH}>Counterparty</th>
+                  <th className={REGISTER_TH}>Flag</th>
                 </tr>
               </thead>
               <tbody>
                 {c.transactions.map((t) => (
                   <tr key={t.id} className="border-b last:border-0">
-                    <td className="num whitespace-nowrap px-3 py-2 text-xs">{t.id}</td>
-                    <td className="num whitespace-nowrap px-3 py-2 text-xs">{t.date}</td>
-                    <td className="px-3 py-2">{t.direction}</td>
-                    <td className="num px-3 py-2 text-right">
+                    <td className="num whitespace-nowrap px-cell-x py-cell-y text-xs">{t.id}</td>
+                    <td className="num whitespace-nowrap px-cell-x py-cell-y text-xs">{t.date}</td>
+                    <td className="px-cell-x py-cell-y">{t.direction}</td>
+                    <td className="num whitespace-nowrap px-cell-x py-cell-y text-right">
                       {fmtNum(t.amount)} {t.currency}
                     </td>
-                    <td className="px-3 py-2">{t.counterparty}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-cell-x py-cell-y">{t.counterparty}</td>
+                    <td className="px-cell-x py-cell-y">
                       {t.flag && <StatusBadge value={t.flag} tone="warning" />}
                     </td>
                   </tr>
