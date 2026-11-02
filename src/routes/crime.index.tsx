@@ -115,7 +115,11 @@ function CrimePage() {
         description="All customers, transactions and entities are fictional. Alerts indicate suspicious activity for review; they are not determinations of wrongdoing."
       />
       <KpiBand label="Alert KPIs" className="grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
-        <Kpi def="open_crime_alerts" value={String(open.length)} />
+        <Kpi
+          className="col-span-2 xl:col-span-1"
+          def="open_crime_alerts"
+          value={String(open.length)}
+        />
         <Kpi
           def="open_fraud_alerts"
           value={String(open.filter((x) => x.type === "Fraud").length)}

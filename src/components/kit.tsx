@@ -309,6 +309,7 @@ export function Kpi({
   spark,
   size = "md",
   basis = false,
+  className,
 }: {
   def: DefinitionId;
   value: string;
@@ -322,6 +323,7 @@ export function Kpi({
   size?: "md" | "lg";
   /** States unit, period and source in the tile, not only in the tooltip. */
   basis?: boolean;
+  className?: string | undefined;
 }) {
   const flat = useContext(InBand);
   const d: Definition = DEFINITIONS[def];
@@ -334,7 +336,12 @@ export function Kpi({
   const sign = delta === undefined ? 0 : Math.sign(parseFloat(delta.replace("−", "-")));
   return (
     <div
-      className={cn(flat ? "bg-card" : "card-surface card-lift", size === "lg" ? "p-5" : "p-4")}
+      className={cn(
+        // In a band each tile is a subgrid, so labels, figures and captions share rows.
+        flat ? "row-span-4 grid grid-cols-1 grid-rows-subgrid bg-card" : "card-surface card-lift",
+        size === "lg" ? "p-5" : "p-4",
+        className,
+      )}
       data-definition={def}
     >
       <div className="flex items-start justify-between gap-2">
@@ -360,8 +367,9 @@ export function Kpi({
       <StateBoundary state={state} label={d.label} note={stateNote}>
         <div className="flex items-end justify-between gap-3">
           <div
+            data-kpi-value
             className={cn(
-              "mt-2 num font-semibold tracking-tight",
+              "mt-2 num shrink-0 font-semibold tracking-tight",
               size === "lg" ? "text-3xl" : "text-2xl",
             )}
           >
@@ -412,13 +420,20 @@ export function Sparkline({ data, good }: { data: number[]; good?: boolean | und
     .join(" ");
   const stroke = good === false ? "var(--critical)" : good ? "var(--success)" : "var(--primary)";
   return (
-    <svg width={w} height={h} aria-hidden className="shrink-0">
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      aria-hidden
+      data-sparkline
+      className="h-[30px] w-[84px] min-w-0 shrink"
+    >
       <path d={`${d} L${w},${h} L0,${h} Z`} fill={stroke} opacity={0.08} />
       <path
         d={d}
         fill="none"
         stroke={stroke}
         strokeWidth={1.6}
+        vectorEffect="non-scaling-stroke"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

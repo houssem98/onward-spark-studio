@@ -28,8 +28,13 @@ async function eachView(page: Page, check: (where: string) => Promise<void>) {
     await check(route);
     const tabs = page.locator("main [role=tab]");
     for (let i = 1; i < (await tabs.count()); i++) {
-      await tabs.nth(i).click();
-      await check(`${route} › ${(await tabs.nth(i).textContent())?.trim()}`);
+      const tab = tabs.nth(i);
+      // A click before hydration is lost; click until the tab reports itself selected.
+      await expect(async () => {
+        await tab.click();
+        await expect(tab).toHaveAttribute("aria-selected", "true", { timeout: 1000 });
+      }).toPass();
+      await check(`${route} › ${(await tab.textContent())?.trim()}`);
     }
   }
 }
@@ -40,6 +45,7 @@ for (const [width, height] of [
   [390, 844],
 ] as const) {
   test(`identifiers, dates and amounts never wrap at ${width}px`, async ({ page }) => {
+    test.setTimeout(240_000);
     await page.setViewportSize({ width, height });
     const wrapped: string[] = [];
     let checked = 0;
@@ -84,6 +90,7 @@ for (const [width, height] of [
 }
 
 test("every visible register has a sticky header carrying its own rule", async ({ page }) => {
+  test.setTimeout(240_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   const off: string[] = [];
   let tables = 0;

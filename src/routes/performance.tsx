@@ -214,7 +214,7 @@ function PerformancePage() {
         </TabsList>
 
         <TabsContent value="scorecard" className="mt-4 space-y-3">
-          <KpiBand label="Scorecard KPIs" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+          <KpiBand label="Scorecard KPIs" className="grid-cols-2 xl:grid-cols-5">
             <Kpi
               def="operating_income"
               value={fmtM(rev, 0)}

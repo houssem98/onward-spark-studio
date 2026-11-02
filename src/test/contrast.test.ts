@@ -55,6 +55,11 @@ const PAIRS: [string, string, number][] = [
   ["ring", "background", 3],
   ["ring", "card", 3],
   ["primary", "background", 3],
+  ["chart-1", "card", 3],
+  ["chart-2", "card", 3],
+  ["chart-3", "card", 3],
+  ["chart-4", "card", 3],
+  ["chart-5", "card", 3],
 ];
 
 describe("contrast", () => {

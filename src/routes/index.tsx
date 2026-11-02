@@ -273,16 +273,15 @@ function Overview() {
       </Panel>
 
       <KpiBand label="Decision KPIs" className="sm:grid-cols-2 xl:grid-cols-5">
-        <div className="sm:col-span-2 xl:col-span-1">
-          <Kpi
-            basis
-            def="operating_income"
-            value={fmtM(rev, 0)}
-            delta={`${fmtPct(growth(rev, prior))} YoY`}
-            deltaGood
-            spark={col("total")}
-          />
-        </div>
+        <Kpi
+          className="sm:col-span-2 xl:col-span-1"
+          basis
+          def="operating_income"
+          value={fmtM(rev, 0)}
+          delta={`${fmtPct(growth(rev, prior))} YoY`}
+          deltaGood
+          spark={col("total")}
+        />
         <Kpi
           basis
           def="cost_to_income"

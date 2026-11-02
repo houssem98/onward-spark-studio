@@ -204,9 +204,20 @@ function ModelDetail() {
         </TabsContent>
 
         <TabsContent value="performance" className="mt-4 space-y-4">
-          <KpiBand label="Performance metrics" className="grid-cols-2 md:grid-cols-4">
-            {Object.entries(v.metrics).map(([k, x]) => (
-              <Kpi key={k} def={MODEL_METRICS[k]!} value={String(x)} />
+          {/* Versions carry two or three metrics; three take a full-width first tile below md. */}
+          <KpiBand
+            label="Performance metrics"
+            className={
+              Object.keys(v.metrics).length === 3 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2"
+            }
+          >
+            {Object.entries(v.metrics).map(([k, x], i, all) => (
+              <Kpi
+                key={k}
+                def={MODEL_METRICS[k]!}
+                value={String(x)}
+                className={all.length === 3 && i === 0 ? "col-span-2 md:col-span-1" : undefined}
+              />
             ))}
           </KpiBand>
           {m.kind === "classification" && cm && (

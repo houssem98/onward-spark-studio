@@ -404,7 +404,7 @@ function DataPage() {
                         }
                       }}
                     >
-                      <td className="num px-cell-x py-cell-y text-xs">{i.id}</td>
+                      <td className="num whitespace-nowrap px-cell-x py-cell-y text-xs">{i.id}</td>
                       <td className="px-cell-x py-cell-y">
                         {i.title}
                         <div className="text-xs text-muted-foreground">{i.dataset}</div>
