@@ -69,6 +69,8 @@ export const Route = createFileRoute("/")({
   component: Overview,
 });
 
+const SEVERITY_RANK = { Critical: 0, High: 1, Medium: 2, Low: 3 } as const;
+
 function Overview() {
   const navigate = useNavigate();
   const { departments, quarterlyRevenue, peers } = useSuspenseQuery(financeQuery).data;
@@ -102,29 +104,29 @@ function Overview() {
     return c === null ? [] : [c];
   });
 
-  const intel = [
+  const candidates = [
     ...issues
       .filter(
         (i) => i.status !== "Resolved" && (i.severity === "Critical" || i.severity === "High"),
       )
-      .slice(0, 2)
       .map((i) => ({
         key: i.id,
         title: i.title,
         text: i.detail,
         badge: <StatusBadge value={i.severity} />,
+        severity: i.severity,
         date: i.detected,
         module: "Data Governance",
         link: <Link to="/data" className="absolute inset-0" aria-label={i.title} />,
       })),
     ...drift
       .filter((d) => d.status !== "Closed")
-      .slice(0, 1)
       .map((d) => ({
         key: d.id,
         title: `${d.model}: ${d.title}`,
         text: "Drift indicates input change against the approved reference; further validation may be needed.",
         badge: <StatusBadge value={d.status} />,
+        severity: d.severity,
         date: d.raised.slice(0, 10),
         module: "Model Governance",
         link: (
@@ -138,12 +140,12 @@ function Overview() {
       })),
     ...cases
       .filter((c) => c.status !== "Closed")
-      .slice(0, 1)
       .map((c) => ({
         key: c.id,
         title: `${c.id}: ${c.title}`,
         text: "Suspicious activity indicator under review, not a determination.",
         badge: <StatusBadge value={c.priority} />,
+        severity: c.priority,
         date: c.opened,
         module: "Financial Crime",
         link: (
@@ -155,23 +157,31 @@ function Overview() {
           />
         ),
       })),
-    {
-      key: gapInv.id,
-      title: gapInv.title,
-      text: gapInv.question,
-      badge: <EvidenceBadge state={gapInv.state} />,
-      date: gapInv.created,
-      module: "Performance",
-      link: (
-        <Link
-          to="/investigations/$id"
-          params={{ id: gapInv.id }}
-          className="absolute inset-0"
-          aria-label={gapInv.title}
-        />
-      ),
-    },
-  ];
+    ...(gapInv.status === "Closed"
+      ? []
+      : [
+          {
+            key: gapInv.id,
+            title: gapInv.title,
+            text: gapInv.question,
+            badge: <EvidenceBadge state={gapInv.state} />,
+            severity: gapInv.priority,
+            date: gapInv.created,
+            module: "Performance",
+            link: (
+              <Link
+                to="/investigations/$id"
+                params={{ id: gapInv.id }}
+                className="absolute inset-0"
+                aria-label={gapInv.title}
+              />
+            ),
+          },
+        ]),
+  ].sort(
+    (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.date.localeCompare(a.date),
+  );
+  const intel = candidates.slice(0, 6);
 
   const modules = [
     {
@@ -238,13 +248,14 @@ function Overview() {
 
       <Panel
         title="Needs attention"
-        subtitle={`${intel.length} items · from records in this workspace · not live AI output`}
+        subtitle={`Top ${intel.length} of ${candidates.length} open · from records in this workspace · not live AI output`}
         bodyClass="p-0"
       >
         <ul className="grid md:grid-cols-2 xl:grid-cols-3">
           {intel.map((i) => (
             <li
               key={i.key}
+              data-severity={i.severity}
               className="relative border-b px-5 py-3.5 transition-colors hover:bg-accent/40"
             >
               {i.link}

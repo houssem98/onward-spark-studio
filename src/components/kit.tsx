@@ -330,6 +330,8 @@ export function Kpi({
     delta === undefined || deltaGood === undefined || delta.startsWith(UNAVAILABLE)
       ? undefined
       : deltaGood;
+  // The arrow states direction; colour alone states good or bad (a cost rise is ▲ in red).
+  const sign = delta === undefined ? 0 : Math.sign(parseFloat(delta.replace("−", "-")));
   return (
     <div
       className={cn(flat ? "bg-card" : "card-surface card-lift", size === "lg" ? "p-5" : "p-4")}
@@ -379,19 +381,19 @@ export function Kpi({
                     : "bg-critical/10 text-critical",
               )}
             >
-              {tone === undefined ? "" : tone ? "▲ " : "▼ "}
+              {tone === undefined || !sign ? "" : sign > 0 ? "▲ " : "▼ "}
               {delta}
             </span>
           )}
           {caption && <span>{caption}</span>}
           {status}
         </div>
-        {basis && (
-          <p className="mt-2 text-caption text-muted-foreground">
-            {d.unit} · {d.period} · {d.source}
-          </p>
-        )}
       </StateBoundary>
+      {basis && (
+        <p className="mt-2 text-caption text-muted-foreground">
+          {d.unit} · {d.period} · {d.source}
+        </p>
+      )}
     </div>
   );
 }
