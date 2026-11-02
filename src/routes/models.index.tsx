@@ -5,7 +5,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import type { Model } from "@/data/models";
 import { modelsQuery } from "@/repo/queries";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
-import { Kpi, PageHeader, Panel, StatusBadge } from "@/components/kit";
+import { Kpi, PageHeader, Panel, StatusBadge, KpiBand } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/app-store";
 import { downloadFile, toCSV } from "@/lib/calc";
@@ -127,7 +127,7 @@ function ModelsPage() {
           </Button>
         }
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <KpiBand label="Model KPIs" className="grid-cols-2 md:grid-cols-4">
         <Kpi def="models_in_inventory" value={String(models.length)} />
         <Kpi
           def="tier1_models"
@@ -142,7 +142,7 @@ function ModelsPage() {
           value={String(drift.filter((d) => d.status !== "Closed").length)}
           sub={`${drift.filter((d) => d.status !== "Closed" && d.severity === "High").length} rated High, not closed`}
         />
-      </div>
+      </KpiBand>
 
       <DataTable
         rows={rows}

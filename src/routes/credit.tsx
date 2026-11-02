@@ -27,6 +27,7 @@ import {
   StatusBadge,
   tooltipStyle,
   TYPE,
+  KpiBand,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ function CreditPage() {
       </div>
 
       <StateBoundary state={empty} label="portfolio slices">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+        <KpiBand label="Portfolio KPIs" className="grid-cols-2 md:grid-cols-4 xl:grid-cols-6">
           <Kpi
             def="outstanding_balance"
             value={fmtM(bal, 0)}
@@ -225,7 +226,7 @@ function CreditPage() {
           />
           <Kpi def="limit_utilization" value={fmtPct(pct(bal, lim))} />
           <Kpi def="collateral_coverage" value={fmtPct(pct(coll, bal), 0)} />
-        </div>
+        </KpiBand>
       </StateBoundary>
       <p className="text-xs text-muted-foreground">
         Control: interest and fee revenue across all slices, {fmtM(portfolioRev)},{" "}
@@ -366,7 +367,7 @@ function CreditPage() {
           }
         >
           <StateBoundary state={empty} label="portfolio slices">
-            <div className="grid grid-cols-2 gap-3">
+            <KpiBand label="Stress KPIs" className="grid-cols-2">
               <Kpi
                 def="stressed_ecl"
                 value={fmtM(ecl * sc.eclMultiplier)}
@@ -377,7 +378,7 @@ function CreditPage() {
                 value={fmtPct(nplRatio === null ? null : nplRatio + sc.nplShift, 2)}
                 delta={`+${sc.nplShift}pp`}
               />
-            </div>
+            </KpiBand>
           </StateBoundary>
           <div className="mt-3">
             <Notice>

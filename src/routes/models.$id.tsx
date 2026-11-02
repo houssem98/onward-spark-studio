@@ -29,6 +29,7 @@ import {
   StatusBadge,
   tooltipStyle,
   TYPE,
+  KpiBand,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -203,11 +204,11 @@ function ModelDetail() {
         </TabsContent>
 
         <TabsContent value="performance" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <KpiBand label="Performance metrics" className="grid-cols-2 md:grid-cols-4">
             {Object.entries(v.metrics).map(([k, x]) => (
               <Kpi key={k} def={MODEL_METRICS[k]!} value={String(x)} />
             ))}
-          </div>
+          </KpiBand>
           {m.kind === "classification" && cm && (
             <div className="grid gap-4 lg:grid-cols-2">
               <Panel title="Confusion matrix" subtitle="At production threshold · synthetic counts">

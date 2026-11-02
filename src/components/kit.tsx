@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -194,18 +194,21 @@ export function SyntheticTag({ label = "Synthetic demo data" }: { label?: string
 export function PageHeader({
   title,
   description,
+  meta,
   actions,
   crumbs,
   tag = true,
 }: {
   title: string;
   description?: string;
+  /** Context line beside the synthetic tag, above the title. */
+  meta?: string;
   actions?: ReactNode;
   crumbs?: { label: string; to?: string }[];
   tag?: boolean;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header data-page-header className="flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {crumbs && (
           <nav
@@ -226,16 +229,19 @@ export function PageHeader({
             ))}
           </nav>
         )}
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          {tag && <SyntheticTag />}
-        </div>
+        {(tag || meta) && (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {tag && <SyntheticTag />}
+            {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
+          </div>
+        )}
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {description && (
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="no-print flex flex-wrap items-center gap-2">{actions}</div>}
-    </div>
+    </header>
   );
 }
 
@@ -270,6 +276,27 @@ export function Panel({
   );
 }
 
+const InBand = createContext(false);
+
+/** One panel of figures with hairline dividers; KPIs inside it drop their own card. */
+export function KpiBand({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section data-kpi-band aria-label={label} className="overflow-hidden rounded-lg border bg-card">
+      <div className={cn("-mb-px -mr-px grid [&>*]:border-b [&>*]:border-r", className)}>
+        <InBand.Provider value>{children}</InBand.Provider>
+      </div>
+    </section>
+  );
+}
+
 export function Kpi({
   def,
   value,
@@ -281,7 +308,6 @@ export function Kpi({
   stateNote,
   spark,
   size = "md",
-  flat = false,
   basis = false,
 }: {
   def: DefinitionId;
@@ -294,11 +320,10 @@ export function Kpi({
   stateNote?: string;
   spark?: number[];
   size?: "md" | "lg";
-  /** Sits inside a shared panel instead of its own card. */
-  flat?: boolean;
   /** States unit, period and source in the tile, not only in the tooltip. */
   basis?: boolean;
 }) {
+  const flat = useContext(InBand);
   const d: Definition = DEFINITIONS[def];
   const caption = sub ?? d.sub;
   const tone =

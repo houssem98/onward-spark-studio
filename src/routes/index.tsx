@@ -28,9 +28,10 @@ import {
   CHART,
   EvidenceBadge,
   Kpi,
+  KpiBand,
+  PageHeader,
   Panel,
   StatusBadge,
-  SyntheticTag,
   tooltipStyle,
   TYPE,
 } from "@/components/kit";
@@ -209,39 +210,31 @@ function Overview() {
 
   return (
     <div className="space-y-section">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <SyntheticTag />
-            <span className="text-xs text-muted-foreground">
-              Northstar Bank (fictional) · FY2025 · USD millions · IFRS basis (synthetic)
-            </span>
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Executive Overview</h1>
-          <p className="mt-1.5 text-muted-foreground">
-            Welcome back, {user.name.split(" ")[0]}. What needs attention first, then how the bank
-            is performing.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            className="bg-card"
-            onClick={() =>
-              copilotBus.ask(
-                "Why did our credit division revenue grow more slowly than our competitors this year?",
-              )
-            }
-          >
-            <Search className="h-4 w-4" /> Ask about credit vs peers
-          </Button>
-          <Button
-            onClick={() => navigate({ to: "/investigations/$id", params: { id: gapInv.id } })}
-          >
-            Open investigation <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="Executive Overview"
+        meta="Northstar Bank (fictional) · FY2025 · USD millions · IFRS basis (synthetic)"
+        description={`Welcome back, ${user.name.split(" ")[0]}. What needs attention first, then how the bank is performing.`}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              className="bg-card"
+              onClick={() =>
+                copilotBus.ask(
+                  "Why did our credit division revenue grow more slowly than our competitors this year?",
+                )
+              }
+            >
+              <Search className="h-4 w-4" /> Ask about credit vs peers
+            </Button>
+            <Button
+              onClick={() => navigate({ to: "/investigations/$id", params: { id: gapInv.id } })}
+            >
+              Open investigation <ArrowRight className="h-4 w-4" />
+            </Button>
+          </>
+        }
+      />
 
       <Panel
         title="Needs attention"
@@ -268,13 +261,9 @@ function Overview() {
         </ul>
       </Panel>
 
-      <section
-        aria-label="Decision KPIs"
-        className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 xl:grid-cols-5"
-      >
+      <KpiBand label="Decision KPIs" className="sm:grid-cols-2 xl:grid-cols-5">
         <div className="sm:col-span-2 xl:col-span-1">
           <Kpi
-            flat
             basis
             def="operating_income"
             value={fmtM(rev, 0)}
@@ -284,7 +273,6 @@ function Overview() {
           />
         </div>
         <Kpi
-          flat
           basis
           def="cost_to_income"
           value={fmtPct(costToIncome(opex, rev))}
@@ -292,10 +280,10 @@ function Overview() {
           deltaGood={cirChange !== null && cirChange < 0}
           spark={cirSpark}
         />
-        <Kpi flat basis def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
-        <Kpi flat basis def="outstanding_balance" value={fmtM(bal, 0)} />
-        <Kpi flat basis def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
-      </section>
+        <Kpi basis def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
+        <Kpi basis def="outstanding_balance" value={fmtM(bal, 0)} />
+        <Kpi basis def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
+      </KpiBand>
 
       <div className="grid gap-5 xl:grid-cols-3">
         <ChartFrame

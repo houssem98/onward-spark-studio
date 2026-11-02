@@ -26,6 +26,7 @@ import {
   StatusBadge,
   tooltipStyle,
   TYPE,
+  KpiBand,
 } from "@/components/kit";
 import { ChartFrame, Waterfall } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -212,7 +213,7 @@ function PerformancePage() {
         </TabsList>
 
         <TabsContent value="scorecard" className="mt-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+          <KpiBand label="Scorecard KPIs" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             <Kpi
               def="operating_income"
               value={fmtM(rev, 0)}
@@ -248,7 +249,7 @@ function PerformancePage() {
             <Kpi def="roe" value={fmtPct(ns.roe)} />
             <Kpi def="credit_growth" value={fmtPct(ns.creditGrowth)} />
             <Kpi def="deposit_growth" value={fmtPct(ns.depositGrowth)} />
-          </div>
+          </KpiBand>
           <Notice>
             Market share is not shown: no comparable market-size data source is available.
             Freshness: {financeData.name.toLowerCase()} refreshed{" "}

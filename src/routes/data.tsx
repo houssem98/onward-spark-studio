@@ -26,6 +26,7 @@ import {
   StatusBadge,
   tooltipStyle,
   TYPE,
+  KpiBand,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -130,7 +131,7 @@ function DataPage() {
         title="Data Governance & Data Intelligence"
         description="Catalog, lineage and data quality for datasets that feed reports and models. Lineage is illustrative, not harvested from live systems."
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <KpiBand label="Data KPIs" className="grid-cols-2 md:grid-cols-4">
         <Kpi def="catalogued_datasets" value={String(datasets.length)} />
         <Kpi
           def="certified_datasets"
@@ -141,7 +142,7 @@ function DataPage() {
           value={String(issues.filter((i) => i.status !== "Resolved").length)}
         />
         <Kpi def="dq_dimension_mean" value={fmtFixed(mean(measurable.map((d) => d.score!)))} />
-      </div>
+      </KpiBand>
 
       <Tabs defaultValue="catalog">
         <TabsList className="h-auto flex-wrap">

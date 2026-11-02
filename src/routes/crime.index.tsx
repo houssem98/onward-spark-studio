@@ -21,6 +21,7 @@ import {
   StatusBadge,
   tooltipStyle,
   TYPE,
+  KpiBand,
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -113,7 +114,7 @@ function CrimePage() {
         title="Fraud, AML & Financial Crime"
         description="All customers, transactions and entities are fictional. Alerts indicate suspicious activity for review; they are not determinations of wrongdoing."
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+      <KpiBand label="Alert KPIs" className="grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
         <Kpi def="open_crime_alerts" value={String(open.length)} />
         <Kpi
           def="open_fraud_alerts"
@@ -132,7 +133,7 @@ function CrimePage() {
         />
         <Kpi def="sla_breaches" value={String(open.filter((x) => x.ageDays > 10).length)} />
         <Kpi def="false_positive_rate" value="N/A" />
-      </div>
+      </KpiBand>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartFrame
