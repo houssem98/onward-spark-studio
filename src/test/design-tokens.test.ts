@@ -36,6 +36,44 @@ describe("design tokens", () => {
     expect([...css.matchAll(/font-size:(?!\s*var\()[^;]+/g)].map((m) => m[0])).toEqual([]);
   });
 
+  it("times every animation and transition from the motion tokens", () => {
+    const tsx = (dir: string): string[] =>
+      readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory()
+          ? tsx(`${dir}/${e.name}`)
+          : e.name.endsWith(".tsx")
+            ? [`${dir}/${e.name}`]
+            : [],
+      );
+    const rawInClasses =
+      /\b\d+(?:\.\d+)?ms\b|cubic-bezier\(|(?<![\w-])(?:duration|delay)-\d+|(?<![\w-])ease-(?:linear|in-out|in|out)(?![\w-])/g;
+    const files = [...tsx("src/routes"), ...tsx("src/components")];
+    const raw = files.flatMap((f) =>
+      [...read(f).matchAll(rawInClasses)].map((m) => `${f}: ${m[0]}`),
+    );
+    // The tokens live in :root; the reduced-motion rule's 0.01ms is pinned by the accessibility suite.
+    const css = read("src/styles.css")
+      .replace(/:root \{[\s\S]*?\n\}/, "")
+      .replace(/@theme inline \{[\s\S]*?\n\}/, "")
+      .replace(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/, "");
+    const rawInCss =
+      /\b\d+(?:\.\d+)?m?s\b|cubic-bezier\(|(?<![\w-])(?:ease|ease-in|ease-out|ease-in-out|linear)(?![\w-])/g;
+    raw.push(...[...css.matchAll(rawInCss)].map((m) => `src/styles.css: ${m[0]}`));
+    expect(raw).toEqual([]);
+    for (const t of [
+      "--duration-instant: 120ms;",
+      "--duration-quick: 160ms;",
+      "--duration-base: 220ms;",
+      "--duration-page: 260ms;",
+      "--duration-data: 500ms;",
+      "--stagger: 40ms;",
+      "--ease-standard: cubic-bezier(0.2, 0, 0, 1);",
+      "--ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);",
+      "--ease-exit: cubic-bezier(0.3, 0, 1, 1);",
+    ])
+      expect(read("src/styles.css"), t).toContain(t);
+  });
+
   it("keeps the type scale charts use equal to the CSS tokens", () => {
     const css = read("src/styles.css") + read("node_modules/tailwindcss/theme.css");
     for (const [name, px] of Object.entries(TYPE))

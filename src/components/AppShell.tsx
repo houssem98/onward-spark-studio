@@ -111,7 +111,7 @@ function NavList({
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-ui font-medium transition-colors duration-150",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-ui font-medium transition-colors",
                     active
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -190,7 +190,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <aside
         className={cn(
-          "no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-out md:flex",
+          "no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-(--duration-base) ease-(--ease-standard) md:flex",
           collapsed ? "w-[76px]" : "w-64",
         )}
       >
