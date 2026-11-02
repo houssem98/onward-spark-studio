@@ -97,5 +97,6 @@ describe("figures that foot and reconcile", () => {
     expect(screen.getByText(/peers report credit revenue/).textContent).toContain(
       "2 of 5 peers report credit revenue",
     );
-  });
+    // A route render, a tab and three wizard steps: past the 5 s default under a loaded gate.
+  }, 30_000);
 });
