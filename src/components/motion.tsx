@@ -28,6 +28,17 @@ function tokenMs(name: string) {
   return v.endsWith("ms") ? parseFloat(v) : parseFloat(v) * 1000 || 0;
 }
 
+const constant = () => () => {};
+
+/** A motion token in milliseconds on the client; 0 on the server, where nothing animates. */
+export function useMotionMs(name: string) {
+  return useSyncExternalStore(
+    constant,
+    () => tokenMs(name),
+    () => 0,
+  );
+}
+
 /**
  * Fades its content up once it scrolls into view. Content already on screen at mount, under
  * reduced motion or without IntersectionObserver is never hidden.

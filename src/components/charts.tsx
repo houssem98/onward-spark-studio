@@ -1,20 +1,43 @@
 import {
+  Area,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   LabelList,
+  Line,
   ResponsiveContainer,
+  Scatter,
   Tooltip,
   XAxis,
   YAxis,
   ReferenceLine,
 } from "recharts";
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, type ReactNode } from "react";
 import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
+import { useMotionMs, useReducedMotion } from "@/components/motion";
 import { StateBoundary, type DataState } from "@/components/states";
 import { cn } from "@/lib/utils";
+
+const SERIES: unknown[] = [Area, Bar, Line, Scatter];
+
+/**
+ * Hands every series in a chart tree the same motion settings. Recharts finds series by type,
+ * so the elements are cloned rather than wrapped; axes, grids and tooltips are left as they are.
+ */
+function withMotion(node: ReactNode, motion: Record<string, unknown>): ReactNode {
+  if (Array.isArray(node)) return node.map((n) => withMotion(n, motion));
+  if (!isValidElement<{ children?: ReactNode; [prop: string]: unknown }>(node)) return node;
+  const series = SERIES.includes(node.type);
+  const kids = node.props.children;
+  if (!series && kids === undefined) return node;
+  return cloneElement(
+    node,
+    series ? motion : {},
+    ...(Array.isArray(kids) ? kids.map((k) => withMotion(k, motion)) : [withMotion(kids, motion)]),
+  );
+}
 
 /** A chart always states its unit, period and source, and offers its data as a table. */
 export function ChartFrame({
@@ -45,6 +68,12 @@ export function ChartFrame({
   children: ReactNode;
 }) {
   const cols = columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }));
+  const reduced = useReducedMotion();
+  const ms = useMotionMs("--duration-data");
+  const motion =
+    reduced || !ms
+      ? { isAnimationActive: false }
+      : { isAnimationActive: true, animationDuration: ms };
   return (
     <figure className={cn("m-0 min-w-0 rounded-md border bg-card", className)}>
       <figcaption className="flex items-start justify-between gap-3 border-b px-4 py-2.5">
@@ -59,7 +88,7 @@ export function ChartFrame({
       </figcaption>
       <div className="p-4">
         <StateBoundary state={state} label={title} note={stateNote}>
-          {children}
+          {withMotion(children, motion)}
           <details className="mt-2 text-xs">
             <summary className="cursor-pointer text-muted-foreground">Show data as a table</summary>
             <div className="mt-2 overflow-x-auto">

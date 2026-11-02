@@ -200,9 +200,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F39 · low · Charts still animate when the user asks for reduced motion
-- Evidence: the reduced-motion rule in `src/styles.css#@media (prefers-reduced-motion: reduce)` stops CSS transitions, but recharts animates its series in JavaScript and the series set no animation option (for example `src/routes/credit.tsx#dataKey="balance"`), so bars and lines still animate; found in L1 T5 and left open by L1 T9, which framed the charts without touching their series.
-- Fix: L8 T5
-- Status: open
+- Evidence: the reduced-motion rule in `src/styles.css#@media (prefers-reduced-motion: reduce)` stops CSS transitions, but recharts animates its series in JavaScript and the series set no animation option (for example `src/routes/credit.tsx#dataKey="balance"`), so bars and lines still animate; found in L1 T5 and left open by L1 T9, which framed the charts without touching their series. Since L10 T3 the chart frame hands every series inside it its motion settings, off under reduced motion (`src/components/charts.tsx#      ? { isAnimationActive: false }`), and `src/test/chart-motion.test.tsx` checks every series on every route and tab.
+- Fix: L10 T3 (taken from L8 T5)
+- Status: fixed in L10 T3
 
 ### F37 · low · Small truth gaps
 - Evidence: a frozen date drives "overdue" while audit times use the real clock; since L2 T6 that date is one named constant the definitions state (`src/lib/definitions.ts#export const DEMO_DATE = "2026-01-14";`), so the overdue count says what it is measured against. The copilot's margin pattern also matched "minimum"; L2 T6 made it match whole words (`src/lib/copilot.ts#\bmargin\b|\bnim\b`). The table CSV wrote amounts without their currency while alerts mix EUR and USD; since L2 T7 the alerts export writes each amount with its currency (`src/test/exports.test.tsx#exports alert amounts with their currency`).
