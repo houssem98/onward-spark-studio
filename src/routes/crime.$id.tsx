@@ -154,8 +154,8 @@ function CasePage() {
               <tbody>
                 {c.transactions.map((t) => (
                   <tr key={t.id} className="border-b last:border-0">
-                    <td className="num px-3 py-2 text-xs">{t.id}</td>
-                    <td className="num px-3 py-2 text-xs">{t.date}</td>
+                    <td className="num whitespace-nowrap px-3 py-2 text-xs">{t.id}</td>
+                    <td className="num whitespace-nowrap px-3 py-2 text-xs">{t.date}</td>
                     <td className="px-3 py-2">{t.direction}</td>
                     <td className="num px-3 py-2 text-right">
                       {fmtNum(t.amount)} {t.currency}

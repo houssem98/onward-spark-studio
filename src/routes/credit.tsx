@@ -405,7 +405,7 @@ function CreditPage() {
             <tbody>
               {watch.map((w) => (
                 <tr key={w.id} className="border-b last:border-0">
-                  <td className="num px-3 py-2 text-xs">{w.id}</td>
+                  <td className="num whitespace-nowrap px-3 py-2 text-xs">{w.id}</td>
                   <td className="px-3 py-2">
                     {w.segment} · {w.product}
                   </td>

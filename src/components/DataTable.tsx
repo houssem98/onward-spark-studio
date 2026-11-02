@@ -7,6 +7,10 @@ import { downloadFile, toCSV } from "@/lib/calc";
 import { toast } from "sonner";
 import { StateBoundary, type DataState } from "@/components/states";
 
+// Identifiers (prefix-number, e.g. ABC-123) and dates are read as one token; they never wrap.
+const WHOLE =
+  /^(?:[A-Z][A-Z0-9]{0,6}(?:-[A-Z0-9]+)+|\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?)$/;
+
 export interface Column<T> {
   key: string;
   header: string;
@@ -118,17 +122,17 @@ export function DataTable<T extends object>({
         </div>
       </div>
       <StateBoundary state={state} label="records" note={stateNote}>
-        <div className="overflow-x-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/60">
+              <tr className="border-b">
                 {columns.map((c) => {
                   const active = sort?.key === c.key;
                   return (
                     <th
                       key={c.key}
                       className={cn(
-                        "whitespace-nowrap px-cell-x py-cell-y text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
+                        "sticky top-0 z-10 whitespace-nowrap bg-muted px-cell-x py-cell-y text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground",
                         c.align === "right" && "text-right",
                       )}
                     >
@@ -203,6 +207,7 @@ export function DataTable<T extends object>({
                         className={cn(
                           "px-cell-x py-cell-y align-middle",
                           c.align === "right" && "num text-right",
+                          WHOLE.test(String(val(r, c) ?? "")) && "whitespace-nowrap",
                           c.className,
                         )}
                       >
