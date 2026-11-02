@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import {
   Bar,
@@ -199,7 +200,7 @@ function PerformancePage() {
   };
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Enterprise Performance & Competitor Intelligence"
         description={`${bank.name} · FY2025 · ${bank.currency} ${bank.unit} · ${bank.basis}. Peers are fictional institutions with illustrative metrics.`}
@@ -823,6 +824,6 @@ function PerformancePage() {
           </Panel>
         </TabsContent>
       </Tabs>
-    </div>
+    </Stagger>
   );
 }

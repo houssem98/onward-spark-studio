@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -98,7 +99,7 @@ function ModelsPage() {
   ];
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="AI, Machine Learning & Model Governance"
         description="Registry, monitoring and model risk management for all AI/ML models in scope."
@@ -214,6 +215,6 @@ function ModelsPage() {
           ))}
         </ul>
       </Panel>
-    </div>
+    </Stagger>
   );
 }

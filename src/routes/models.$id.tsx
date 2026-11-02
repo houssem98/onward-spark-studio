@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useState } from "react";
 import {
   Bar,
@@ -125,7 +126,7 @@ function ModelDetail() {
   };
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         crumbs={[{ label: "AI & Model Governance", to: "/models" }, { label: m.id }]}
         title={m.name}
@@ -715,6 +716,6 @@ function ModelDetail() {
           </Panel>
         </TabsContent>
       </Tabs>
-    </div>
+    </Stagger>
   );
 }

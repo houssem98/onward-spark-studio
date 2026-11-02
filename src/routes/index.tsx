@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useState } from "react";
 import {
   Area,
@@ -219,7 +220,7 @@ function Overview() {
   ];
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Executive Overview"
         meta="Northstar Bank (fictional) · FY2025 · USD millions · IFRS basis (synthetic)"
@@ -544,6 +545,6 @@ function Overview() {
           </ul>
         </Panel>
       </div>
-    </div>
+    </Stagger>
   );
 }

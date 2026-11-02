@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/components/kit";
@@ -48,7 +49,7 @@ function InvDetail() {
   if (!inv) return null;
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         crumbs={[{ label: "Investigations & Reports", to: "/investigations" }, { label: inv.id }]}
         title={inv.title}
@@ -221,6 +222,6 @@ function InvDetail() {
         Narrative, figures and evidence states on this page come from the demo data; no automated
         verification has run.
       </Notice>
-    </div>
+    </Stagger>
   );
 }

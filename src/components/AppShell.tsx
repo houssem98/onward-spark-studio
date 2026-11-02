@@ -301,7 +301,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           key={path}
           id="main"
           tabIndex={-1}
-          className="page-enter mx-auto w-full min-w-0 max-w-[1520px] flex-1 p-4 outline-none md:p-7"
+          className="mx-auto w-full min-w-0 max-w-[1520px] flex-1 p-4 outline-none md:p-7"
         >
           {children}
         </main>

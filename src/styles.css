@@ -148,6 +148,8 @@
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
@@ -159,11 +161,8 @@
 }
 
 /* A route change swaps the page at once and lets its entrance play; only the active nav item
-   travels. The page stays clickable while it does. */
-::view-transition {
-  pointer-events: none;
-}
-
+   travels. While it does, the browser hit-tests the document, not the page, so a click in those
+   few frames is lost; e2e/choreography.spec.ts holds the page to clickable within 500 ms. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -213,10 +212,6 @@
   }
 }
 
-@utility page-enter {
-  animation: page-in var(--duration-page) var(--ease-enter) both;
-}
-
 [data-reveal="hidden"]:not([data-stagger]),
 [data-reveal="hidden"][data-stagger] > * {
   opacity: 0;
@@ -229,6 +224,13 @@
   transition-duration: var(--duration-base);
   transition-timing-function: var(--ease-enter);
   transition-delay: calc(var(--stagger) * var(--reveal-step, 0));
+}
+
+/* A page's sections, on screen as it mounts, arrive in order: the whole sequence takes five
+   --stagger steps and one --duration-quick, 360 ms. Without JavaScript they end visible. */
+[data-reveal="idle"][data-stagger] > * {
+  animation: page-in var(--duration-quick) var(--ease-enter) both;
+  animation-delay: calc(var(--stagger) * var(--reveal-step, 0));
 }
 
 [data-stagger] > :nth-child(2) { --reveal-step: 1; }

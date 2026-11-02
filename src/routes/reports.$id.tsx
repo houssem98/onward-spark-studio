@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Stagger } from "@/components/motion";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Notice, PageHeader } from "@/components/kit";
 import { investigationsQuery } from "@/repo/queries";
@@ -19,7 +20,7 @@ function ReportPlaceholder() {
   const report = useSuspenseQuery(investigationsQuery).data.reports.find((r) => r.id === id)!;
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title={report.title}
         description={`${report.id} · ${report.period} · ${report.status}`}
@@ -32,6 +33,6 @@ function ReportPlaceholder() {
       <Link to="/investigations" className="text-sm text-primary hover:underline">
         Back to investigations and reports
       </Link>
-    </div>
+    </Stagger>
   );
 }

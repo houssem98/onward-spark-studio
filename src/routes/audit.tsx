@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { PageHeader } from "@/components/kit";
@@ -44,7 +45,7 @@ function AuditPage() {
     { key: "detail", header: "Detail", cell: (a) => <span className="text-xs">{a.detail}</span> },
   ];
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Audit Trail & Activity"
         description="Sample events and simulated decisions from this session, newest first. Model version switches and exports are not recorded. Session-only; not persisted."
@@ -64,6 +65,6 @@ function AuditPage() {
           />
         }
       />
-    </div>
+    </Stagger>
   );
 }

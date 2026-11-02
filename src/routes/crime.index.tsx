@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import {
   Bar,
@@ -115,7 +116,7 @@ function CrimePage() {
   ];
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Fraud, AML & Financial Crime"
         description="All customers, transactions and entities are fictional. Alerts indicate suspicious activity for review; they are not determinations of wrongdoing."
@@ -314,6 +315,6 @@ function CrimePage() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </Stagger>
   );
 }

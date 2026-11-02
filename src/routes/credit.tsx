@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import {
   Bar,
@@ -154,7 +155,7 @@ function CreditPage() {
   };
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Credit Intelligence"
         description="Portfolio performance, revenue and credit quality. Not approved for production underwriting decisions."
@@ -427,6 +428,6 @@ function CreditPage() {
           </table>
         </div>
       </Panel>
-    </div>
+    </Stagger>
   );
 }

@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
@@ -65,7 +66,7 @@ function CasePage() {
   };
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         crumbs={[{ label: "Fraud, AML & Fin. Crime", to: "/crime" }, { label: c.id }]}
         title={c.title}
@@ -293,6 +294,6 @@ function CasePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Stagger>
   );
 }

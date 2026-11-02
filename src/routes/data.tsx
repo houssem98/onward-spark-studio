@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
 import {
   Line,
@@ -148,7 +149,7 @@ function DataPage() {
   const measurable = dqDimensions.filter((d) => d.score !== null);
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Data Governance & Data Intelligence"
         description="Catalog, lineage and data quality for datasets that feed reports and models. Lineage is illustrative, not harvested from live systems."
@@ -675,6 +676,6 @@ function DataPage() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </Stagger>
   );
 }

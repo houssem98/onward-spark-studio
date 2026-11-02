@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Stagger } from "@/components/motion";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
@@ -109,7 +110,7 @@ function InvPage() {
   ];
 
   return (
-    <div className="space-y-section">
+    <Stagger className="space-y-section">
       <PageHeader
         title="Investigations & Reports"
         description="Shared evidence and investigation framework across all modules."
@@ -168,6 +169,6 @@ function InvPage() {
           ))}
         </ul>
       </Panel>
-    </div>
+    </Stagger>
   );
 }

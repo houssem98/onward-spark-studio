@@ -49,7 +49,7 @@ Taste is judged by the human at each signoff, at 1440 px and 390 px (`docs/LOOP_
 
 Native stack, zero new runtime dependencies: CSS custom properties and keyframes, tw-animate-css for Radix overlays, Recharts' own animation props, TanStack Router view transitions (`defaultViewTransition`, a no-op in browsers without the View Transitions API), IntersectionObserver for reveal-on-view, and `requestAnimationFrame` for number transitions.
 
-Tokens (L10 T1), starting values; the page entrance and the card lift moved onto them in L10 T1 (`src/styles.css#animation: page-in var(--duration-page) var(--ease-enter) both;`, `src/styles.css#transition-duration: var(--duration-instant);`):
+Tokens (L10 T1), starting values; the page entrance and the card lift moved onto them in L10 T1 (`src/styles.css#transition-duration: var(--duration-instant);`), and in L10 T6 the entrance became the sections' ordered reveal (`src/styles.css#animation: page-in var(--duration-quick) var(--ease-enter) both;`):
 
 | Token | Value | Used for |
 |---|---|---|
