@@ -196,6 +196,26 @@
   animation: page-in var(--duration-page) var(--ease-enter) both;
 }
 
+[data-reveal="hidden"]:not([data-stagger]),
+[data-reveal="hidden"][data-stagger] > * {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+[data-reveal="shown"]:not([data-stagger]),
+[data-reveal="shown"][data-stagger] > * {
+  transition-property: opacity, transform;
+  transition-duration: var(--duration-base);
+  transition-timing-function: var(--ease-enter);
+  transition-delay: calc(var(--stagger) * var(--reveal-step, 0));
+}
+
+[data-stagger] > :nth-child(2) { --reveal-step: 1; }
+[data-stagger] > :nth-child(3) { --reveal-step: 2; }
+[data-stagger] > :nth-child(4) { --reveal-step: 3; }
+[data-stagger] > :nth-child(5) { --reveal-step: 4; }
+[data-stagger] > :nth-child(n + 6) { --reveal-step: 5; }
+
 @keyframes page-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
