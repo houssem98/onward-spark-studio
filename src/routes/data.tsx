@@ -38,7 +38,15 @@ import { useActions, useStore } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 
+type DataSearch = { tab?: string; dataset?: string; issue?: string };
+
 export const Route = createFileRoute("/data")({
+  validateSearch: (s: Record<string, unknown>): DataSearch =>
+    Object.fromEntries(
+      (["tab", "dataset", "issue"] as const).flatMap((k) =>
+        typeof s[k] === "string" ? [[k, s[k]]] : [],
+      ),
+    ),
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(datasetsQuery);
   },
@@ -73,12 +81,25 @@ function DataPage() {
   const cert = useStore((s) => s.certification);
   const issues = useStore((s) => s.issues);
   const reqs = useStore((s) => s.accessRequests);
+  // The tab and the open dataset or issue live in the URL, so a link or a reload reopens them.
+  const search = Route.useSearch();
+  const go = Route.useNavigate();
+  const set = (next: { [K in keyof DataSearch]?: string | undefined }) =>
+    void go({
+      search: (s) =>
+        Object.fromEntries(Object.entries({ ...s, ...next }).filter(([, v]) => v !== undefined)),
+      replace: true,
+    });
   const [domain, setDomain] = useState("All");
   const [certF, setCertF] = useState("All");
-  const [ds, setDs] = useState<Dataset | null>(null);
+  const ds = datasets.find((d) => d.id === search.dataset) ?? null;
+  const setDs = (d: Dataset | null) => set({ dataset: d?.id });
   const [node, setNode] = useState<LineageNode>(lineageNodes[4]!);
-  const [issueId, setIssueId] = useState<string | null>(null);
-  const [resolution, setResolution] = useState("");
+  const issueId = search.issue;
+  const setIssueId = (id: string | null) => set({ issue: id ?? undefined });
+  const [resolution, setResolution] = useState(
+    () => issues.find((i) => i.id === search.issue)?.resolution ?? "",
+  );
   const [purpose, setPurpose] = useState("");
   const issue = issues.find((i) => i.id === issueId);
 
@@ -145,7 +166,10 @@ function DataPage() {
         <Kpi def="dq_dimension_mean" value={fmtFixed(mean(measurable.map((d) => d.score!)))} />
       </KpiBand>
 
-      <Tabs defaultValue="catalog">
+      <Tabs
+        value={search.tab ?? (search.issue ? "quality" : "catalog")}
+        onValueChange={(t) => set({ tab: t })}
+      >
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="catalog">Catalog</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>
@@ -390,7 +414,16 @@ function DataPage() {
                   {issues.map((i) => (
                     <tr
                       key={i.id}
-                      className="cursor-pointer border-b last:border-0 hover:bg-accent/50"
+                      ref={
+                        i.id === issueId
+                          ? (el) => el?.scrollIntoView({ block: "nearest" })
+                          : undefined
+                      }
+                      aria-selected={issueId === undefined ? undefined : i.id === issueId}
+                      className={cn(
+                        "cursor-pointer border-b last:border-0 hover:bg-accent/50",
+                        i.id === issueId && "bg-accent",
+                      )}
                       tabIndex={0}
                       onClick={() => {
                         setIssueId(i.id);

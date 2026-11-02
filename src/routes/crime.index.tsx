@@ -33,6 +33,8 @@ import { useActions, useStore } from "@/store/app-store";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/crime/")({
+  validateSearch: (s: Record<string, unknown>): { alert?: string } =>
+    typeof s["alert"] === "string" ? { alert: s["alert"] } : {},
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(crimeQuery);
   },
@@ -62,7 +64,11 @@ function CrimePage() {
   const [type, setType] = useState("All");
   const [status, setStatus] = useState("All");
   const [cat, setCat] = useState("All");
-  const [sel, setSel] = useState<string | null>(null);
+  // The open alert lives in the URL, so a link or a reload reopens it.
+  const { alert: sel } = Route.useSearch();
+  const search = Route.useNavigate();
+  const setSel = (id: string | null) =>
+    void search({ search: id ? { alert: id } : {}, replace: true });
   const a = alerts.find((x) => x.id === sel);
 
   const rows = useMemo(

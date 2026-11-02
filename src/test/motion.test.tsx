@@ -66,7 +66,8 @@ function step(ms: number) {
   act(() => run.forEach((f) => f(now)));
 }
 
-const visible = (el: HTMLElement) => el.querySelector("[aria-hidden]")!.textContent;
+// At rest a figure is one text; mid-tween the visible copy is the aria-hidden one.
+const visible = (el: HTMLElement) => (el.querySelector("[aria-hidden]") ?? el).textContent;
 const accessible = (el: HTMLElement) => {
   const clone = el.cloneNode(true) as HTMLElement;
   clone.querySelectorAll("[aria-hidden]").forEach((n) => n.remove());
@@ -99,7 +100,7 @@ describe("motion primitives", () => {
       </>,
     );
     expect(frames).toHaveLength(0);
-    expect(visible(container)).toBe("$200.0M");
+    expect(visible(container.lastElementChild as HTMLElement)).toBe("$200.0M");
   });
 
   it("reveals below-the-fold content once it scrolls into view, and leaves it visible without an observer", () => {

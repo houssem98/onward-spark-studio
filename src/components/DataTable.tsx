@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,17 @@ export function DataTable<T extends object>({
   const p = Math.min(page, pages - 1);
   const visible = filtered.slice(p * pageSize, p * pageSize + pageSize);
 
+  // The selected record stays on screen: its page is shown and its row scrolled into view, so a
+  // link to a record, or a drawer opened on one, never leaves it out of sight.
+  const body = useRef<HTMLTableSectionElement>(null);
+  const at = selectedKey === undefined ? -1 : filtered.findIndex((r) => rowKey(r) === selectedKey);
+  useEffect(() => {
+    if (at >= 0) setPage(Math.floor(at / pageSize));
+  }, [at, pageSize]);
+  useEffect(() => {
+    body.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [selectedKey, p]);
+
   const exportCsv = () => {
     const data = filtered.map((r) =>
       Object.fromEntries(columns.map((c) => [c.header, c.csv ? c.csv(r) : val(r, c)])),
@@ -165,7 +176,7 @@ export function DataTable<T extends object>({
                 })}
               </tr>
             </thead>
-            <tbody>
+            <tbody ref={body}>
               {visible.length === 0 && (
                 <tr>
                   <td

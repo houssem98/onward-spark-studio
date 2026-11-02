@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AnimatedNumber } from "@/components/motion";
 import { UNAVAILABLE } from "@/lib/calc";
 import { DEFINITIONS, type Definition, type DefinitionId } from "@/lib/definitions";
 import { repo } from "@/repo/queries";
@@ -297,6 +298,27 @@ export function KpiBand({
   );
 }
 
+/**
+ * A formatted figure as prefix, number and suffix, so a change can tween in the figure's own
+ * format; the target itself is always the exact text given. Text that is not one figure stays put.
+ */
+function Figure({ text }: { text: string }) {
+  const m = /^(\D*?)([−-]?)(\d[\d,]*(?:\.\d+)?)(\D*)$/.exec(text);
+  if (!m) return <>{text}</>;
+  const [, pre, minus, digits, post] = m as unknown as [string, string, string, string, string];
+  const decimals = digits.split(".")[1]?.length ?? 0;
+  const n = (minus ? -1 : 1) * parseFloat(digits.replace(/,/g, ""));
+  const format = (x: number) =>
+    x === n
+      ? text
+      : `${pre}${x < 0 ? minus || "−" : ""}${Math.abs(x).toLocaleString("en-US", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+          useGrouping: digits.includes(","),
+        })}${post}`;
+  return <AnimatedNumber value={n} format={format} />;
+}
+
 export function Kpi({
   def,
   value,
@@ -373,7 +395,7 @@ export function Kpi({
               size === "lg" ? "text-3xl" : "text-2xl",
             )}
           >
-            {value}
+            <Figure text={value} />
           </div>
           {spark && spark.length > 1 && <Sparkline data={spark} good={deltaGood} />}
         </div>
