@@ -18,7 +18,7 @@ import { CHART, TYPE } from "@/components/kit";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
 import { StateBoundary } from "@/components/states";
 import { Button } from "@/components/ui/button";
-import { fmtSigned } from "@/lib/calc";
+import { fmtSigned, reconcileBridge, UNAVAILABLE } from "@/lib/calc";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 import { CASE_CAVEAT, caseBridge, cumulativeAt, globalImportance, stepLine } from "@/lib/explain";
 import type { ModelExplanation } from "@/repo/types";
@@ -90,31 +90,40 @@ export function Journey({
 /** Each input feature with its definition, the range of its values and how many are missing. */
 export function InputsStage({ explanation: e }: { explanation: ModelExplanation }) {
   return (
-    <div className={`${REGISTER_BOX} rounded-md border bg-card`}>
-      <table className="w-full text-xs">
-        <thead>
-          <tr>
-            <th className={REGISTER_TH}>Feature</th>
-            <th className={REGISTER_TH}>Definition</th>
-            <th className={REGISTER_TH}>Range</th>
-            <th className={REGISTER_TH}>Missing</th>
-          </tr>
-        </thead>
-        <tbody>
-          {e.features.map((f) => {
-            const vs = e.observations.map((o) => o.values[f]);
-            const present = vs.filter((v): v is number => Number.isFinite(v));
-            return (
-              <tr key={f} className="border-b last:border-0">
-                <td className="whitespace-nowrap px-3 py-2 font-mono">{f}</td>
-                <td className="px-3 py-2 text-muted-foreground">{e.definitions[f]}</td>
-                <td className="num whitespace-nowrap px-3 py-2">{`${Math.min(...present)} to ${Math.max(...present)}`}</td>
-                <td className="num px-3 py-2">{vs.length - present.length}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">
+        Source: {e.source} · {e.model} {e.version}
+      </p>
+      <div className={`${REGISTER_BOX} rounded-md border bg-card`}>
+        <table className="w-full text-xs">
+          <thead>
+            <tr>
+              <th className={REGISTER_TH}>Feature</th>
+              <th className={REGISTER_TH}>Definition</th>
+              <th className={REGISTER_TH}>Range</th>
+              <th className={REGISTER_TH}>Missing</th>
+            </tr>
+          </thead>
+          <tbody>
+            {e.features.map((f) => {
+              const vs = e.observations.map((o) => o.values[f]);
+              const present = vs.filter((v): v is number => Number.isFinite(v));
+              return (
+                <tr key={f} className="border-b last:border-0">
+                  <td className="whitespace-nowrap px-3 py-2 font-mono">{f}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{e.definitions[f]}</td>
+                  <td className="num whitespace-nowrap px-3 py-2">
+                    {present.length
+                      ? `${Math.min(...present)} to ${Math.max(...present)}`
+                      : UNAVAILABLE}
+                  </td>
+                  <td className="num px-3 py-2">{vs.length - present.length}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -122,7 +131,9 @@ export function InputsStage({ explanation: e }: { explanation: ModelExplanation 
 /** What the model outputs across the cases, on its log-odds scale and as a labeled probability. */
 export function PredictionStage({ explanation: e }: { explanation: ModelExplanation }) {
   const outputs = e.observations.map((o) => o.output).sort((a, b) => a - b);
-  const median = outputs[Math.floor((outputs.length - 1) / 2)]!;
+  const half = outputs.length / 2;
+  const median =
+    outputs.length % 2 ? outputs[Math.floor(half)]! : (outputs[half - 1]! + outputs[half]!) / 2;
   return (
     <div className="rounded-md border bg-card px-4 py-3 text-xs">
       <p>
@@ -179,9 +190,20 @@ export function Beeswarm({ explanation: e }: { explanation: ModelExplanation }) 
       description="One point per case and feature; right of zero raised the log-odds, left lowered them."
       rows={e.observations.map((o) => ({
         case: o.id,
-        ...Object.fromEntries(features.map((f) => [f, f4(o.contributions[f]!)])),
+        ...Object.fromEntries(
+          features.flatMap((f) => [
+            [`${f}:value`, o.values[f]],
+            [f, f4(o.contributions[f]!)],
+          ]),
+        ),
       }))}
-      columns={[{ key: "case", header: "Case" }, ...features.map((f) => ({ key: f, header: f }))]}
+      columns={[
+        { key: "case", header: "Case" },
+        ...features.flatMap((f) => [
+          { key: `${f}:value`, header: `${f} value` },
+          { key: f, header: `${f} contribution` },
+        ]),
+      ]}
       actions={
         <div className="flex items-center gap-2">
           <select
@@ -229,7 +251,7 @@ export function Beeswarm({ explanation: e }: { explanation: ModelExplanation }) 
               fontSize={TYPE.caption}
               fill={CHART.text}
             >
-              {t === 0 ? "0" : fmtSigned(t, 2)}
+              {t === 0 ? "0" : f4(t)}
             </text>
           ))}
           {features.map((f, r) => {
@@ -318,7 +340,8 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
     setPlaying(true);
   };
   const s = at > 0 ? b.steps[at - 1]! : null;
-  const direction = s ? (s.value > 0 ? "up" : "down") : undefined;
+  const direction = s?.value ? (s.value > 0 ? "up" : "down") : undefined;
+  const rec = reconcileBridge(b);
 
   const rows = [
     { step: b.baseLabel, value: "—", contribution: "—", after: f4(b.base) },
@@ -366,6 +389,10 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
         }
       >
         <Waterfall bridge={b} shown={at === last ? last + 1 : at} tone="risk" format={f4} />
+        <p data-reconcile={rec.reconciles} className="num mt-1 text-xs text-muted-foreground">
+          Baseline {f4(b.base)} + contributions {f4(rec.explained)} = output {f4(b.actual)}:{" "}
+          {rec.reconciles ? "reconciles" : `does not reconcile, off by ${f4(rec.difference)}`}
+        </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button
             size="sm"

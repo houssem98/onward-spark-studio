@@ -605,6 +605,12 @@ function ModelDetail() {
         </TabsContent>
 
         <TabsContent value="explainability" className="mt-4">
+          {explanation && version && version !== explanation.version && (
+            <p data-version-note className="mb-4 rounded-md border bg-card px-4 py-2 text-xs">
+              These explanations are of version {explanation.version}; none are available for the
+              selected version {version}.
+            </p>
+          )}
           <Journey
             state={explanation ? "success" : "empty"}
             stateNote="Explainability evidence is not available for this model type."
@@ -615,10 +621,13 @@ function ModelDetail() {
                 "Global importance": (
                   <ChartFrame
                     title="Global feature importance"
-                    unit="Mean |SHAP|"
-                    period="Validation sample"
-                    source="Synthetic validation sample (demo data)"
-                    rows={importance ?? []}
+                    unit="Mean |SHAP|, log-odds"
+                    period={`${explanation.model} ${explanation.version}`}
+                    source={explanation.source}
+                    rows={(importance ?? []).map((r) => ({
+                      feature: r.feature,
+                      value: r.value.toFixed(4),
+                    }))}
                     columns={[
                       { key: "feature", header: "Feature" },
                       { key: "value", header: "Mean |SHAP|" },

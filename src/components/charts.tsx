@@ -4,7 +4,9 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  DefaultTooltipContent,
   LabelList,
+  type TooltipProps,
   Line,
   ResponsiveContainer,
   Scatter,
@@ -240,6 +242,13 @@ export function Waterfall({
                 ]
               : stepTooltip
           }
+          // A step not revealed yet keeps its place on the axis but tells nothing on hover.
+          {...(shown !== undefined && {
+            content: (p: TooltipProps<number, string>) =>
+              (p.payload?.[0]?.payload as { hidden?: boolean } | undefined)?.hidden ? null : (
+                <DefaultTooltipContent {...p} />
+              ),
+          })}
         />
         <ReferenceLine y={0} stroke={CHART.grid} />
         <Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />

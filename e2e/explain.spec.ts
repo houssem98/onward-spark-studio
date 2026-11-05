@@ -113,6 +113,37 @@ test("beeswarm points travel once from zero and rest at their contribution", asy
   expect(off.misplaced, "every point rests at its contribution").toBe(0);
 });
 
+// L11 T8 (council C19): a step not yet revealed shows nothing on hover; a revealed one does.
+test("hovering a step that is not revealed yet shows no value", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/models/MDL-001?tab=explainability");
+  const frame = page.locator("[data-case-waterfall]");
+  const play = frame.getByRole("button", { name: "Play" });
+  await expect
+    .poll(() => play.evaluate((b) => Object.keys(b).some((k) => k.startsWith("__react"))), {
+      timeout: 60_000,
+    })
+    .toBe(true);
+  await expect(frame).toHaveAttribute("data-step", "0");
+  await frame.scrollIntoViewIfNeeded();
+  const cells = frame.locator("table tbody tr");
+  const baseline = (await cells.first().locator("td").last().textContent())!;
+  const output = (await cells.last().locator("td").last().textContent())!;
+  const plot = (await frame.locator(".recharts-cartesian-grid").boundingBox())!;
+  const ticks = frame.locator(".recharts-xAxis .recharts-cartesian-axis-tick");
+  const tooltip = frame.locator(".recharts-tooltip-wrapper");
+  const hover = async (i: number) => {
+    const at = (await ticks.nth(i).boundingBox())!;
+    await page.mouse.move(at.x + at.width / 2, plot.y + plot.height / 2);
+    await page.mouse.move(at.x + at.width / 2 + 2, plot.y + plot.height / 2 + 2);
+  };
+  await hover(0);
+  await expect(tooltip, "a revealed step shows its value").toContainText(baseline);
+  await hover((await ticks.count()) - 1);
+  await expect(tooltip).not.toContainText(output);
+});
+
 // L11 T3: a case plays from the baseline to the output, and its last bar reads the output.
 test("a case plays to the end and its final label is the output", async ({ page }) => {
   test.setTimeout(120_000);
@@ -135,7 +166,7 @@ test("a case plays to the end and its final label is the output", async ({ page 
   const labels = frame.locator(".recharts-label-list text");
   await expect(labels).toHaveCount(await frame.locator("table tbody tr").count());
   await expect(labels.last()).toHaveText(output!);
-  await expect(line).toContainText(`Output log-odds ${output!.replace("+", "")}`);
+  await expect(line).toContainText(`Output log-odds ${output!}`);
   expect(Number(await frame.getAttribute("data-cumulative"))).toBeCloseTo(
     Number(output!.replace("−", "-")),
     4,

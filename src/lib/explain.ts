@@ -2,7 +2,8 @@ import type { Bridge } from "@/lib/calc";
 import type { ExplainedObservation, FeatureImportance, ModelExplanation } from "@/repo/types";
 
 const r4 = (v: number) => Math.round(v * 10_000) / 10_000;
-const f4 = (v: number) => `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(4)}`;
+// Signed as the charts and tables sign it, so a figure reads the same everywhere.
+const f4 = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(4)}`;
 const probability = (logOdds: number) => `${(100 / (1 + Math.exp(-logOdds))).toFixed(1)}%`;
 
 export const CASE_CAVEAT =
@@ -51,7 +52,11 @@ export function stepLine(b: Bridge, o: ExplainedObservation, n: number) {
     return `Baseline log-odds ${f4(b.base)}, a ${probability(b.base)} probability of default`;
   const s = b.steps[n - 1]!;
   const value = o.values[s.label];
-  const line = `${s.label}${value === undefined ? "" : ` ${value}`} ${s.value > 0 ? "raised" : "lowered"} the log-odds by ${f4(Math.abs(s.value))} to ${f4(cumulativeAt(b, n))}`;
+  const name = `${s.label}${value === undefined ? "" : ` ${value}`}`;
+  const line =
+    s.value === 0
+      ? `${name} left the log-odds unchanged at ${f4(cumulativeAt(b, n))}`
+      : `${name} ${s.value > 0 ? "raised" : "lowered"} the log-odds by ${Math.abs(s.value).toFixed(4)} to ${f4(cumulativeAt(b, n))}`;
   return n === b.steps.length
     ? `${line}. Output log-odds ${f4(b.actual)}, a ${probability(b.actual)} probability of default`
     : line;
