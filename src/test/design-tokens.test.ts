@@ -46,10 +46,16 @@ describe("design tokens", () => {
             : [],
       );
     const rawInClasses =
-      /\b\d+(?:\.\d+)?ms\b|cubic-bezier\(|(?<![\w-])(?:duration|delay)-\d+|(?<![\w-])ease-(?:linear|in-out|in|out)(?![\w-])/g;
+      /\b\d+(?:\.\d+)?ms\b|cubic-bezier\(|(?<![\w-])(?:duration|delay)-(?:\d+|\[)|(?<![\w-])ease-(?:linear|in-out|in|out)(?![\w-])/g;
+    // Chart animation props and inline styles take their timing from the tokens too: seconds,
+    // bare easings and numeric chart durations slipped past the class check (L10 T8, C16).
+    const rawInProps =
+      /animation(?:Duration|Easing|Begin)=\{?\s*["'`\d]|(?:transition|animation)\w*\s*:\s*["'`][^"'`]*?(?:\d+(?:\.\d+)?m?s\b|cubic-bezier|(?<![\w-])(?:ease|ease-in|ease-out|ease-in-out|linear)(?![\w-]))/g;
     const files = [...tsx("src/routes"), ...tsx("src/components")];
     const raw = files.flatMap((f) =>
-      [...read(f).matchAll(rawInClasses)].map((m) => `${f}: ${m[0]}`),
+      [rawInClasses, rawInProps].flatMap((re) =>
+        [...read(f).matchAll(re)].map((m) => `${f}: ${m[0]}`),
+      ),
     );
     // The tokens live in :root; the reduced-motion rule's 0.01ms is pinned by the accessibility suite.
     const css = read("src/styles.css")
@@ -71,7 +77,7 @@ describe("design tokens", () => {
       "--ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);",
       "--ease-exit: cubic-bezier(0.3, 0, 1, 1);",
     ])
-      expect(read("src/styles.css"), t).toContain(t);
+      expect(read("src/styles.css").replace(/\/\*[\s\S]*?\*\//g, ""), t).toContain(t);
   });
 
   it("keeps the type scale charts use equal to the CSS tokens", () => {

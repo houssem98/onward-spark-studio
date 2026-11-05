@@ -6,7 +6,11 @@ import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AnimatedNumber, Reveal, Stagger } from "@/components/motion";
+import { AnimatedNumber, Reveal, Stagger, useReducedMotion } from "@/components/motion";
+
+// The rule the stylesheet applies, not text a comment could hold.
+const stylesheet = () =>
+  readFileSync(join(process.cwd(), "src/styles.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
 const fmt = (n: number) => `$${n.toFixed(1)}M`;
 
@@ -194,7 +198,7 @@ describe("motion primitives", () => {
     expect(root).toHaveAttribute("data-stagger");
     expect(root).toHaveClass("grid");
     expect([...root.children].map((c) => c.tagName)).toEqual(Array(7).fill("P"));
-    const css = readFileSync(join(process.cwd(), "src/styles.css"), "utf8");
+    const css = stylesheet();
     expect(css).toContain("[data-stagger] > :nth-child(n + 6) { --reveal-step: 5; }");
     expect(css).toContain("transition-delay: calc(var(--stagger) * var(--reveal-step, 0));");
   });
@@ -240,6 +244,9 @@ describe("motion primitives", () => {
       </main>
     );
     const html = renderToString(tree);
+    // A component that reads the setting, so a server that read it too would be caught (C20).
+    const Reads = () => <i>{String(useReducedMotion())}</i>;
+    const readsHtml = renderToString(<Reads />);
     // The server cannot know the visitor prefers reduced motion; the client does.
     reduceMotion(true);
     const container = document.createElement("div");
@@ -252,5 +259,15 @@ describe("motion primitives", () => {
     expect(errors).toEqual([]);
     expect(container.innerHTML).toBe(html);
     container.remove();
+
+    const reads = document.createElement("div");
+    reads.innerHTML = readsHtml;
+    document.body.append(reads);
+    act(() => {
+      hydrateRoot(reads, <Reads />, { onRecoverableError: (e) => errors.push(e) });
+    });
+    expect(errors, "hydration matched the server's answer").toEqual([]);
+    expect(reads.textContent, "then the client's answer").toBe("true");
+    reads.remove();
   });
 });

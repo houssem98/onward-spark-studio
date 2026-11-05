@@ -2,12 +2,20 @@ import { defineConfig } from "@playwright/test";
 
 const PORT = 3418;
 const PRODUCTION_PORT = 3419;
+// Specs that time the page: frames, long tasks, clickability, layout shift.
+const TIMING = /(motion-budget|choreography|navigation)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: "e2e",
   workers: 2,
   timeout: 90_000,
   reporter: "list",
+  // A second worker on the same machine moves a timing measure (L10 T8, C22), so the timing specs
+  // run after every other spec, one at a time.
+  projects: [
+    { name: "main", testIgnore: TIMING },
+    { name: "timing", testMatch: TIMING, dependencies: ["main"], workers: 1 },
+  ],
   use: {
     baseURL: `http://localhost:${PORT}`,
     channel: "chrome",

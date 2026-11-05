@@ -62,7 +62,11 @@ describe("accessibility", () => {
   });
 
   it("draws focus from the theme ring and stops motion when the user asks", () => {
-    const css = readFileSync(join(process.cwd(), "src/styles.css"), "utf8");
+    // The rules the stylesheet applies, not text a comment could hold.
+    const css = readFileSync(join(process.cwd(), "src/styles.css"), "utf8").replace(
+      /\/\*[\s\S]*?\*\//g,
+      "",
+    );
     expect(css).toMatch(/:focus-visible\s*\{[^}]*outline:[^;]*var\(--ring\)/);
     expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*transition-duration:\s*0\.01ms !important[\s\S]*animation-duration:\s*0\.01ms !important/,

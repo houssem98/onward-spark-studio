@@ -1,7 +1,10 @@
 import { readdirSync } from "node:fs";
 import type { ReactNode } from "react";
-import { cleanup } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
+import { Bar, BarChart } from "recharts";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { ChartFrame } from "@/components/charts";
 
 import { clickTab, open, setUp } from "./a11y";
 
@@ -118,6 +121,26 @@ function dataToken(value: string) {
 afterEach(() => vi.restoreAllMocks());
 
 describe("chart motion", () => {
+  it("leaves a series that opts out of animation still inside a frame", () => {
+    reduceMotion(false);
+    dataToken(".5s");
+    seen.series.length = 0;
+    seen.where = "frame";
+    render(
+      <ChartFrame title="t" unit="u" period="p" source="s" rows={[]}>
+        <BarChart data={[]}>
+          <Bar dataKey="still" isAnimationActive={false} />
+          <Bar dataKey="moving" />
+        </BarChart>
+      </ChartFrame>,
+    );
+    expect(
+      seen.series.map(
+        (s) => `${String(s.props["dataKey"])} ${String(s.props["isAnimationActive"])}`,
+      ),
+    ).toEqual(["still false", "moving true"]);
+  });
+
   it("turns every series' animation off under reduced motion", async () => {
     reduceMotion(true);
     dataToken(".5s");

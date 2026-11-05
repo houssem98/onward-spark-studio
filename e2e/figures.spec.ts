@@ -29,6 +29,12 @@ test.describe("with motion", () => {
   test.use({ contextOptions: { reducedMotion: "no-preference" } });
   test("credit KPIs tween to the values the filter gives", async ({ page, browser }) => {
     test.setTimeout(120_000);
+    const reduced = await browser.newPage({ reducedMotion: "reduce" });
+    await hydrated(reduced, "/credit");
+    await filterCredit(reduced);
+    const expected = await values(reduced);
+    await reduced.close();
+
     await hydrated(page, "/credit");
     const before = await values(page);
     // Record whether any figure splits into a tween while the filter applies.
@@ -41,15 +47,10 @@ test.describe("with motion", () => {
     });
     await filterCredit(page);
     await expect(page.locator("[data-kpi-value] [aria-hidden]")).toHaveCount(0);
-    await page.waitForTimeout(400);
+    // Until the figures land, not for a fixed time (L10 T8, C17).
+    await expect.poll(() => values(page)).toEqual(expected);
     const after = await values(page);
     const tweened = await page.evaluate(() => (window as unknown as { tweened: boolean }).tweened);
-
-    const reduced = await browser.newPage({ reducedMotion: "reduce" });
-    await hydrated(reduced, "/credit");
-    await filterCredit(reduced);
-    const expected = await values(reduced);
-    await reduced.close();
 
     console.log(`figures: before ${before.join(" ")} | after ${after.join(" ")}`);
     expect(tweened, "a figure tweened").toBe(true);

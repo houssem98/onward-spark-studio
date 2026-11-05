@@ -210,6 +210,31 @@ test.describe("below the first screen, with motion", () => {
   });
 });
 
+// The stagger as the browser applies it, not as the stylesheet's text reads (L10 T8, C11).
+test.describe("the stagger", () => {
+  test.use({ contextOptions: { reducedMotion: "no-preference" } });
+  test("steps each section one --stagger apart and stops at the sixth", async ({ page }) => {
+    test.setTimeout(120_000);
+    // Tall enough that every section of the overview starts on the first screen.
+    await page.setViewportSize({ width: 1440, height: 4000 });
+    await page.goto("/");
+    await expect(page.locator("main h1")).toHaveCount(1);
+    const { delays, step } = await page.evaluate(() => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue("--stagger").trim();
+      const step = v.endsWith("ms") ? parseFloat(v) : parseFloat(v) * 1000;
+      const delays = [...document.querySelector("main > [data-stagger]")!.children].map((s) => {
+        const a = s.getAnimations().find((x) => (x as CSSAnimation).animationName === "page-in");
+        return a ? Number(a.effect!.getTiming().delay) : null;
+      });
+      return { delays, step };
+    });
+    console.log(`stagger: ${step}ms steps, delays ${delays.join(", ")}`);
+    expect(step).toBeGreaterThan(0);
+    expect(delays.length).toBeGreaterThanOrEqual(7);
+    expect(delays).toEqual(delays.map((_, i) => Math.min(i, 5) * step));
+  });
+});
+
 test("below the first screen under reduced motion, nothing waits", async ({ page }) => {
   test.setTimeout(180_000);
   await belowTheFold(page, false);
@@ -224,7 +249,14 @@ test.describe("without JavaScript", () => {
     for (const path of PAGES) {
       await page.goto(path);
       await expect(page.locator("main h1")).toBeVisible();
-      await page.waitForTimeout(SEQUENCE_MS + 200);
+      // Until the reveal has run its course, not for a fixed time (L10 T8, C17).
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => document.getAnimations().filter((a) => a.playState === "running").length,
+          ),
+        )
+        .toBe(0);
       const hidden = await page.evaluate(() =>
         [...(document.querySelector("main")?.querySelectorAll(":scope > * > *") ?? [])]
           .filter((s) => getComputedStyle(s).opacity !== "1")

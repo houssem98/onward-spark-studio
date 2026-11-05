@@ -32,9 +32,11 @@ function withMotion(node: ReactNode, motion: Record<string, unknown>): ReactNode
   const series = SERIES.includes(node.type);
   const kids = node.props.children;
   if (!series && kids === undefined) return node;
+  // A series that opts out of animation stays out.
+  const still = node.props["isAnimationActive"] === false;
   return cloneElement(
     node,
-    series ? motion : {},
+    series && !still ? motion : {},
     ...(Array.isArray(kids) ? kids.map((k) => withMotion(k, motion)) : [withMotion(kids, motion)]),
   );
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Stagger } from "@/components/motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Line,
   LineChart,
@@ -100,6 +100,13 @@ function DataPage() {
   const setDs = (d: Dataset | null) => set({ dataset: d?.id });
   const [node, setNode] = useState<LineageNode>(lineageNodes[4]!);
   const issueId = search.issue;
+  // On selection only: an inline ref ran on every render and pulled the register back each time.
+  const issueRows = useRef<HTMLTableSectionElement>(null);
+  useEffect(() => {
+    issueRows.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest" });
+  }, [issueId]);
   // Closing an issue opened from a link stays on the tab it was shown on.
   const setIssueId = (id: string | null) => set({ issue: id ?? undefined, tab });
   const [resolution, setResolution] = useState(
@@ -412,15 +419,10 @@ function DataPage() {
                     <th className={REGISTER_TH}>Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={issueRows}>
                   {issues.map((i) => (
                     <tr
                       key={i.id}
-                      ref={
-                        i.id === issueId
-                          ? (el) => el?.scrollIntoView({ block: "nearest" })
-                          : undefined
-                      }
                       aria-selected={issueId === undefined ? undefined : i.id === issueId}
                       className={cn(
                         "cursor-pointer border-b last:border-0 hover:bg-accent/50",
