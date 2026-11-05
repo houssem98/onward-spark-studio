@@ -31,7 +31,7 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 - [ ] L7 AI. ledger: `docs/loops/L7_AI.md` · needs: L5. · budget 15 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 7 --- Controlled AI orchestration`
 - [ ] L8 Enterprise. ledger: `docs/loops/L8_ENTERPRISE.md` · needs: L6, L7. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 8 --- Enterprise readiness`
 - [x] L9 Craft. ledger: `docs/loops/L9_CRAFT.md` · needs: L1, L2. · budget 22 ticks or $25 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 9 --- Craft: art direction, browser proof and premium surfaces`
-- [ ] L10 Motion. ledger: `docs/loops/L10_MOTION.md` · needs: L9. · budget 18 ticks or $20 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 10 --- Motion: tokens, primitives and choreography`
+- [x] L10 Motion. ledger: `docs/loops/L10_MOTION.md` · needs: L9. · budget 18 ticks or $20 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 10 --- Motion: tokens, primitives and choreography`
 - [ ] L11 Explain. ledger: `docs/loops/L11_EXPLAIN.md` · needs: L10. · budget 15 ticks or $20 · `docs/roadmap/DESIGN_MOTION_ROADMAP.md#Phase 11 --- Explain: reconciling, animated model explanations`
 
 One edge per line below; graph-lint compares these edges with the `needs:` above.
