@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Stagger } from "@/components/motion";
 import { useState } from "react";
 import {
@@ -33,7 +33,13 @@ import {
   KpiBand,
 } from "@/components/kit";
 import { ChartFrame, ImportanceBars } from "@/components/charts";
-import { Beeswarm, CaseWaterfall } from "@/components/explain";
+import {
+  Beeswarm,
+  CaseWaterfall,
+  InputsStage,
+  Journey,
+  PredictionStage,
+} from "@/components/explain";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,6 +103,7 @@ function ModelDetail() {
     explanations,
   } = useSuspenseQuery(modelsQuery).data;
   const importance = featureImportance[id];
+  const explanation = explanations[id];
   const [pointed, setPointed] = useState<string | null>(null);
   const m = models.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
@@ -597,34 +604,54 @@ function ModelDetail() {
           </Panel>
         </TabsContent>
 
-        <TabsContent value="explainability" className="mt-4 space-y-4">
-          <ChartFrame
-            title="Global feature importance"
-            unit="Mean |SHAP|"
-            period="Validation sample"
-            source="Synthetic validation sample (demo data)"
-            rows={importance ?? []}
-            columns={[
-              { key: "feature", header: "Feature" },
-              { key: "value", header: "Mean |SHAP|" },
-            ]}
-            state={importance ? "success" : "empty"}
+        <TabsContent value="explainability" className="mt-4">
+          <Journey
+            state={explanation ? "success" : "empty"}
             stateNote="Explainability evidence is not available for this model type."
-            activeRow={importance?.findIndex((r) => r.feature === pointed)}
-          >
-            <ImportanceBars
-              rows={importance ?? []}
-              definitions={explanations[id]?.definitions ?? {}}
-              active={pointed}
-              onActive={setPointed}
-            />
-          </ChartFrame>
-          {explanations[id] && (
-            <>
-              <Beeswarm explanation={explanations[id]} />
-              <CaseWaterfall explanation={explanations[id]} />
-            </>
-          )}
+            stages={
+              explanation && {
+                "Inputs and data quality": <InputsStage explanation={explanation} />,
+                Prediction: <PredictionStage explanation={explanation} />,
+                "Global importance": (
+                  <ChartFrame
+                    title="Global feature importance"
+                    unit="Mean |SHAP|"
+                    period="Validation sample"
+                    source="Synthetic validation sample (demo data)"
+                    rows={importance ?? []}
+                    columns={[
+                      { key: "feature", header: "Feature" },
+                      { key: "value", header: "Mean |SHAP|" },
+                    ]}
+                    activeRow={importance?.findIndex((r) => r.feature === pointed)}
+                  >
+                    <ImportanceBars
+                      rows={importance ?? []}
+                      definitions={explanation.definitions}
+                      active={pointed}
+                      onActive={setPointed}
+                    />
+                  </ChartFrame>
+                ),
+                "Contributions by case": <Beeswarm explanation={explanation} />,
+                "Case explanation": <CaseWaterfall explanation={explanation} />,
+                Review: (
+                  <p className="rounded-md border bg-card px-4 py-3 text-xs">
+                    Read these contributions alongside the validation results and the approval
+                    record.{" "}
+                    <Link
+                      to="/models/$id"
+                      params={{ id }}
+                      search={{ tab: "governance" }}
+                      className="font-medium underline underline-offset-2"
+                    >
+                      Open governance
+                    </Link>
+                  </p>
+                ),
+              }
+            }
+          />
         </TabsContent>
 
         <TabsContent value="governance" className="mt-4 grid gap-4 lg:grid-cols-2">

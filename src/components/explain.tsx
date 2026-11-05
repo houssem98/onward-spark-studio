@@ -1,23 +1,141 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Hourglass,
+  Inbox,
   Pause,
   Play,
   RotateCcw,
+  XCircle,
 } from "lucide-react";
 
 import { ChartFrame, Waterfall } from "@/components/charts";
 import { CHART, TYPE } from "@/components/kit";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
+import { StateBoundary } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { fmtSigned } from "@/lib/calc";
+import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 import { CASE_CAVEAT, caseBridge, cumulativeAt, globalImportance, stepLine } from "@/lib/explain";
 import type { ModelExplanation } from "@/repo/types";
 
 const f4 = (v: number) => fmtSigned(v, 4);
+const pct = (logOdds: number) => `${(100 / (1 + Math.exp(-logOdds))).toFixed(1)}%`;
+
+/** The journey order of the explainability tab: inputs, prediction, then the explanations. */
+export const JOURNEY = [
+  "Inputs and data quality",
+  "Prediction",
+  "Global importance",
+  "Contributions by case",
+  "Case explanation",
+  "Review",
+] as const;
+type JourneyStage = (typeof JOURNEY)[number];
+type StageState = "loading" | "success" | "empty" | "error";
+
+const STATUS: Record<StageState, { text: string; Icon: typeof Inbox; className: string }> = {
+  loading: { text: "Loading", Icon: Hourglass, className: "text-muted-foreground" },
+  success: { text: "Complete", Icon: CheckCircle2, className: "text-success" },
+  empty: { text: "Unavailable", Icon: Inbox, className: "text-muted-foreground" },
+  error: { text: "Failed", Icon: XCircle, className: "text-critical" },
+};
+
+/**
+ * The explainability tab as a journey of numbered stages, each marking its own state by icon and
+ * word: loading, complete, unavailable or failed. A model without explanations says so once.
+ */
+export function Journey({
+  state,
+  stateNote,
+  stages,
+}: {
+  state: StageState;
+  stateNote?: string;
+  stages?: Record<JourneyStage, ReactNode> | undefined;
+}) {
+  return (
+    <div className="space-y-6">
+      {state === "empty" && stateNote && (
+        <p className="text-xs text-muted-foreground">{stateNote}</p>
+      )}
+      {JOURNEY.map((title, i) => {
+        const s = STATUS[state];
+        return (
+          <section key={title} data-stage={title} data-state={state} aria-label={title}>
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <span className="num text-muted-foreground">{i + 1}</span>
+              {title}
+              <span
+                className={`ml-auto inline-flex items-center gap-1 text-xs font-normal ${s.className}`}
+              >
+                <s.Icon className="size-3.5" aria-hidden />
+                {s.text}
+              </span>
+            </h2>
+            <StateBoundary state={state} label={title}>
+              {stages?.[title]}
+            </StateBoundary>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Each input feature with its definition, the range of its values and how many are missing. */
+export function InputsStage({ explanation: e }: { explanation: ModelExplanation }) {
+  return (
+    <div className={`${REGISTER_BOX} rounded-md border bg-card`}>
+      <table className="w-full text-xs">
+        <thead>
+          <tr>
+            <th className={REGISTER_TH}>Feature</th>
+            <th className={REGISTER_TH}>Definition</th>
+            <th className={REGISTER_TH}>Range</th>
+            <th className={REGISTER_TH}>Missing</th>
+          </tr>
+        </thead>
+        <tbody>
+          {e.features.map((f) => {
+            const vs = e.observations.map((o) => o.values[f]);
+            const present = vs.filter((v): v is number => Number.isFinite(v));
+            return (
+              <tr key={f} className="border-b last:border-0">
+                <td className="whitespace-nowrap px-3 py-2 font-mono">{f}</td>
+                <td className="px-3 py-2 text-muted-foreground">{e.definitions[f]}</td>
+                <td className="num whitespace-nowrap px-3 py-2">{`${Math.min(...present)} to ${Math.max(...present)}`}</td>
+                <td className="num px-3 py-2">{vs.length - present.length}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** What the model outputs across the cases, on its log-odds scale and as a labeled probability. */
+export function PredictionStage({ explanation: e }: { explanation: ModelExplanation }) {
+  const outputs = e.observations.map((o) => o.output).sort((a, b) => a - b);
+  const median = outputs[Math.floor((outputs.length - 1) / 2)]!;
+  return (
+    <div className="rounded-md border bg-card px-4 py-3 text-xs">
+      <p>
+        {e.observations.length} synthetic cases scored by {e.model} {e.version} on the log-odds
+        scale, converted here to a probability of default: baseline {pct(e.baseline)}, cases from{" "}
+        {pct(outputs[0]!)} to {pct(outputs.at(-1)!)}, median {pct(median)}.
+      </p>
+      <p className="mt-1 text-muted-foreground">
+        The output is decision support, not a credit decision.
+      </p>
+    </div>
+  );
+}
 
 const W = 960;
 const LEFT = 168;

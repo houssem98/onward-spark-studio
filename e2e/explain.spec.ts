@@ -47,6 +47,47 @@ test("importance bars grow from zero, and the keyboard reaches each and opens it
   }
 });
 
+// L11 T5: the tab reads as the journey, in order, at both widths, with nothing overflowing.
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+] as const) {
+  test(`the explainability journey reads in order at ${width}px`, async ({ page }) => {
+    test.setTimeout(120_000);
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+    await page.setViewportSize({ width, height });
+    await page.goto("/credit");
+    const link = page.getByRole("link", { name: "Retail PD Scorecard" });
+    await expect(async () => {
+      await link.click();
+      await expect(page).toHaveURL(/\/models\/MDL-001\?tab=explainability$/, { timeout: 2000 });
+    }).toPass({ timeout: 60_000 });
+    // A click before hydration loads the page in full; measure layout once its stylesheets apply.
+    await page.waitForLoadState("load");
+    const stages = page.locator("[data-stage]");
+    await expect(stages).toHaveCount(6);
+    expect(await stages.evaluateAll((s) => s.map((x) => x.getAttribute("data-stage")))).toEqual([
+      "Inputs and data quality",
+      "Prediction",
+      "Global importance",
+      "Contributions by case",
+      "Case explanation",
+      "Review",
+    ]);
+    expect(await stages.evaluateAll((s) => s.map((x) => x.getAttribute("data-state")))).toEqual(
+      Array(6).fill("success"),
+    );
+    await expect(page.locator("h1")).toHaveCount(1);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "horizontal overflow").toBe(0);
+    expect(errors).toEqual([]);
+  });
+}
+
 // L11 T4: every beeswarm point travels once from zero and comes to rest where its contribution is.
 test("beeswarm points travel once from zero and rest at their contribution", async ({ page }) => {
   test.setTimeout(120_000);
