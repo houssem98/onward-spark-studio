@@ -403,33 +403,3 @@ export const LGD_SCATTER = Array.from({ length: 40 }, (_, i) => {
     predicted: Math.min(1, Math.max(0, Math.round((actual * 0.85 + 0.07 + noise) * 100) / 100)),
   };
 });
-
-export const FEATURE_IMPORTANCE: Record<string, { feature: string; value: number }[]> = {
-  "MDL-001": [
-    { feature: "bureau_score", value: 0.31 },
-    { feature: "dti_ratio", value: 0.22 },
-    { feature: "months_on_book", value: 0.14 },
-    { feature: "revolving_util", value: 0.12 },
-    { feature: "income_verified", value: 0.08 },
-  ],
-  "MDL-002": [
-    { feature: "debt_service_coverage", value: 0.28 },
-    { feature: "utilization_rate", value: 0.21 },
-    { feature: "sector_code", value: 0.17 },
-    { feature: "years_in_business", value: 0.13 },
-    { feature: "revenue_band", value: 0.09 },
-  ],
-  "MDL-003": [
-    { feature: "merchant_risk", value: 0.26 },
-    { feature: "velocity_1h", value: 0.24 },
-    { feature: "geo_distance", value: 0.18 },
-    { feature: "device_new", value: 0.12 },
-    { feature: "amount_z", value: 0.1 },
-  ],
-  "MDL-006": [
-    { feature: "aum_trend_90d", value: 0.33 },
-    { feature: "advisor_contacts", value: 0.19 },
-    { feature: "tenure", value: 0.15 },
-    { feature: "product_count", value: 0.12 },
-  ],
-};

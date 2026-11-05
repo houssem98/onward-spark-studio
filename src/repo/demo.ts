@@ -1,6 +1,7 @@
 import * as credit from "@/data/credit";
 import * as crime from "@/data/crime";
 import * as datasets from "@/data/datasets";
+import { EXPLANATIONS } from "@/data/explanations";
 import * as finance from "@/data/finance";
 import * as investigations from "@/data/investigations";
 import * as models from "@/data/models";
@@ -8,6 +9,7 @@ import type { Certification, QualityIssue } from "@/data/datasets";
 import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
 import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
+import { globalImportance } from "@/lib/explain";
 import type {
   AccessRequest,
   AuditEvent,
@@ -309,8 +311,9 @@ export const demoRepo: Repository = {
       perfHistory: tag(models.PERF_HISTORY),
       forecast: tag(models.FORECAST_SERIES),
       lgdScatter: tag(models.LGD_SCATTER),
+      explanations: Object.fromEntries(EXPLANATIONS.map((e) => [e.model, e])),
       featureImportance: Object.fromEntries(
-        Object.entries(models.FEATURE_IMPORTANCE).map(([id, rows]) => [id, tag(rows)]),
+        EXPLANATIONS.map((e) => [e.model, tag(globalImportance(e))]),
       ),
     }),
     selectVersion: (model, version) =>

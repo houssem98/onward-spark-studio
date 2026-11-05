@@ -14,6 +14,7 @@ const MARKERS = {
   "src/data/credit.ts": "Working capital line",
   "src/data/crime.ts": "Repeated sub-threshold cash deposits",
   "src/data/datasets.ts": "Posted journal entries and account balances by legal entity.",
+  "src/data/explanations.ts": "Seeded SHAP fixture for the credit classifiers",
   "src/data/finance.ts": "Solent",
   "src/data/investigations.ts":
     "Is the SME credit risk model still fit for purpose after input drift?",

@@ -52,6 +52,31 @@ export interface ModelDecision {
 
 export type FindingStatus = "Open" | "Remediating" | "Closed";
 
+/** One explained observation: its feature values and SHAP contributions, which sum with the
+ *  baseline to the model's output. */
+export interface ExplainedObservation {
+  id: string;
+  values: Record<string, number>;
+  contributions: Record<string, number>;
+  output: number;
+  synthetic: true;
+}
+
+/** SHAP explanations of one model version, on the model's output scale (log-odds for the credit
+ *  classifiers; a probability is only ever a labeled conversion of the output). */
+export interface ModelExplanation {
+  model: string;
+  version: string;
+  scale: "log-odds";
+  baseline: number;
+  features: string[];
+  observations: ExplainedObservation[];
+  source: string;
+  synthetic: true;
+}
+
+export type FeatureImportance = { feature: string; value: number };
+
 // A read resolves to a snapshot of one domain; a write resolves once the change is stored.
 export interface FinanceData {
   bank: typeof finance.BANK;
@@ -107,7 +132,9 @@ export interface ModelsData {
   perfHistory: typeof models.PERF_HISTORY;
   forecast: typeof models.FORECAST_SERIES;
   lgdScatter: typeof models.LGD_SCATTER;
-  featureImportance: typeof models.FEATURE_IMPORTANCE;
+  explanations: Record<string, ModelExplanation>;
+  /** Mean absolute SHAP per feature over `explanations`, for the models that have them. */
+  featureImportance: Record<string, FeatureImportance[]>;
 }
 
 export interface InvestigationsData {
