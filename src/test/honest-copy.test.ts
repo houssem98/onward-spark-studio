@@ -45,6 +45,18 @@ describe("honest copy", () => {
     expect(found).toEqual([]);
   });
 
+  // L11 T3: an explanation describes how the model scored a case, never what caused the outcome.
+  it("words every explanation as the model's behaviour, never as a cause", () => {
+    const CAUSAL =
+      /\b(because|due to|caused?|causing|drove|drives|driven by|led to|leads to|results? in|resulted in|reason for)\b/i;
+    const copy = ["src/lib/explain.ts", "src/components/explain.tsx"];
+    expect(copy.filter((f) => CAUSAL.test(text(f)))).toEqual([]);
+    expect(text("src/lib/explain.ts")).toContain(
+      "Contributions describe how the model scored this case, not causes",
+    );
+    expect(text("src/lib/explain.ts")).toContain("decision support, not a credit decision");
+  });
+
   it("labels the wizard's fixed validation results as fixed", () => {
     expect(text("src/routes/performance.tsx")).toContain("These results are fixed in this demo");
   });

@@ -198,30 +198,56 @@ export function ImportanceBars({
   );
 }
 
-export function Waterfall({ bridge, height = 280 }: { bridge: Bridge; height?: number }) {
-  const rows = waterfallRows(bridge);
+/**
+ * A bridge as a standing waterfall. `shown` reveals rows up to that index whole, each where it
+ * ends, and keeps the rest's geometry so the axis never rescales; `tone="risk"` colours an
+ * increase as the critical direction, as for a probability of default.
+ */
+export function Waterfall({
+  bridge,
+  height = 280,
+  shown,
+  tone = "gain",
+  format,
+}: {
+  bridge: Bridge;
+  height?: number;
+  shown?: number;
+  tone?: "gain" | "risk";
+  format?: (v: number) => string;
+}) {
+  const rows = waterfallRows(bridge).map((r, i) => {
+    const hidden = shown !== undefined && i > shown;
+    return { ...r, hidden, label: hidden ? undefined : format ? format(r.signed) : r.signed };
+  });
+  const [up, down] =
+    tone === "risk" ? [CHART.critical, CHART.success] : [CHART.success, CHART.critical];
   const color = (t: string) =>
-    t === "total"
-      ? CHART.c3
-      : t === "up"
-        ? CHART.success
-        : t === "residual"
-          ? CHART.c4
-          : CHART.critical;
+    t === "total" ? CHART.c3 : t === "up" ? up : t === "residual" ? CHART.c4 : down;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={rows} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke={CHART.grid} />
         <XAxis dataKey="name" {...axisProps} interval={0} />
         <YAxis {...axisProps} width={40} />
-        <Tooltip {...tooltipStyle} formatter={stepTooltip} />
+        <Tooltip
+          {...tooltipStyle}
+          formatter={
+            format
+              ? (_v: unknown, _n: unknown, p: { payload?: { signed: number } }) => [
+                  format(p.payload!.signed),
+                  "Value",
+                ]
+              : stepTooltip
+          }
+        />
         <ReferenceLine y={0} stroke={CHART.grid} />
         <Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />
         <Bar dataKey="value" stackId="a" isAnimationActive={false}>
           {/* Label the signed step; the stacked bar's own value is the stack top. */}
-          <LabelList dataKey="signed" position="top" fontSize={TYPE.caption} fill={CHART.text} />
+          <LabelList dataKey="label" position="top" fontSize={TYPE.caption} fill={CHART.text} />
           {rows.map((r, i) => (
-            <Cell key={i} fill={color(r.type)} />
+            <Cell key={i} fill={r.hidden ? "transparent" : color(r.type)} />
           ))}
         </Bar>
       </BarChart>
