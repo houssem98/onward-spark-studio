@@ -102,6 +102,36 @@ describe("KPI figures", () => {
     expect(figure(container).textContent).toBe("$812M");
   });
 
+  it("tween through the sign change with the sign each frame's value has", () => {
+    reduceMotion(false);
+    baseToken();
+    stubFrames();
+    const { container, rerender } = render(tile("$743M"));
+    rerender(tile("−$12M"));
+    const seen: string[] = [];
+    for (let i = 0; i < 30 && frames.length; i++) {
+      now += 16;
+      const run = frames;
+      frames = [];
+      act(() => run.forEach((f) => f(now)));
+      seen.push(
+        (container.querySelector("[data-kpi-value] [aria-hidden]") ?? figure(container))
+          .textContent!,
+      );
+    }
+    const signed = seen.map((s) => (s.startsWith("−") ? -1 : 1) * Number(s.replace(/[^\d.]/g, "")));
+    expect(
+      seen.every((s) => /^−?\$\d+M$/.test(s)),
+      seen.join(" "),
+    ).toBe(true);
+    expect(
+      signed.every((v, i) => i === 0 || v <= signed[i - 1]!),
+      seen.join(" "),
+    ).toBe(true);
+    expect(signed[0]).toBeGreaterThan(0);
+    expect(seen.at(-1)).toBe("−$12M");
+  });
+
   it("keep text that is not a figure as it is", () => {
     reduceMotion(false);
     stubFrames();

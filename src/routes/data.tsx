@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 
 type DataSearch = { tab?: string; dataset?: string; issue?: string };
+const TABS = ["catalog", "lineage", "quality", "governance"];
 
 export const Route = createFileRoute("/data")({
   validateSearch: (s: Record<string, unknown>): DataSearch =>
@@ -90,14 +91,17 @@ function DataPage() {
       search: (s) =>
         Object.fromEntries(Object.entries({ ...s, ...next }).filter(([, v]) => v !== undefined)),
       replace: true,
+      resetScroll: false,
     });
+  const tab = TABS.includes(search.tab ?? "") ? search.tab! : search.issue ? "quality" : "catalog";
   const [domain, setDomain] = useState("All");
   const [certF, setCertF] = useState("All");
   const ds = datasets.find((d) => d.id === search.dataset) ?? null;
   const setDs = (d: Dataset | null) => set({ dataset: d?.id });
   const [node, setNode] = useState<LineageNode>(lineageNodes[4]!);
   const issueId = search.issue;
-  const setIssueId = (id: string | null) => set({ issue: id ?? undefined });
+  // Closing an issue opened from a link stays on the tab it was shown on.
+  const setIssueId = (id: string | null) => set({ issue: id ?? undefined, tab });
   const [resolution, setResolution] = useState(
     () => issues.find((i) => i.id === search.issue)?.resolution ?? "",
   );
@@ -167,10 +171,7 @@ function DataPage() {
         <Kpi def="dq_dimension_mean" value={fmtFixed(mean(measurable.map((d) => d.score!)))} />
       </KpiBand>
 
-      <Tabs
-        value={search.tab ?? (search.issue ? "quality" : "catalog")}
-        onValueChange={(t) => set({ tab: t })}
-      >
+      <Tabs value={tab} onValueChange={(t) => set({ tab: t })}>
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="catalog">Catalog</TabsTrigger>
           <TabsTrigger value="lineage">Lineage</TabsTrigger>

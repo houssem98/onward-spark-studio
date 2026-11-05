@@ -153,24 +153,6 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
   }
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
-  }
-}
-
-/* A route change swaps the page at once and lets its entrance play; only the active nav item
-   travels. While it does, the browser hit-tests the document, not the page, so a click in those
-   few frames is lost; e2e/choreography.spec.ts holds the page to clickable within 500 ms. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-}
-
-::view-transition-group(nav-active) {
-  animation-duration: var(--duration-base);
-  animation-timing-function: var(--ease-standard);
 }
 
 @utility num {

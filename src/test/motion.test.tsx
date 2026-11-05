@@ -101,6 +101,25 @@ describe("motion primitives", () => {
     );
     expect(frames).toHaveLength(0);
     expect(visible(container.lastElementChild as HTMLElement)).toBe("$200.0M");
+    // Nor is the split visible copy ever committed, not even for one render.
+    const mo = new MutationObserver(() => {});
+    mo.observe(container, { subtree: true, childList: true });
+    rerender(
+      <>
+        <Reveal>section</Reveal>
+        <AnimatedNumber value={300} format={fmt} />
+      </>,
+    );
+    const split = mo
+      .takeRecords()
+      .flatMap((r) => [...r.addedNodes])
+      .filter(
+        (n) =>
+          n instanceof Element &&
+          !!(n.matches("[aria-hidden]") || n.querySelector("[aria-hidden]")),
+      );
+    mo.disconnect();
+    expect(split).toHaveLength(0);
   });
 
   it("reveals below-the-fold content once it scrolls into view, and leaves it visible without an observer", () => {

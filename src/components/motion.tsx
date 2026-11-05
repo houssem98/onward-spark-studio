@@ -123,8 +123,9 @@ export function AnimatedNumber({
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }, [value, reduced]);
-  // At rest the figure is one text; only a tween splits it into a visible and a spoken copy.
-  if (shown === value) return <span>{format(value)}</span>;
+  // At rest, and always under reduced motion, the figure is one text; only a tween splits it
+  // into a visible and a spoken copy.
+  if (reduced || shown === value) return <span>{format(value)}</span>;
   return (
     <span>
       <span aria-hidden>{format(shown)}</span>

@@ -303,19 +303,30 @@ export function KpiBand({
  * format; the target itself is always the exact text given. Text that is not one figure stays put.
  */
 function Figure({ text }: { text: string }) {
-  const m = /^(\D*?)([−-]?)(\d[\d,]*(?:\.\d+)?)(\D*)$/.exec(text);
+  // The sign may stand before the prefix ("−$12M") or after it ("$-12M").
+  const m = /^([−-]?)(\D*?)([−-]?)(\d[\d,]*(?:\.\d+)?)(\D*)$/.exec(text);
   if (!m) return <>{text}</>;
-  const [, pre, minus, digits, post] = m as unknown as [string, string, string, string, string];
+  const [, lead, pre, inner, digits, post] = m as unknown as [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
+  const minus = lead || inner;
   const decimals = digits.split(".")[1]?.length ?? 0;
   const n = (minus ? -1 : 1) * parseFloat(digits.replace(/,/g, ""));
-  const format = (x: number) =>
-    x === n
-      ? text
-      : `${pre}${x < 0 ? minus || "−" : ""}${Math.abs(x).toLocaleString("en-US", {
-          minimumFractionDigits: decimals,
-          maximumFractionDigits: decimals,
-          useGrouping: digits.includes(","),
-        })}${post}`;
+  const format = (x: number) => {
+    if (x === n) return text;
+    const abs = Math.abs(x).toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      useGrouping: digits.includes(","),
+    });
+    const sign = x < 0 && /[1-9]/.test(abs) ? minus || "−" : "";
+    return inner ? `${pre}${sign}${abs}${post}` : `${sign}${pre}${abs}${post}`;
+  };
   return <AnimatedNumber value={n} format={format} />;
 }
 

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
@@ -87,8 +87,39 @@ function NavList({
   collapsed: boolean;
   onNavigate?: () => void;
 }) {
+  // The active item's highlight slides by a CSS transition, not a view transition: while a view
+  // transition runs the browser hit-tests the document, and clicks on the new page are lost.
+  // Until it is measured, as on the server, the active item paints its own highlight.
+  const ref = useRef<HTMLElement>(null);
+  const [bar, setBar] = useState<{ top: number; height: number } | null>(null);
+  const [placed, setPlaced] = useState(false);
+  useLayoutEffect(() => {
+    const a = ref.current!.querySelector<HTMLElement>('a[aria-current="page"]');
+    setBar(a ? { top: a.offsetTop, height: a.offsetHeight } : null);
+  }, [path, collapsed]);
+  useEffect(() => {
+    if (!bar || placed) return;
+    const raf = requestAnimationFrame(() => setPlaced(true));
+    return () => cancelAnimationFrame(raf);
+  }, [bar, placed]);
   return (
-    <nav aria-label="Main" className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+    <nav
+      aria-label="Main"
+      ref={ref}
+      className="relative flex-1 space-y-5 overflow-y-auto px-3 py-4"
+    >
+      {bar && (
+        <span
+          aria-hidden
+          data-nav-indicator
+          className={cn(
+            "pointer-events-none absolute inset-x-3 top-0 rounded-lg bg-sidebar-primary shadow-sm",
+            placed &&
+              "transition-[transform,height] duration-(--duration-base) ease-(--ease-standard)",
+          )}
+          style={{ transform: `translateY(${bar.top}px)`, height: bar.height }}
+        />
+      )}
       {NAV_GROUPS.map((g) => (
         <div key={g.label}>
           {!collapsed && (
@@ -111,9 +142,12 @@ function NavList({
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-ui font-medium transition-colors",
+                    "relative flex items-center gap-3 rounded-lg px-3 py-2 text-ui font-medium transition-colors",
                     active
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm [view-transition-name:nav-active]"
+                      ? cn(
+                          "text-sidebar-primary-foreground",
+                          !bar && "bg-sidebar-primary shadow-sm",
+                        )
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     collapsed && "justify-center px-0",
                   )}

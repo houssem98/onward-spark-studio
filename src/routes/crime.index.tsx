@@ -69,7 +69,7 @@ function CrimePage() {
   const { alert: sel } = Route.useSearch();
   const search = Route.useNavigate();
   const setSel = (id: string | null) =>
-    void search({ search: id ? { alert: id } : {}, replace: true });
+    void search({ search: id ? { alert: id } : {}, replace: true, resetScroll: false });
   const a = alerts.find((x) => x.id === sel);
 
   const rows = useMemo(

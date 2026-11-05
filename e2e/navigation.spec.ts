@@ -1,31 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
 
-type Probe = { vt: number; anims: string[]; shift: number };
+type Probe = { vt: number; ys: number[]; shift: number; run: number };
 
 /**
- * Counts view transitions and the animations each one runs, and sums every layout shift,
- * including those right after a click, which the CLS metric itself would forgive.
+ * Counts view transitions, which swallow clicks while they run (L10 T8, C1), and sums every
+ * layout shift, including those right after a click, which the CLS metric itself would forgive.
  */
 async function instrument(page: Page) {
   await page.addInitScript(() => {
     const w = window as unknown as { probe: Probe };
-    w.probe = { vt: 0, anims: [], shift: 0 };
+    w.probe = { vt: 0, ys: [], shift: 0, run: 0 };
     const start = document.startViewTransition?.bind(document);
     if (start)
       document.startViewTransition = ((arg: Parameters<typeof start>[0]) => {
         w.probe.vt++;
-        const t = start(arg);
-        t.ready
-          .then(() =>
-            w.probe.anims.push(
-              document
-                .getAnimations()
-                .map((a) => (a.effect as KeyframeEffect).pseudoElement ?? "")
-                .join(" "),
-            ),
-          )
-          .catch(() => {});
-        return t;
+        return start(arg);
       }) as typeof document.startViewTransition;
     new PerformanceObserver((list) => {
       for (const e of list.getEntries())
@@ -62,15 +51,33 @@ async function walkNav(page: Page, motion: boolean) {
     .getByRole("link")
     .evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
   expect(hrefs.length, "nav entries").toBeGreaterThanOrEqual(8);
+  // Visit every page once, so the measured pass is not timing the dev server's first compile,
+  // which starves the frame sampler (3 frames in 1.5 s on a cold route).
+  for (const href of [...hrefs.slice(1), hrefs[0]!]) {
+    await nav.locator(`a[href="${href}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`${href === "/" ? "/$" : href}$`));
+    await expect(page.locator("main h1")).toHaveCount(1);
+  }
 
   const report: string[] = [];
   const off: string[] = [];
   for (const href of [...hrefs.slice(1), hrefs[0]!]) {
+    // Samples the indicator's top every frame from just before the click until the next route's
+    // sampler takes over. A fixed 1.5 s window ended before a slow landing under gate load, with
+    // 12 samples all at the start, and so reported a jump it never watched (L10 T10).
     await page.evaluate(() => {
       const p = (window as unknown as { probe: Probe }).probe;
       p.shift = 0;
       p.vt = 0;
-      p.anims = [];
+      p.ys = [];
+      const run = ++p.run;
+      const tick = () => {
+        if (p.run !== run) return;
+        const bar = document.querySelector('nav[aria-label="Main"] [data-nav-indicator]');
+        if (bar) p.ys.push(Math.round(bar.getBoundingClientRect().y));
+        requestAnimationFrame(tick);
+      };
+      tick();
     });
     const link = nav.locator(`a[href="${href}"]`);
     // A click before hydration is lost; click until the route changes.
@@ -81,18 +88,35 @@ async function walkNav(page: Page, motion: boolean) {
     await expect(page.locator("main h1")).toHaveCount(1);
     await page.waitForTimeout(700);
     const p = await probe(page);
-    const named = await page.evaluate(() =>
-      [...document.querySelectorAll("*")]
-        .filter((el) => getComputedStyle(el).viewTransitionName === "nav-active")
-        .map((el) => el.getAttribute("href")),
+    const end = await page.evaluate(() => {
+      const nav = document.querySelector('nav[aria-label="Main"]')!;
+      const box = (el: Element | null) => {
+        const r = el?.getBoundingClientRect();
+        return r ? [Math.round(r.y), Math.round(r.height)] : null;
+      };
+      const active = nav.querySelector('a[aria-current="page"]');
+      return {
+        href: active?.getAttribute("href"),
+        link: box(active),
+        bar: box(nav.querySelector("[data-nav-indicator]")),
+      };
+    });
+    const [from, to] = [p.ys[0] ?? NaN, end.bar?.[0] ?? NaN];
+    const between = p.ys.filter((y) => y > Math.min(from, to) + 1 && y < Math.max(from, to) - 1);
+    report.push(
+      `${href} shift ${p.shift.toFixed(4)} vt ${p.vt} indicator ${from}→${to} over ${between.length} frames`,
     );
-    report.push(`${href} shift ${p.shift.toFixed(4)} vt ${p.vt}`);
     if (p.shift >= 0.1) off.push(`${href}: layout shift ${p.shift.toFixed(4)}`);
-    if (named.join() !== href) off.push(`${href}: nav-active on ${JSON.stringify(named)}`);
-    if (motion && p.vt !== 1) off.push(`${href}: ${p.vt} view transitions`);
-    if (motion && !p.anims.some((a) => a.includes("::view-transition-group(nav-active)")))
-      off.push(`${href}: the active indicator did not move (${JSON.stringify(p.anims)})`);
-    if (!motion && p.vt !== 0) off.push(`${href}: ${p.vt} view transitions under reduced motion`);
+    if (end.href !== href) off.push(`${href}: aria-current on ${end.href}`);
+    if (!end.bar || !end.link || end.bar.some((v, i) => Math.abs(v - end.link![i]!) > 1))
+      off.push(
+        `${href}: indicator at ${JSON.stringify(end.bar)}, item at ${JSON.stringify(end.link)}`,
+      );
+    if (p.vt !== 0) off.push(`${href}: ${p.vt} view transitions`);
+    if (motion && between.length === 0)
+      off.push(`${href}: the indicator jumped ${from}→${to} (${p.ys.join(",")})`);
+    if (!motion && between.length > 0)
+      off.push(`${href}: the indicator slid under reduced motion (${between.join(",")})`);
   }
 
   const aside = page.locator("aside");

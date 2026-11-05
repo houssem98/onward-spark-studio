@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 // Budget, stated before measuring: the page's sections reveal in DOM order and the whole sequence
-// ends within 400 ms; the primary action is clickable within 500 ms of the navigation landing,
-// that is of the new page's h1 rendering. The first run timed from the click instead, and /credit
-// took 530 ms under reduced motion, with no animation at all: that is the dev server's route
-// latency, which motion does not own. The click-to-clickable time is still reported.
+// ends within 400 ms; the primary action is clickable within 500 ms of the click that navigated,
+// as rule 5 is written. T6 timed from the new h1 instead, which hid a view transition that
+// swallowed clicks for about 266 ms after landing (L10 T8, C1 and C2).
 const SEQUENCE_MS = 400;
 // The production build Playwright serves beside the dev server (playwright.config.ts): the dev
 // server's own latency, 51 to 504 ms after landing with no motion at all, would swamp the budget.
@@ -71,18 +70,18 @@ async function walk(page: Page, motion: boolean) {
         while (performance.now() - t0 < 5000) {
           await frame();
           const now = performance.now();
+          if (now - t0 > limit) return { landed: landed ? landed - t0 : null, clickable: null };
           if (!landed) {
             if (document.querySelector("main h1")?.textContent !== was) landed = now;
             else continue;
           }
-          if (now - landed > limit) return { landed: landed - t0, clickable: null };
           const el = document.querySelector<HTMLElement>(sel);
           if (!el) continue;
           const r = el.getBoundingClientRect();
           const next = [r.x, r.y, r.width, r.height].map(Math.round).join();
           const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
           if (next === box && r.width > 0 && hit && (hit === el || el.contains(hit)))
-            return { landed: landed - t0, clickable: now - landed };
+            return { landed: landed - t0, clickable: now - t0 };
           box = next;
         }
         return { landed: null, clickable: null };
@@ -97,9 +96,10 @@ async function walk(page: Page, motion: boolean) {
     const end = Math.max(...ends);
     const ms = t.clickable === null ? null : Math.round(t.clickable);
     report.push(
-      `${href} landed ${Math.round(t.landed ?? NaN)}ms, action ${ms}ms after, sequence ${end}ms over ${seq.length}`,
+      `${href} landed ${Math.round(t.landed ?? NaN)}ms, action ${ms}ms after the click, sequence ${end}ms over ${seq.length}`,
     );
-    if (ms === null) off.push(`${href}: primary action not clickable within ${ACTION_MS}ms`);
+    if (ms === null)
+      off.push(`${href}: primary action not clickable within ${ACTION_MS}ms of the click`);
     if (seq.length < 2 || seq.some((s) => s === null))
       off.push(`${href}: sections without a reveal ${JSON.stringify(seq)}`);
     else if (motion) {
