@@ -128,12 +128,29 @@ describe("chart motion", () => {
     ).toEqual([]);
   }, 180_000);
 
-  it("animates every series at --duration-data otherwise, unless it opts out", async () => {
+  it("animates every series at --duration-data otherwise, except the bridge waterfall, rule 3's one exception", async () => {
     reduceMotion(false);
     dataToken(".5s");
     const series = await walk();
     const animated = series.filter((s) => s.props["isAnimationActive"] === true);
     expect(animated.length).toBeGreaterThan(20);
+    // The waterfall's steps float on transparent offset bars; grown from the axis they would show
+    // steps that are not there mid-flight. Its two stacked bars are the only series that stand still.
+    const still = series.filter((s) => s.props["isAnimationActive"] === false);
+    expect(still.length, "the bridge waterfall is drawn and stands still").toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(
+      still
+        .filter(
+          (s) =>
+            s.type !== "Bar" ||
+            s.props["stackId"] !== "a" ||
+            !["offset", "value"].includes(String(s.props["dataKey"])) ||
+            (s.props["dataKey"] === "offset" && s.props["fill"] !== "transparent"),
+        )
+        .map((s) => s.label),
+    ).toEqual([]);
     expect(
       series
         .filter(

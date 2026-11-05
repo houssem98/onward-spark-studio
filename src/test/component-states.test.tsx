@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ReactElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -5,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { ChartFrame } from "@/components/charts";
 import { DataTable } from "@/components/DataTable";
 import { EvidenceBadge, Kpi } from "@/components/kit";
-import { DATA_STATES, type DataState } from "@/components/states";
+import { DATA_STATES, StateBoundary, type DataState } from "@/components/states";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 afterEach(cleanup);
@@ -101,6 +103,41 @@ describe.each(Object.entries(subjects))("%s states", (_name, { content, ui }) =>
       return signature;
     });
     expect(new Set(seen).size).toBe(DATA_STATES.length);
+  });
+});
+
+// Rule 7: no continuous loops; shimmer only on loading skeletons.
+const LOOPING = /\banimate-(pulse|spin|ping|bounce)\b|\binfinite\b/;
+
+describe("No continuous loops", () => {
+  it("the loading line holds still: no pulse, no spin", () => {
+    const { container } = render(
+      <StateBoundary state="loading" label="Credit revenue">
+        x
+      </StateBoundary>,
+    );
+    const looping = [...container.querySelectorAll("*")]
+      .map((el) => el.getAttribute("class") ?? "")
+      .filter((c) => LOOPING.test(c));
+    expect(looping).toEqual([]);
+  });
+
+  it("nothing in src loops, except the loading skeleton's shimmer", () => {
+    const files = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? files(join(dir, e.name)) : [join(dir, e.name)],
+      );
+    const found = files("src")
+      .filter((f) => /\.(tsx?|css)$/.test(f))
+      .filter((f) => !f.startsWith(join("src", "test")))
+      .filter((f) => f !== join("src", "components", "ui", "skeleton.tsx"))
+      .flatMap((f) =>
+        readFileSync(f, "utf8")
+          .split("\n")
+          .filter((line) => LOOPING.test(line))
+          .map((line) => `${f}: ${line.trim()}`),
+      );
+    expect(found).toEqual([]);
   });
 });
 

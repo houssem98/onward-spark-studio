@@ -47,7 +47,7 @@ Taste is judged by the human at each signoff, at 1440 px and 390 px (`docs/LOOP_
 
 ## 4. Motion system
 
-Native stack, zero new runtime dependencies: CSS custom properties and keyframes, tw-animate-css for Radix overlays, Recharts' own animation props, TanStack Router view transitions (`defaultViewTransition`, a no-op in browsers without the View Transitions API), IntersectionObserver for reveal-on-view, and `requestAnimationFrame` for number transitions.
+Native stack, zero new runtime dependencies: CSS custom properties and keyframes, tw-animate-css for Radix overlays, Recharts' own animation props, IntersectionObserver for reveal-on-view, and `requestAnimationFrame` for number transitions. No view transitions: from L10 T4 to T10 the router ran one on each route change, and while one plays the browser hit-tests the document, so the first clicks on the new page were lost (L10 T8, C1).
 
 Tokens (L10 T1), starting values; the page entrance and the card lift moved onto them in L10 T1 (`src/styles.css#transition-duration: var(--duration-instant);`), and in L10 T6 the entrance became the sections' ordered reveal (`src/styles.css#animation: page-in var(--duration-quick) var(--ease-enter) both;`):
 
@@ -67,7 +67,7 @@ Rules, each owned by a test:
 
 1. Animate to explain a change, a relationship or a sequence; never as decoration (`BankIntelli_Elite_Premium_Design_Roadmap.md#Avoid decorative`).
 2. Numbers: a figure tweens only when its value changes after mount, straight from old to new, no overshoot, at most `--duration-base`; its accessible text is the final value from the first frame; nothing tweens on first render.
-3. Charts: series animate on entrance and on filter change; axes and baselines never animate, so a comparison cannot mislead mid-flight.
+3. Charts: series animate on entrance and on filter change; axes and baselines never animate, so a comparison cannot mislead mid-flight. One exception: the bridge waterfall stands still (`src/components/charts.tsx#<Bar dataKey="offset" stackId="a" fill="transparent" isAnimationActive={false} />`), since its steps float on transparent offset bars and, grown from the axis, would show steps that are not there.
 4. Reduced motion: every animation, CSS or JavaScript, reaches its final state at once; step-through controls (L11) still work.
 5. Nothing delays interaction: a page's primary action is clickable within 500 ms of navigation.
 6. No layout shift from motion: cumulative layout shift under 0.1 per route change, measured in the browser.

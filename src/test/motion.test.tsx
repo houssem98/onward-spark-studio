@@ -18,21 +18,26 @@ function reduceMotion(on: boolean) {
   }));
 }
 
-let observed: { cb: IntersectionObserverCallback; el?: Element }[] = [];
+let observed: { cb: IntersectionObserverCallback; els: Element[] }[] = [];
 function stubObserver() {
   observed = [];
   vi.stubGlobal(
     "IntersectionObserver",
     class {
-      rec: { cb: IntersectionObserverCallback; el?: Element };
+      rec: { cb: IntersectionObserverCallback; els: Element[] };
       constructor(cb: IntersectionObserverCallback) {
-        this.rec = { cb };
+        this.rec = { cb, els: [] };
         observed.push(this.rec);
       }
       observe(el: Element) {
-        this.rec.el = el;
+        this.rec.els.push(el);
       }
-      disconnect() {}
+      unobserve(el: Element) {
+        this.rec.els = this.rec.els.filter((x) => x !== el);
+      }
+      disconnect() {
+        this.rec.els = [];
+      }
     },
   );
 }
@@ -44,9 +49,20 @@ function belowFold() {
 function scrollIntoView() {
   act(() =>
     observed.forEach((o) =>
-      o.cb([{ isIntersecting: true, target: o.el } as IntersectionObserverEntry], {} as never),
+      o.cb(
+        o.els.map((target) => ({ isIntersecting: true, target }) as IntersectionObserverEntry),
+        {} as never,
+      ),
     ),
   );
+}
+/** Each element's top is its data-y; jsdom's window is 768 px tall. */
+function laidOut() {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return { top: Number(this.dataset["y"] ?? 0) } as DOMRect;
+  });
 }
 
 // Frames are stepped by hand: each call to step() advances the clock and runs one frame.
@@ -135,6 +151,35 @@ describe("motion primitives", () => {
     vi.unstubAllGlobals();
     const bare = render(<Reveal>section</Reveal>).container.querySelector("[data-reveal]");
     expect(bare).toHaveAttribute("data-reveal", "idle");
+  });
+
+  it("holds a page's sections that start below the first screen until they scroll into view", () => {
+    const page = () => (
+      <Stagger>
+        <p data-y="0">header</p>
+        <p data-y="400">figures</p>
+        <p data-y="2000">register</p>
+      </Stagger>
+    );
+    reduceMotion(false);
+    stubObserver();
+    laidOut();
+    const { container, unmount } = render(page());
+    const root = container.firstElementChild!;
+    const [header, figures, register] = [...root.children];
+    expect(root).toHaveAttribute("data-reveal", "idle");
+    expect(header).not.toHaveAttribute("data-reveal");
+    expect(figures).not.toHaveAttribute("data-reveal");
+    expect(register).toHaveAttribute("data-reveal", "hidden");
+    scrollIntoView();
+    expect(register).toHaveAttribute("data-reveal", "shown");
+    unmount();
+
+    vi.restoreAllMocks();
+    reduceMotion(true);
+    laidOut();
+    const still = render(page()).container.firstElementChild!;
+    expect([...still.children].filter((c) => c.hasAttribute("data-reveal"))).toEqual([]);
   });
 
   it("staggers direct children without wrapping them, at most six steps", () => {

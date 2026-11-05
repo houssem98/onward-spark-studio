@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, Ban, Clock, Inbox, Loader2, XCircle } from "lucide-react";
+import { AlertTriangle, Ban, Clock, Hourglass, Inbox, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const DATA_STATES = [
@@ -39,12 +39,8 @@ export function StateBoundary({
       return <>{children}</>;
     case "loading":
       return (
-        <Tag
-          role="status"
-          aria-busy="true"
-          className={cn(message, "animate-pulse text-muted-foreground")}
-        >
-          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> Loading {label}…
+        <Tag role="status" aria-busy="true" className={cn(message, "text-muted-foreground")}>
+          <Hourglass className="h-3.5 w-3.5" aria-hidden /> Loading {label}…
         </Tag>
       );
     case "empty":

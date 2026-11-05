@@ -194,14 +194,12 @@
   }
 }
 
-[data-reveal="hidden"]:not([data-stagger]),
-[data-reveal="hidden"][data-stagger] > * {
+[data-reveal="hidden"]:not([data-stagger] > *) {
   opacity: 0;
   transform: translateY(6px);
 }
 
-[data-reveal="shown"]:not([data-stagger]),
-[data-reveal="shown"][data-stagger] > * {
+[data-reveal="shown"]:not([data-stagger] > *) {
   transition-property: opacity, transform;
   transition-duration: var(--duration-base);
   transition-timing-function: var(--ease-enter);
@@ -213,6 +211,26 @@
 [data-reveal="idle"][data-stagger] > * {
   animation: page-in var(--duration-quick) var(--ease-enter) both;
   animation-delay: calc(var(--stagger) * var(--reveal-step, 0));
+}
+
+/* Sections that start below the first screen wait there and arrive as they scroll into view. */
+[data-stagger] > [data-reveal="hidden"] {
+  opacity: 0;
+  animation: none;
+}
+
+[data-stagger] > [data-reveal="shown"] {
+  animation: page-in var(--duration-quick) var(--ease-enter) both;
+}
+
+/* Sonner injects its own timing after this sheet; toasts move on the tokens like any overlay. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-sonner-toaster],
+  [data-sonner-toast],
+  [data-sonner-toast] > * {
+    transition-duration: var(--duration-base) !important;
+    transition-timing-function: var(--ease-standard) !important;
+  }
 }
 
 [data-stagger] > :nth-child(2) { --reveal-step: 1; }

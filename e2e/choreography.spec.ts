@@ -30,16 +30,25 @@ async function hydratedHome(page: Page) {
   return nav;
 }
 
-/** The reveal animations on the page's sections, in DOM order: [delay, end] in ms. */
+/**
+ * The reveal animations on the page's sections on the first screen, in DOM order: [delay, end] in
+ * ms. Sections held until they scroll into view are returned apart, with their top.
+ */
 const sequence = (page: Page) =>
   page.evaluate(() => {
     const sections = [...(document.querySelector("main > [data-stagger]")?.children ?? [])];
-    return sections.map((s) => {
-      const a = s.getAnimations().find((x) => (x as CSSAnimation).animationName === "page-in");
-      if (!a) return null;
-      const t = a.effect!.getTiming();
-      return [Number(t.delay), Number(t.delay) + Number(t.duration)] as const;
-    });
+    const held = sections
+      .filter((s) => s.getAttribute("data-reveal") === "hidden")
+      .map((s) => Math.round(s.getBoundingClientRect().top + scrollY));
+    const seq = sections
+      .filter((s) => s.getAttribute("data-reveal") !== "hidden")
+      .map((s) => {
+        const a = s.getAnimations().find((x) => (x as CSSAnimation).animationName === "page-in");
+        if (!a) return null;
+        const t = a.effect!.getTiming();
+        return [Number(t.delay), Number(t.delay) + Number(t.duration)] as const;
+      });
+    return { seq, held, fold: innerHeight };
   });
 
 async function walk(page: Page, motion: boolean) {
@@ -89,7 +98,11 @@ async function walk(page: Page, motion: boolean) {
       { href, sel: PRIMARY, limit: ACTION_MS },
     );
     await expect(page).toHaveURL(new RegExp(`${href === "/" ? "/$" : href}$`));
-    const seq = await sequence(page);
+    const { seq, held, fold } = await sequence(page);
+    if (held.some((top) => top < fold))
+      off.push(`${href}: a section on the first screen is held hidden ${JSON.stringify(held)}`);
+    if (!motion && held.length)
+      off.push(`${href}: ${held.length} sections held under reduced motion`);
     // And Playwright agrees it is clickable once settled.
     await page.locator(PRIMARY).first().click({ trial: true });
     const ends = seq.map((s) => s?.[1] ?? NaN);
@@ -128,22 +141,87 @@ test("under reduced motion every section is there at once", async ({ page }) => 
   await walk(page, false);
 });
 
+const PAGES = [
+  "/",
+  "/performance",
+  "/credit",
+  "/crime",
+  "/data",
+  "/models",
+  "/investigations",
+  "/audit",
+];
+
+/** At 390 px most sections start below the first screen; they wait there and arrive in view. */
+async function belowTheFold(page: Page, motion: boolean) {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const off: string[] = [];
+  const report: string[] = [];
+  let total = 0;
+  for (const path of PAGES) {
+    await page.goto(path);
+    const stagger = page.locator("main > [data-stagger]");
+    await expect
+      .poll(() => stagger.evaluate((el) => Object.keys(el).some((k) => k.startsWith("__react"))), {
+        timeout: 60_000,
+      })
+      .toBe(true);
+    const sections = stagger.locator(":scope > *");
+    const at = await sections.evaluateAll((ss) =>
+      ss.map((s) => ({
+        top: Math.round(s.getBoundingClientRect().top + scrollY),
+        held: s.getAttribute("data-reveal") === "hidden",
+        opacity: getComputedStyle(s).opacity,
+      })),
+    );
+    const held = at.flatMap((s, i) => (s.held ? [i] : []));
+    total += held.length;
+    report.push(`${path} ${held.length} of ${at.length} held`);
+    for (const [i, s] of at.entries()) {
+      if (s.held && s.top < 844) off.push(`${path}: section ${i} held on the first screen`);
+      if (s.held && s.opacity !== "0") off.push(`${path}: section ${i} held but visible`);
+      if (!s.held && s.top >= 844 && motion)
+        off.push(`${path}: section ${i} below the first screen not held`);
+    }
+    for (const i of held) {
+      const s = sections.nth(i);
+      await s.scrollIntoViewIfNeeded();
+      await expect(s, `${path}: section ${i} revealed`).toHaveAttribute("data-reveal", "shown");
+      await expect
+        .poll(() => s.evaluate((el) => getComputedStyle(el).opacity), { timeout: 2000 })
+        .toBe("1");
+      const ran = await s.evaluate((el) =>
+        el.getAnimations().some((a) => (a as CSSAnimation).animationName === "page-in"),
+      );
+      if (!ran) off.push(`${path}: section ${i} appeared without its entrance`);
+    }
+  }
+  console.log(`${motion ? "fold" : "fold reduced"}: ${report.join(" · ")}`);
+  if (motion && total === 0) off.push("no section on any page waits below the first screen");
+  if (!motion && total > 0) off.push(`${total} sections held under reduced motion`);
+  expect(off).toEqual([]);
+}
+
+test.describe("below the first screen, with motion", () => {
+  test.use({ contextOptions: { reducedMotion: "no-preference" } });
+  test("sections wait hidden and reveal as they scroll into view", async ({ page }) => {
+    test.setTimeout(180_000);
+    await belowTheFold(page, true);
+  });
+});
+
+test("below the first screen under reduced motion, nothing waits", async ({ page }) => {
+  test.setTimeout(180_000);
+  await belowTheFold(page, false);
+});
+
 test.describe("without JavaScript", () => {
   test.use({ javaScriptEnabled: false, contextOptions: { reducedMotion: "no-preference" } });
   test("every section of every page is visible", async ({ page }) => {
     test.setTimeout(180_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     const off: string[] = [];
-    for (const path of [
-      "/",
-      "/performance",
-      "/credit",
-      "/crime",
-      "/data",
-      "/models",
-      "/investigations",
-      "/audit",
-    ]) {
+    for (const path of PAGES) {
       await page.goto(path);
       await expect(page.locator("main h1")).toBeVisible();
       await page.waitForTimeout(SEQUENCE_MS + 200);

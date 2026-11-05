@@ -40,8 +40,9 @@ export function useMotionMs(name: string) {
 }
 
 /**
- * Fades its content up once it scrolls into view. Content already on screen at mount, under
- * reduced motion or without IntersectionObserver is never hidden.
+ * Fades its content up once it scrolls into view; a Stagger does so for each child that starts
+ * below the screen. Content already on screen at mount, under reduced motion or without
+ * IntersectionObserver is never hidden.
  */
 export function Reveal({
   children,
@@ -57,21 +58,27 @@ export function Reveal({
   const [state, setState] = useState<"idle" | "hidden" | "shown">("idle");
   useLayoutEffect(() => {
     const el = ref.current!;
-    if (
-      reduced ||
-      typeof IntersectionObserver === "undefined" ||
-      el.getBoundingClientRect().top < innerHeight
-    )
-      return;
-    setState("hidden");
+    if (reduced || typeof IntersectionObserver === "undefined") return;
+    const below = (t: Element) => t.getBoundingClientRect().top >= innerHeight;
+    const held = stagger ? [...el.children].filter(below) : below(el) ? [el] : [];
+    if (!held.length) return;
+    // A Stagger's children are the page's own elements, so they are marked in place.
+    const mark = (t: Element, s: "hidden" | "shown") =>
+      t === el ? setState(s) : t.setAttribute("data-reveal", s);
+    held.forEach((t) => mark(t, "hidden"));
     const io = new IntersectionObserver((entries) => {
-      if (!entries.some((e) => e.isIntersecting)) return;
-      setState("shown");
-      io.disconnect();
+      for (const e of entries)
+        if (e.isIntersecting) {
+          mark(e.target, "shown");
+          io.unobserve(e.target);
+        }
     });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduced]);
+    held.forEach((t) => io.observe(t));
+    return () => {
+      io.disconnect();
+      if (stagger) held.forEach((t) => t.removeAttribute("data-reveal"));
+    };
+  }, [reduced, stagger]);
   return (
     <div
       ref={ref}
