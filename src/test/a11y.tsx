@@ -23,9 +23,10 @@ export function setUp() {
 }
 
 export async function open(path: string) {
+  const queryClient = new QueryClient();
   const router = createRouter({
     routeTree,
-    context: { queryClient: new QueryClient() },
+    context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
   });
   await act(async () => {
@@ -34,6 +35,15 @@ export async function open(path: string) {
   await act(async () => {
     await router.load();
   });
+  // Reads a page starts on its own, outside its loader, settle before the test looks; a read
+  // that never answers is given a bounded number of turns.
+  for (let turn = 0; turn < 50; turn++) {
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    if (!queryClient.isFetching()) break;
+  }
+  return router;
 }
 
 /** The text an aria-labelledby points at; empty when the ids resolve to nothing. */

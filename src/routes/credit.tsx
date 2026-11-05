@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { FilterSelect } from "@/components/DataTable";
 import { StateBoundary } from "@/components/states";
 import {
@@ -33,7 +33,7 @@ import {
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { downloadFile, fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
-import { creditQuery, financeQuery, modelsQuery } from "@/repo/queries";
+import { creditQuery, explanationsQuery, financeQuery, modelsQuery } from "@/repo/queries";
 import { revenueGapInvestigation, useStore } from "@/store/app-store";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,10 @@ export const Route = createFileRoute("/credit")({
     await Promise.all([
       queryClient.ensureQueryData(creditQuery),
       queryClient.ensureQueryData(financeQuery),
-      queryClient.ensureQueryData(modelsQuery),
+      // The explanation links are extra: fetched here so they render on the server, but a failed
+      // read leaves the page standing (prefetch never throws) and just omits them.
+      queryClient.prefetchQuery(modelsQuery),
+      queryClient.prefetchQuery(explanationsQuery),
     ]);
   },
   head: () => ({
@@ -89,7 +92,8 @@ function CreditPage() {
   } = useSuspenseQuery(creditQuery).data;
   const division = useSuspenseQuery(financeQuery).data.departments.find((d) => d.id === "credit")!;
   // The credit models whose explanations the repository serves, linked to their explainability tab.
-  const { models, explanations } = useSuspenseQuery(modelsQuery).data;
+  const models = useQuery(modelsQuery).data?.models ?? [];
+  const explanations = useQuery(explanationsQuery).data ?? {};
   const explained = models.filter((m) => explanations[m.id]);
   const gapInv = useStore(revenueGapInvestigation);
   // Control: the whole portfolio, not the filtered rows, against the division it belongs to.
@@ -205,22 +209,24 @@ function CreditPage() {
         <span className="ml-auto self-center text-xs text-muted-foreground">
           Currency: USD · Period: FY2025 · {rows.length} portfolio slices
         </span>
-        <span className="self-center text-xs text-muted-foreground">
-          Model explanations:{" "}
-          {explained.map((m, i) => (
-            <Fragment key={m.id}>
-              {i > 0 && " · "}
-              <Link
-                to="/models/$id"
-                params={{ id: m.id }}
-                search={{ tab: "explainability" }}
-                className="text-foreground underline underline-offset-2"
-              >
-                {m.name}
-              </Link>
-            </Fragment>
-          ))}
-        </span>
+        {explained.length > 0 && (
+          <span className="self-center text-xs text-muted-foreground">
+            Model explanations:{" "}
+            {explained.map((m, i) => (
+              <Fragment key={m.id}>
+                {i > 0 && " · "}
+                <Link
+                  to="/models/$id"
+                  params={{ id: m.id }}
+                  search={{ tab: "explainability" }}
+                  className="text-foreground underline underline-offset-2"
+                >
+                  {m.name}
+                </Link>
+              </Fragment>
+            ))}
+          </span>
+        )}
       </div>
 
       <StateBoundary state={empty} label="portfolio slices">

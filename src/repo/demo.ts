@@ -316,6 +316,7 @@ export const demoRepo: Repository = {
         EXPLANATIONS.map((e) => [e.model, tag(globalImportance(e))]),
       ),
     }),
+    explain: async () => Object.fromEntries(EXPLANATIONS.map((e) => [e.model, e])),
     selectVersion: (model, version) =>
       set((s) => ({ modelVersion: { ...s.modelVersion, [model]: version } })),
     decide: (model, decision, comment) =>

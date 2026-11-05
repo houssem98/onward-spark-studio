@@ -11,7 +11,8 @@ test("importance bars grow from zero, and the keyboard reaches each and opens it
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/models/MDL-001?tab=explainability");
   const bars = page.locator("[data-importance-bar]");
-  await expect(bars.first()).toBeVisible();
+  // The bars follow the explanation read, which runs once the page is live (T9).
+  await expect(bars.first()).toBeVisible({ timeout: 60_000 });
   await expect
     .poll(() => bars.first().evaluate((b) => Object.keys(b).some((k) => k.startsWith("__react"))), {
       timeout: 60_000,
@@ -76,9 +77,13 @@ for (const [width, height] of [
       "Case explanation",
       "Review",
     ]);
-    expect(await stages.evaluateAll((s) => s.map((x) => x.getAttribute("data-state")))).toEqual(
-      Array(6).fill("success"),
-    );
+    // Explanations are read after the page (T9): wait for them, then five stages are complete and
+    // the review waits on a decision MDL-001 does not have.
+    await expect(stages.first()).toHaveAttribute("data-state", "success");
+    expect(await stages.evaluateAll((s) => s.map((x) => x.getAttribute("data-state")))).toEqual([
+      ...Array(5).fill("success"),
+      "pending",
+    ]);
     await expect(page.locator("h1")).toHaveCount(1);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -142,6 +147,32 @@ test("hovering a step that is not revealed yet shows no value", async ({ page })
   await expect(tooltip, "a revealed step shows its value").toContainText(baseline);
   await hover((await ticks.count()) - 1);
   await expect(tooltip).not.toContainText(output);
+});
+
+// L11 T9 (council C9): stepping by keyboard to either end keeps focus on the control used.
+test("focus stays on the step controls at the first and last step", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/models/MDL-001?tab=explainability");
+  const frame = page.locator("[data-case-waterfall]");
+  const forward = frame.getByRole("button", { name: "Step forward" });
+  await expect
+    .poll(() => forward.evaluate((b) => Object.keys(b).some((k) => k.startsWith("__react"))), {
+      timeout: 60_000,
+    })
+    .toBe(true);
+  const focused = () => page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
+  await forward.focus();
+  const last = Number(
+    (await frame.locator("text=/Step \\d+ of \\d+/").textContent())!.split(" of ")[1],
+  );
+  for (let i = 0; i < last; i++) await page.keyboard.press("Enter");
+  await expect(frame).toHaveAttribute("data-step", String(last));
+  expect(await focused()).toBe("Step forward");
+  await frame.getByRole("button", { name: "Step back" }).focus();
+  for (let i = 0; i < last; i++) await page.keyboard.press("Enter");
+  await expect(frame).toHaveAttribute("data-step", "0");
+  expect(await focused()).toBe("Step back");
 });
 
 // L11 T3: a case plays from the baseline to the output, and its last bar reads the output.

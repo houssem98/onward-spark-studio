@@ -57,6 +57,7 @@ export function ChartFrame({
   actions,
   className,
   activeRow,
+  headingLevel = 2,
   children,
 }: {
   title: string;
@@ -72,8 +73,11 @@ export function ChartFrame({
   className?: string;
   /** The table row the chart points at, by index: the one hovered or focused in the chart. */
   activeRow?: number | undefined;
+  /** 3 when the chart sits inside a section that has its own heading. */
+  headingLevel?: 2 | 3;
   children: ReactNode;
 }) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   const cols = columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }));
   const reduced = useReducedMotion();
   const ms = useMotionMs("--duration-data");
@@ -85,7 +89,7 @@ export function ChartFrame({
     <figure className={cn("m-0 min-w-0 rounded-md border bg-card", className)}>
       <figcaption className="flex items-start justify-between gap-3 border-b px-4 py-2.5">
         <div>
-          <h2 className="text-sm font-semibold">{title}</h2>
+          <Heading className="text-sm font-semibold">{title}</Heading>
           {description && <p className="text-xs text-muted-foreground">{description}</p>}
           <p className="text-xs text-muted-foreground">
             {unit} · {period} · Source: {source}

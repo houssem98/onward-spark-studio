@@ -17,8 +17,8 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { modelsQuery } from "@/repo/queries";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { explanationsQuery, modelsQuery } from "@/repo/queries";
 import {
   axisProps,
   CHART,
@@ -93,17 +93,19 @@ function ModelDetail() {
   const tab = asked && TABS.includes(asked) ? asked : "overview";
   const navigate = Route.useNavigate();
   const actions = useActions();
-  const {
-    models,
-    driftFeatures,
-    perfHistory,
-    forecast,
-    lgdScatter,
-    featureImportance,
-    explanations,
-  } = useSuspenseQuery(modelsQuery).data;
+  const { models, driftFeatures, perfHistory, forecast, lgdScatter, featureImportance } =
+    useSuspenseQuery(modelsQuery).data;
   const importance = featureImportance[id];
-  const explanation = explanations[id];
+  // Read apart from the page's own data: while it loads or if it fails, only the tab says so.
+  const explained = useQuery(explanationsQuery);
+  const explanation = explained.data?.[id];
+  const explainState = explained.isPending
+    ? "loading"
+    : explained.isError
+      ? "error"
+      : explanation
+        ? "success"
+        : "empty";
   const [pointed, setPointed] = useState<string | null>(null);
   const m = models.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
@@ -612,7 +614,9 @@ function ModelDetail() {
             </p>
           )}
           <Journey
-            state={explanation ? "success" : "empty"}
+            key={id}
+            state={explainState}
+            overrides={{ Review: decisions.length ? "success" : "pending" }}
             stateNote="Explainability evidence is not available for this model type."
             stages={
               explanation && {
@@ -621,6 +625,7 @@ function ModelDetail() {
                 "Global importance": (
                   <ChartFrame
                     title="Global feature importance"
+                    headingLevel={3}
                     unit="Mean |SHAP|, log-odds"
                     period={`${explanation.model} ${explanation.version}`}
                     source={explanation.source}
@@ -646,6 +651,11 @@ function ModelDetail() {
                 "Case explanation": <CaseWaterfall explanation={explanation} />,
                 Review: (
                   <p className="rounded-md border bg-card px-4 py-3 text-xs">
+                    {decisions.length
+                      ? `${decisions.at(-1)!.decision} by ${decisions.at(-1)!.by}, ${decisions.at(-1)!.at}.`
+                      : "No review decision is recorded for this model."}{" "}
+                    Open validation findings:{" "}
+                    {m.findings.filter((f) => (fStatus[f.id] ?? f.status) !== "Closed").length}.
                     Read these contributions alongside the validation results and the approval
                     record.{" "}
                     <Link

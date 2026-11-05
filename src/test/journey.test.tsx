@@ -26,13 +26,16 @@ const stage = (title: string) => document.querySelector<HTMLElement>(`[data-stag
 const pct = (logOdds: number) => `${(100 / (1 + Math.exp(-logOdds))).toFixed(1)}%`;
 
 describe("explanation journey (L11 T5)", () => {
-  it("reads in the journey order, every stage complete for an explained model", async () => {
+  it("reads in the journey order, every explanation stage complete and review pending until a decision is recorded", async () => {
     await open("/models/MDL-001?tab=explainability");
     expect(stages().map((s) => s.dataset["stage"])).toEqual([...ORDER]);
-    for (const s of stages()) {
+    for (const s of stages().slice(0, -1)) {
       expect(s.dataset["state"]).toBe("success");
       expect(s).toHaveTextContent("Complete");
     }
+    // MDL-001 has no recorded decision (T9, council C12).
+    expect(stages().at(-1)!.dataset["state"]).toBe("pending");
+    expect(stages().at(-1)).toHaveTextContent("Not reviewed");
   });
 
   it("states the inputs and the prediction from the same rows the charts read", async () => {

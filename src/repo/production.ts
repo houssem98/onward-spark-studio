@@ -24,6 +24,7 @@ export const productionRepo: Repository = {
   },
   models: {
     read: notConfigured,
+    explain: notConfigured,
     selectVersion: notConfigured,
     decide: notConfigured,
     setFindingStatus: notConfigured,

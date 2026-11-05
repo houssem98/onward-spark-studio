@@ -3,6 +3,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CheckCircle2,
+  CircleDashed,
   ChevronLeft,
   ChevronRight,
   Hourglass,
@@ -36,10 +37,12 @@ export const JOURNEY = [
   "Review",
 ] as const;
 type JourneyStage = (typeof JOURNEY)[number];
-type StageState = "loading" | "success" | "empty" | "error";
+type StageState = "loading" | "success" | "empty" | "error" | "pending";
 
 const STATUS: Record<StageState, { text: string; Icon: typeof Inbox; className: string }> = {
   loading: { text: "Loading", Icon: Hourglass, className: "text-muted-foreground" },
+  // Shown, but waiting on a person: the review stage before any decision is recorded.
+  pending: { text: "Not reviewed", Icon: CircleDashed, className: "text-muted-foreground" },
   success: { text: "Complete", Icon: CheckCircle2, className: "text-success" },
   empty: { text: "Unavailable", Icon: Inbox, className: "text-muted-foreground" },
   error: { text: "Failed", Icon: XCircle, className: "text-critical" },
@@ -53,10 +56,13 @@ export function Journey({
   state,
   stateNote,
   stages,
+  overrides,
 }: {
-  state: StageState;
+  state: Exclude<StageState, "pending">;
   stateNote?: string;
   stages?: Record<JourneyStage, ReactNode> | undefined;
+  /** A stage whose own state differs once the explanations are in, such as an unrecorded review. */
+  overrides?: Partial<Record<JourneyStage, StageState>>;
 }) {
   return (
     <div className="space-y-6">
@@ -64,20 +70,21 @@ export function Journey({
         <p className="text-xs text-muted-foreground">{stateNote}</p>
       )}
       {JOURNEY.map((title, i) => {
-        const s = STATUS[state];
+        const own = (state === "success" && overrides?.[title]) || state;
+        const s = STATUS[own];
         return (
-          <section key={title} data-stage={title} data-state={state} aria-label={title}>
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <span className="num text-muted-foreground">{i + 1}</span>
-              {title}
-              <span
-                className={`ml-auto inline-flex items-center gap-1 text-xs font-normal ${s.className}`}
-              >
+          <section key={title} data-stage={title} data-state={own} aria-label={title}>
+            <div className="mb-2 flex items-center gap-2">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <span className="num text-muted-foreground">{i + 1}</span>
+                {title}
+              </h2>
+              <span className={`ml-auto inline-flex items-center gap-1 text-xs ${s.className}`}>
                 <s.Icon className="size-3.5" aria-hidden />
                 {s.text}
               </span>
-            </h2>
-            <StateBoundary state={state} label={title}>
+            </div>
+            <StateBoundary state={own === "pending" ? "success" : own} label={title}>
               {stages?.[title]}
             </StateBoundary>
           </section>
@@ -184,6 +191,7 @@ export function Beeswarm({ explanation: e }: { explanation: ModelExplanation }) 
   return (
     <ChartFrame
       title="Contributions by case"
+      headingLevel={3}
       unit="SHAP contribution, log-odds"
       period={`${e.model} ${e.version}`}
       source={e.source}
@@ -230,7 +238,13 @@ export function Beeswarm({ explanation: e }: { explanation: ModelExplanation }) 
         </div>
       }
     >
-      <div className="overflow-x-auto">
+      {/* Focusable, so a keyboard can scroll the 960-wide drawing on a narrow screen. */}
+      <div
+        className="overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Contributions by case, scrollable"
+      >
         <svg
           data-beeswarm
           data-x0={LEFT}
@@ -325,10 +339,15 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
 
   useEffect(() => {
     if (!playing) return;
+    // Reduced motion turned on mid-play: no more timed steps, the final state at once.
+    if (reduced) {
+      setPlaying(false);
+      return setStep(last);
+    }
     if (at >= last) return setPlaying(false);
     const t = setTimeout(() => setStep(at + 1), ms * 2);
     return () => clearTimeout(t);
-  }, [playing, at, last, ms]);
+  }, [playing, at, last, ms, reduced]);
 
   const go = (n: number) => {
     setPlaying(false);
@@ -358,6 +377,7 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
     <div data-case-waterfall data-step={at} data-cumulative={cumulativeAt(b, at)}>
       <ChartFrame
         title="Case explanation"
+        headingLevel={3}
         unit="Log-odds of default"
         period={`${e.model} ${e.version}`}
         source={e.source}
@@ -406,7 +426,8 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
             size="sm"
             variant="outline"
             aria-label="Step back"
-            disabled={at === 0}
+            aria-disabled={at === 0}
+            className="aria-disabled:opacity-50"
             onClick={() => go(at - 1)}
           >
             <ChevronLeft className="size-4" />
@@ -415,7 +436,8 @@ export function CaseWaterfall({ explanation: e }: { explanation: ModelExplanatio
             size="sm"
             variant="outline"
             aria-label="Step forward"
-            disabled={at === last}
+            aria-disabled={at === last}
+            className="aria-disabled:opacity-50"
             onClick={() => go(at + 1)}
           >
             <ChevronRight className="size-4" />

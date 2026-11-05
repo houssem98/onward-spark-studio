@@ -31,6 +31,13 @@ export const modelsQuery = queryOptions({
   queryKey: ["models"],
   queryFn: () => repo.models.read(),
 });
+// Read by the page that shows it, not its loader, so the page stands while it loads or fails;
+// a failure is shown at once rather than retried behind a loading state.
+export const explanationsQuery = queryOptions({
+  queryKey: ["explanations"],
+  queryFn: () => repo.models.explain(),
+  retry: false,
+});
 export const investigationsQuery = queryOptions({
   queryKey: ["investigations"],
   queryFn: () => repo.investigations.read(),

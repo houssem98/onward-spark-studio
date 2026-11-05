@@ -86,13 +86,13 @@ describe("case waterfall (L11 T3)", () => {
     }
     expect(cumulative()).toBe(o.output);
     expect(line()).toHaveTextContent("Output");
-    expect(button("Step forward")).toBeDisabled();
+    expect(button("Step forward")).toHaveAttribute("aria-disabled", "true");
     press("Step back");
     expect(at()).toBe(b.steps.length - 1);
     press("Reset");
     expect(at()).toBe(0);
     expect(cumulative()).toBe(e.baseline);
-    expect(button("Step back")).toBeDisabled();
+    expect(button("Step back")).toHaveAttribute("aria-disabled", "true");
   });
 
   it("plays to the output, telling increase from decrease by sign and icon as well as colour", async () => {

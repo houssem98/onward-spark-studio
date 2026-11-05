@@ -166,6 +166,8 @@ export interface Repository {
   };
   models: {
     read(): Promise<ModelsData>;
+    /** The explanations alone, read apart so a failure here leaves the rest of a page standing. */
+    explain(): Promise<Record<string, ModelExplanation>>;
     selectVersion(model: string, version: string): Promise<void>;
     decide(model: string, decision: "Approved" | "Rejected", comment: string): Promise<void>;
     setFindingStatus(id: string, status: FindingStatus): Promise<void>;
