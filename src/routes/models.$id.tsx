@@ -33,7 +33,7 @@ import {
   KpiBand,
 } from "@/components/kit";
 import { ChartFrame, ImportanceBars } from "@/components/charts";
-import { CaseWaterfall } from "@/components/explain";
+import { Beeswarm, CaseWaterfall } from "@/components/explain";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -619,7 +619,12 @@ function ModelDetail() {
               onActive={setPointed}
             />
           </ChartFrame>
-          {explanations[id] && <CaseWaterfall explanation={explanations[id]} />}
+          {explanations[id] && (
+            <>
+              <Beeswarm explanation={explanations[id]} />
+              <CaseWaterfall explanation={explanations[id]} />
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="governance" className="mt-4 grid gap-4 lg:grid-cols-2">

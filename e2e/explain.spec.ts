@@ -47,6 +47,31 @@ test("importance bars grow from zero, and the keyboard reaches each and opens it
   }
 });
 
+// L11 T4: every beeswarm point travels once from zero and comes to rest where its contribution is.
+test("beeswarm points travel once from zero and rest at their contribution", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/models/MDL-001?tab=explainability");
+  const swarm = page.locator("svg[data-beeswarm]");
+  await expect(swarm).toBeVisible();
+  const off = await swarm.evaluate(async (svg) => {
+    const points = [...svg.querySelectorAll<SVGCircleElement>("circle[data-case]")];
+    const travelling = points.filter((p) =>
+      p.getAnimations().some((a) => (a as CSSAnimation).animationName === "point-travel"),
+    );
+    await Promise.all(points.flatMap((p) => p.getAnimations().map((a) => a.finished)));
+    const left = svg.getBoundingClientRect().left;
+    const misplaced = points.filter((p) => {
+      const r = p.getBoundingClientRect();
+      return Math.abs(r.left + r.width / 2 - left - Number(p.getAttribute("cx"))) > 0.5;
+    });
+    return { points: points.length, travelling: travelling.length, misplaced: misplaced.length };
+  });
+  expect(off.points).toBeGreaterThanOrEqual(200);
+  expect(off.travelling, "every point travels").toBe(off.points);
+  expect(off.misplaced, "every point rests at its contribution").toBe(0);
+});
+
 // L11 T3: a case plays from the baseline to the output, and its last bar reads the output.
 test("a case plays to the end and its final label is the output", async ({ page }) => {
   test.setTimeout(120_000);

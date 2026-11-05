@@ -115,7 +115,7 @@ export function ChartFrame({
                       className={cn("border-b last:border-0", i === activeRow && "bg-accent")}
                     >
                       {cols.map((c) => (
-                        <td key={c.key} className="num px-2 py-1">
+                        <td key={c.key} className="num whitespace-nowrap px-2 py-1">
                           {r[c.key] === null ? UNAVAILABLE : (r[c.key] ?? "—")}
                         </td>
                       ))}
