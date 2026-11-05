@@ -30,25 +30,32 @@ const button = (name: string) =>
 const read = async (id = "MDL-001") => (await demoRepo.models.read()).explanations[id]!;
 
 describe("council fixes: states, keyboard and reduced motion (L11 T9)", () => {
-  it("C5: stages load and fail with the explanation read, and the page and the credit page stand", async () => {
-    vi.spyOn(demoRepo.models, "explain").mockReturnValue(new Promise(() => {}));
-    await open(PATH);
-    expect(states()).toEqual(ORDER.map(() => "loading"));
-    expect(stage("Prediction").querySelector('[role="status"][aria-busy="true"]')).not.toBeNull();
-    expect(document.querySelector("h1")).not.toBeNull();
-    cleanup();
-    vi.restoreAllMocks();
+  // Three page opens, one of them waiting out a read that never answers.
+  it(
+    "C5: stages load and fail with the explanation read, and the page and the credit page stand",
+    {
+      timeout: 20_000,
+    },
+    async () => {
+      vi.spyOn(demoRepo.models, "explain").mockReturnValue(new Promise(() => {}));
+      await open(PATH);
+      expect(states()).toEqual(ORDER.map(() => "loading"));
+      expect(stage("Prediction").querySelector('[role="status"][aria-busy="true"]')).not.toBeNull();
+      expect(document.querySelector("h1")).not.toBeNull();
+      cleanup();
+      vi.restoreAllMocks();
 
-    vi.spyOn(demoRepo.models, "explain").mockRejectedValue(new Error("explanations down"));
-    await open(PATH);
-    expect(states()).toEqual(ORDER.map(() => "error"));
-    expect(stage("Prediction").querySelector('[role="alert"]')).not.toBeNull();
-    expect(document.querySelector("h1")).not.toBeNull();
-    cleanup();
-    await open("/credit");
-    expect(document.querySelector("h1")).toHaveTextContent("Credit Intelligence");
-    expect(document.querySelector('a[href*="tab=explainability"]')).toBeNull();
-  });
+      vi.spyOn(demoRepo.models, "explain").mockRejectedValue(new Error("explanations down"));
+      await open(PATH);
+      expect(states()).toEqual(ORDER.map(() => "error"));
+      expect(stage("Prediction").querySelector('[role="alert"]')).not.toBeNull();
+      expect(document.querySelector("h1")).not.toBeNull();
+      cleanup();
+      await open("/credit");
+      expect(document.querySelector("h1")).toHaveTextContent("Credit Intelligence");
+      expect(document.querySelector('a[href*="tab=explainability"]')).toBeNull();
+    },
+  );
 
   it("C8: a change of model starts the tab afresh", async () => {
     const router = await open(PATH);

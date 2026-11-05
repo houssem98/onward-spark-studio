@@ -47,10 +47,29 @@ describe("honest copy", () => {
 
   // L11 T3: an explanation describes how the model scored a case, never what caused the outcome.
   it("words every explanation as the model's behaviour, never as a cause", () => {
+    // "causes" too, but not the caveat's own "not causes" (L11 T10, council C7).
     const CAUSAL =
-      /\b(because|due to|caused?|causing|drove|drives|driven by|led to|leads to|results? in|resulted in|reason for)\b/i;
-    const copy = ["src/lib/explain.ts", "src/components/explain.tsx"];
-    expect(copy.filter((f) => CAUSAL.test(text(f)))).toEqual([]);
+      /\b(because|due to|(?<!not )causes?|caused|causing|drove|drives|driven by|led to|leads to|results? in|resulted in|reason for|responsible for|therefore|pushes|pushed)\b/i;
+    const route = text("src/routes/models.$id.tsx");
+    const start = route.indexOf('<TabsContent value="explainability"');
+    // Every file that carries explanation copy, and the route's explainability tab alone, since
+    // its other tabs describe the monitoring system, not a model's behaviour.
+    const copy: Record<string, string> = {
+      "src/lib/explain.ts": text("src/lib/explain.ts"),
+      "src/components/explain.tsx": text("src/components/explain.tsx"),
+      "src/components/charts.tsx": text("src/components/charts.tsx"),
+      "src/data/explanations.ts": text("src/data/explanations.ts"),
+      "src/routes/models.$id.tsx (explainability tab)": route.slice(
+        start,
+        route.indexOf("</TabsContent>", start),
+      ),
+    };
+    expect(copy["src/routes/models.$id.tsx (explainability tab)"]!.length).toBeGreaterThan(500);
+    expect(
+      Object.entries(copy)
+        .filter(([, t]) => CAUSAL.test(t))
+        .map(([f]) => f),
+    ).toEqual([]);
     expect(text("src/lib/explain.ts")).toContain(
       "Contributions describe how the model scored this case, not causes",
     );

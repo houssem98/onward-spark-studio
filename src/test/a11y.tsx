@@ -37,7 +37,7 @@ export async function open(path: string) {
   });
   // Reads a page starts on its own, outside its loader, settle before the test looks; a read
   // that never answers is given a bounded number of turns.
-  for (let turn = 0; turn < 50; turn++) {
+  for (let turn = 0; turn < 10; turn++) {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 0));
     });

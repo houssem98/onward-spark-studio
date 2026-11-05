@@ -175,6 +175,30 @@ test("focus stays on the step controls at the first and last step", async ({ pag
   expect(await focused()).toBe("Step back");
 });
 
+// L11 T10 (council C18): under reduced motion the bars, the points and the case land at once.
+test.describe("under reduced motion", () => {
+  test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+  test("bars, beeswarm points and the case are placed at once", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/models/MDL-001?tab=explainability");
+    const frame = page.locator("[data-case-waterfall]");
+    await expect(frame).toBeVisible({ timeout: 60_000 });
+    const moving = await page.evaluate(() => {
+      const els = [...document.querySelectorAll("[data-bar-fill], circle[data-case]")];
+      const timed = els
+        .flatMap((el) => el.getAnimations())
+        .filter((a) => Number(a.effect?.getComputedTiming().duration ?? 0) > 1);
+      return { elements: els.length, timed: timed.length };
+    });
+    expect(moving.elements).toBeGreaterThan(200);
+    expect(moving.timed, "animations longer than 1 ms").toBe(0);
+    const last = (await frame.locator("text=/Step \\d+ of \\d+/").textContent())!.split(" of ")[1];
+    await expect(frame).toHaveAttribute("data-step", last!);
+  });
+});
+
 // L11 T3: a case plays from the baseline to the output, and its last bar reads the output.
 test("a case plays to the end and its final label is the output", async ({ page }) => {
   test.setTimeout(120_000);
