@@ -32,7 +32,7 @@ import {
   TYPE,
   KpiBand,
 } from "@/components/kit";
-import { ChartFrame } from "@/components/charts";
+import { ChartFrame, ImportanceBars } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,8 +86,17 @@ function ModelDetail() {
   const tab = asked && TABS.includes(asked) ? asked : "overview";
   const navigate = Route.useNavigate();
   const actions = useActions();
-  const { models, driftFeatures, perfHistory, forecast, lgdScatter, featureImportance } =
-    useSuspenseQuery(modelsQuery).data;
+  const {
+    models,
+    driftFeatures,
+    perfHistory,
+    forecast,
+    lgdScatter,
+    featureImportance,
+    explanations,
+  } = useSuspenseQuery(modelsQuery).data;
+  const importance = featureImportance[id];
+  const [pointed, setPointed] = useState<string | null>(null);
   const m = models.find((x) => x.id === id)!;
   const lifecycle = useStore((s) => s.modelLifecycle[id]);
   const version = useStore((s) => s.modelVersion[id]);
@@ -593,22 +602,21 @@ function ModelDetail() {
             unit="Mean |SHAP|"
             period="Validation sample"
             source="Synthetic validation sample (demo data)"
-            rows={featureImportance[id] ?? []}
+            rows={importance ?? []}
             columns={[
               { key: "feature", header: "Feature" },
               { key: "value", header: "Mean |SHAP|" },
             ]}
-            state={featureImportance[id] ? "success" : "empty"}
+            state={importance ? "success" : "empty"}
             stateNote="Explainability evidence is not available for this model type."
+            activeRow={importance?.findIndex((r) => r.feature === pointed)}
           >
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={featureImportance[id] ?? []} layout="vertical" margin={{ left: 40 }}>
-                <XAxis type="number" {...axisProps} />
-                <YAxis type="category" dataKey="feature" {...axisProps} width={130} />
-                <Tooltip {...tooltipStyle} />
-                <Bar dataKey="value" fill={CHART.c1} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ImportanceBars
+              rows={importance ?? []}
+              definitions={explanations[id]?.definitions ?? {}}
+              active={pointed}
+              onActive={setPointed}
+            />
           </ChartFrame>
         </TabsContent>
 

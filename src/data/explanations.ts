@@ -27,6 +27,7 @@ interface Feature {
   score?: (value: number) => number;
   /** Signed spread of the contribution on the log-odds scale. */
   weight: number;
+  definition: string;
 }
 
 function explain(
@@ -69,6 +70,7 @@ function explain(
     scale: "log-odds",
     baseline,
     features: features.map((f) => f.name),
+    definitions: Object.fromEntries(features.map((f) => [f.name, f.definition])),
     observations,
     source: SOURCE,
     synthetic: true,
@@ -81,11 +83,36 @@ const SECTORS = Object.keys(SECTOR_RISK).map(Number);
 export const EXPLANATIONS: ModelExplanation[] = [
   // Retail PD Scorecard: baseline log-odds of a 10% probability of default.
   explain("MDL-001", "3.2.0", -2.1972, "APP", 1001, [
-    { name: "bureau_score", draw: (r) => Math.round(520 + r() * 300), weight: -0.55 },
-    { name: "dti_ratio", draw: (r) => Math.round((0.08 + r() * 0.5) * 100) / 100, weight: 0.42 },
-    { name: "months_on_book", draw: (r) => Math.round(r() * 120), weight: -0.24 },
-    { name: "revolving_util", draw: (r) => Math.round(r() * 100) / 100, weight: 0.2 },
-    { name: "income_verified", draw: (r) => (r() < 0.7 ? 1 : 0), weight: -0.13 },
+    {
+      name: "bureau_score",
+      draw: (r) => Math.round(520 + r() * 300),
+      weight: -0.55,
+      definition: "Credit bureau score at application, on a 300 to 850 scale.",
+    },
+    {
+      name: "dti_ratio",
+      draw: (r) => Math.round((0.08 + r() * 0.5) * 100) / 100,
+      weight: 0.42,
+      definition: "Monthly debt payments divided by gross monthly income, at application.",
+    },
+    {
+      name: "months_on_book",
+      draw: (r) => Math.round(r() * 120),
+      weight: -0.24,
+      definition: "Months the applicant has held any account with the bank.",
+    },
+    {
+      name: "revolving_util",
+      draw: (r) => Math.round(r() * 100) / 100,
+      weight: 0.2,
+      definition: "Share of bureau-reported revolving credit limits in use.",
+    },
+    {
+      name: "income_verified",
+      draw: (r) => (r() < 0.7 ? 1 : 0),
+      weight: -0.13,
+      definition: "1 when the stated income was checked against documents, 0 when it was not.",
+    },
   ]),
   // SME Credit Risk Model: baseline log-odds of a 5% probability of default.
   explain("MDL-002", "2.4.1", -2.9444, "SME", 2002, [
@@ -93,15 +120,33 @@ export const EXPLANATIONS: ModelExplanation[] = [
       name: "debt_service_coverage",
       draw: (r) => Math.round((0.6 + r() * 2.4) * 100) / 100,
       weight: -0.5,
+      definition: "Operating cash flow over the last 12 months divided by scheduled debt service.",
     },
-    { name: "utilization_rate", draw: (r) => Math.round(r() * 100) / 100, weight: 0.37 },
+    {
+      name: "utilization_rate",
+      draw: (r) => Math.round(r() * 100) / 100,
+      weight: 0.37,
+      definition: "Share of committed facility limits drawn at the review date.",
+    },
     {
       name: "sector_code",
       draw: (r) => SECTORS[Math.floor(r() * SECTORS.length)]!,
       score: (code) => SECTOR_RISK[code]!,
       weight: 0.28,
+      definition:
+        "Section code of the borrower's main activity; the model reads it through a sector risk index.",
     },
-    { name: "years_in_business", draw: (r) => Math.round(1 + r() * 29), weight: -0.22 },
-    { name: "revenue_band", draw: (r) => 1 + Math.floor(r() * 5), weight: -0.15 },
+    {
+      name: "years_in_business",
+      draw: (r) => Math.round(1 + r() * 29),
+      weight: -0.22,
+      definition: "Years since the business was incorporated.",
+    },
+    {
+      name: "revenue_band",
+      draw: (r) => 1 + Math.floor(r() * 5),
+      weight: -0.15,
+      definition: "Annual revenue band, from 1 (smallest) to 5 (largest).",
+    },
   ]),
 ];

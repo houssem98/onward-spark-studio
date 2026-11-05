@@ -13,7 +13,7 @@ import {
   YAxis,
   ReferenceLine,
 } from "recharts";
-import { Children, cloneElement, isValidElement, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useId, useState, type ReactNode } from "react";
 import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
@@ -54,6 +54,7 @@ export function ChartFrame({
   description,
   actions,
   className,
+  activeRow,
   children,
 }: {
   title: string;
@@ -67,6 +68,8 @@ export function ChartFrame({
   description?: string;
   actions?: ReactNode;
   className?: string;
+  /** The table row the chart points at, by index: the one hovered or focused in the chart. */
+  activeRow?: number | undefined;
   children: ReactNode;
 }) {
   const cols = columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }));
@@ -106,7 +109,11 @@ export function ChartFrame({
                 </thead>
                 <tbody>
                   {rows.map((r, i) => (
-                    <tr key={i} className="border-b last:border-0">
+                    <tr
+                      key={i}
+                      data-active={i === activeRow || undefined}
+                      className={cn("border-b last:border-0", i === activeRow && "bg-accent")}
+                    >
                       {cols.map((c) => (
                         <td key={c.key} className="num px-2 py-1">
                           {r[c.key] === null ? UNAVAILABLE : (r[c.key] ?? "—")}
@@ -121,6 +128,73 @@ export function ChartFrame({
         </StateBoundary>
       </div>
     </figure>
+  );
+}
+
+/**
+ * Features ranked by importance as bars that grow from zero to their value. Each bar is a button:
+ * hovering or focusing it points at its table row through `onActive`, activating it opens the
+ * feature's definition below the bars.
+ */
+export function ImportanceBars({
+  rows,
+  definitions,
+  active,
+  onActive,
+}: {
+  rows: { feature: string; value: number }[];
+  definitions: Record<string, string>;
+  active: string | null;
+  onActive: (feature: string | null) => void;
+}) {
+  const [open, setOpen] = useState<string | null>(null);
+  const id = useId();
+  const max = Math.max(0, ...rows.map((r) => r.value)) || 1;
+  return (
+    <div>
+      <ul className="space-y-1" aria-label="Features ranked by importance">
+        {rows.map((r) => (
+          <li key={r.feature}>
+            <button
+              type="button"
+              data-importance-bar
+              data-feature={r.feature}
+              data-value={r.value}
+              aria-expanded={open === r.feature}
+              aria-controls={id}
+              onMouseEnter={() => onActive(r.feature)}
+              onMouseLeave={() => onActive(null)}
+              onFocus={() => onActive(r.feature)}
+              onBlur={() => onActive(null)}
+              onClick={() => setOpen(open === r.feature ? null : r.feature)}
+              className={cn(
+                "grid w-full grid-cols-[minmax(0,10rem)_1fr_4.5rem] items-center gap-3 rounded-md px-2 py-1 text-left text-xs hover:bg-accent/50",
+                active === r.feature && "bg-accent",
+              )}
+            >
+              <span className="truncate font-mono">{r.feature}</span>
+              <span className="h-3 rounded-sm bg-muted">
+                <span
+                  data-bar-fill
+                  className="bar-grow block h-full rounded-sm"
+                  style={{ width: `${(r.value / max) * 100}%`, background: CHART.c1 }}
+                />
+              </span>
+              <span className="num text-right">{r.value.toFixed(4)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div id={id} aria-live="polite" className="mt-3 border-t pt-2 text-xs">
+        {open ? (
+          <p>
+            <span className="font-mono font-medium">{open}</span>: {definitions[open]}
+          </p>
+        ) : (
+          <p className="text-muted-foreground">Select a feature to read its definition.</p>
+        )}
+      </div>
+    </div>
   );
 }
 

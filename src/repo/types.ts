@@ -70,6 +70,8 @@ export interface ModelExplanation {
   scale: "log-odds";
   baseline: number;
   features: string[];
+  /** What each feature measures, in plain words. */
+  definitions: Record<string, string>;
   observations: ExplainedObservation[];
   source: string;
   synthetic: true;

@@ -239,6 +239,16 @@
 [data-stagger] > :nth-child(5) { --reveal-step: 4; }
 [data-stagger] > :nth-child(n + 6) { --reveal-step: 5; }
 
+/* Ranked bars grow from zero to their value, once; the reduced-motion rule lands them at once. */
+.bar-grow {
+  transform-origin: left;
+  animation: bar-grow var(--duration-data) var(--ease-enter) both;
+}
+
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+}
+
 @keyframes page-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
