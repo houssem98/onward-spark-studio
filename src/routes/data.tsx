@@ -274,7 +274,7 @@ function DataPage() {
                       y={18}
                       fontSize={TYPE.micro}
                       fill={sel ? "var(--cyan)" : "var(--muted-foreground)"}
-                      style={{ textTransform: "uppercase", letterSpacing: 1 }}
+                      style={{ textTransform: "capitalize" }}
                     >
                       {n.type}
                     </text>

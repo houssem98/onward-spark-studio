@@ -123,9 +123,7 @@ function NavList({
       {NAV_GROUPS.map((g) => (
         <div key={g.label}>
           {!collapsed && (
-            <p className="mb-1.5 px-3 text-micro font-semibold uppercase tracking-[0.12em] text-ink-muted">
-              {g.label}
-            </p>
+            <p className="mb-1.5 px-3 text-micro font-medium text-ink-muted">{g.label}</p>
           )}
           <div className="space-y-0.5">
             {g.items.map((n) => {

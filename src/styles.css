@@ -162,9 +162,7 @@
 
 @utility eyebrow {
   font-size: var(--text-caption);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted-foreground);
 }
 

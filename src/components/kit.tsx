@@ -169,7 +169,7 @@ export function EvidenceBadge({
               setOpen((o) => !o);
             }}
             className={cn(
-              "inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption font-semibold uppercase leading-none tracking-wide",
+              "inline-flex cursor-help items-center gap-1 whitespace-nowrap rounded-sm border px-1.5 py-0.5 text-caption font-medium leading-none",
               toneCls[e.tone],
             )}
           >
@@ -185,7 +185,7 @@ export function EvidenceBadge({
 
 export function SyntheticTag({ label = "Synthetic demo data" }: { label?: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-sm border border-dashed border-cyan/60 bg-cyan/5 px-1.5 py-0.5 text-micro font-medium uppercase tracking-wider text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-sm border border-dashed border-cyan/60 bg-cyan/5 px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
       <FlaskConical className="h-3 w-3 text-cyan" aria-hidden />
       {label}
     </span>

@@ -2,7 +2,7 @@
 // border-collapse a row border stays behind when its sticky cells move.
 export const REGISTER_BOX = "max-h-[70vh] overflow-auto";
 export const REGISTER_HEAD =
-  "sticky top-0 z-10 whitespace-nowrap bg-muted text-left text-caption font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]";
+  "sticky top-0 z-10 whitespace-nowrap bg-muted text-left text-caption font-medium text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]";
 export const REGISTER_TH = `${REGISTER_HEAD} px-cell-x py-cell-y`;
 
 // Read as one token, so never wrapped: identifiers (prefix-number, e.g. ABC-123), dates,
