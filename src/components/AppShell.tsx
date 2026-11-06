@@ -253,7 +253,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-20">
           <EnvironmentBanner environment={repo.environment} />
-          <header className="no-print flex h-16 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur md:px-6">
+          <header className="no-print flex h-16 items-center gap-3 border-b bg-card px-4 md:px-6">
             <button
               className="rounded-md p-2 hover:bg-muted md:hidden"
               aria-label="Open navigation"
@@ -349,7 +349,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sheet open={mobileNav} onOpenChange={setMobileNav}>
         <SheetContent
           side="left"
-          className="flex w-[270px] flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+          className="flex w-[272px] flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
