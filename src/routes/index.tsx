@@ -99,11 +99,6 @@ function Overview() {
   const openAlerts = alerts.filter((a) => a.status !== "Closed");
   const dqAvg = mean(dqDimensions.flatMap((d) => (d.score === null ? [] : [d.score])));
   const series = range === "8q" ? quarterlyRevenue : quarterlyRevenue.slice(4);
-  const col = (k: string) => quarterlyRevenue.map((x) => Number(x[k]));
-  const cirSpark = quarterlyRevenue.flatMap((x) => {
-    const c = costToIncome(Number(x["expenses"]), Number(x["total"]));
-    return c === null ? [] : [c];
-  });
 
   const candidates = [
     ...issues
@@ -279,17 +274,17 @@ function Overview() {
           basis
           def="operating_income"
           value={fmtM(rev, 0)}
-          delta={`${fmtPct(growth(rev, prior))} YoY`}
+          delta={fmtPct(growth(rev, prior))}
+          versus="vs FY2024"
           deltaGood
-          spark={col("total")}
         />
         <Kpi
           basis
           def="cost_to_income"
           value={fmtPct(costToIncome(opex, rev))}
           delta={fmtFixed(cirChange, 1, "pp")}
+          versus="vs FY2024"
           deltaGood={cirChange !== null && cirChange < 0}
-          spark={cirSpark}
         />
         <Kpi basis def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
         <Kpi basis def="outstanding_balance" value={fmtM(bal, 0)} />

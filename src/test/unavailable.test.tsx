@@ -13,13 +13,16 @@ describe("a value with a zero denominator", () => {
         <Kpi
           def="npl_ratio"
           value={fmtPct(pct(1, 0), 2)}
-          delta={`${fmtPct(growth(1, 0))} YoY`}
+          delta={fmtPct(growth(1, 0))}
+          versus="vs FY2024"
           deltaGood
         />
       </TooltipProvider>,
     );
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Unavailable YoY").className).not.toMatch(/text-success|text-critical/);
+    expect(screen.getByText("Unavailable vs FY2024").className).not.toMatch(
+      /text-success|text-critical/,
+    );
   });
 
   it("shows as Unavailable in a chart frame's table", () => {

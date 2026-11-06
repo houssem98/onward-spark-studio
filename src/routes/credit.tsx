@@ -234,7 +234,8 @@ function CreditPage() {
           <Kpi
             def="outstanding_balance"
             value={fmtM(bal, 0)}
-            delta={`${fmtPct(growth(bal, prior))} YoY`}
+            delta={fmtPct(growth(bal, prior))}
+            versus="vs prior year"
             deltaGood
           />
           <Kpi def="new_originations" value={fmtM(orig, 0)} />
@@ -401,11 +402,13 @@ function CreditPage() {
                 def="stressed_ecl"
                 value={fmtM(ecl * sc.eclMultiplier)}
                 delta={`×${sc.eclMultiplier}`}
+                versus="vs Baseline"
               />
               <Kpi
                 def="stressed_npl_ratio"
                 value={fmtPct(nplRatio === null ? null : nplRatio + sc.nplShift, 2)}
                 delta={`+${sc.nplShift}pp`}
+                versus="vs Baseline"
               />
             </KpiBand>
           </StateBoundary>

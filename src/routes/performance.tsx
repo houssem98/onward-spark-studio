@@ -219,31 +219,36 @@ function PerformancePage() {
             <Kpi
               def="operating_income"
               value={fmtM(rev, 0)}
-              delta={`${fmtPct(growth(rev, b.nii + b.nonInterest))} YoY`}
+              delta={fmtPct(growth(rev, b.nii + b.nonInterest))}
+              versus="vs FY2024"
               deltaGood
             />
             <Kpi
               def="net_interest_income"
               value={fmtM(a.nii, 0)}
               delta={fmtPct(growth(a.nii, b.nii))}
+              versus="vs FY2024"
               deltaGood
             />
             <Kpi
               def="nim"
               value={fmtPct(nim, 2)}
               delta={fmtFixed(diff(nim, pct(b.nii, b.avgEarningAssets)), 2, "pp")}
+              versus="vs FY2024"
               deltaGood={false}
             />
             <Kpi
               def="non_interest_income"
               value={fmtM(a.nonInterest, 0)}
               delta={fmtPct(growth(a.nonInterest, b.nonInterest))}
+              versus="vs FY2024"
               deltaGood
             />
             <Kpi
               def="operating_expenses"
               value={fmtM(opex, 0)}
               delta={fmtPct(growth(opex, priorOpex))}
+              versus="vs FY2024"
               deltaGood={false}
             />
             <Kpi def="cost_to_income" value={fmtPct(ns.cir)} />

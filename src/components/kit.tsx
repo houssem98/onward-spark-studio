@@ -335,11 +335,11 @@ export function Kpi({
   value,
   sub,
   delta,
+  versus,
   deltaGood,
   status,
   state,
   stateNote,
-  spark,
   size = "md",
   basis = false,
   className,
@@ -347,17 +347,19 @@ export function Kpi({
   def: DefinitionId;
   value: string;
   sub?: string;
-  delta?: string;
-  deltaGood?: boolean;
   status?: ReactNode;
   state?: DataState;
   stateNote?: string;
-  spark?: number[];
   size?: "md" | "lg";
   /** States unit, period and source in the tile, not only in the tooltip. */
   basis?: boolean;
   className?: string | undefined;
-}) {
+} &
+  // A change always says what it compares to, such as "vs FY2024".
+  (
+    | { delta: string; versus: string; deltaGood?: boolean }
+    | { delta?: undefined; versus?: undefined; deltaGood?: undefined }
+  )) {
   const flat = useContext(InBand);
   const d: Definition = DEFINITIONS[def];
   const caption = sub ?? d.sub;
@@ -398,23 +400,22 @@ export function Kpi({
         </Tooltip>
       </div>
       <StateBoundary state={state} label={d.label} note={stateNote}>
-        <div className="flex items-end justify-between gap-3">
-          <div
-            data-kpi-value
-            className={cn(
-              "mt-2 num shrink-0 font-semibold tracking-tight",
-              size === "lg" ? "text-3xl" : "text-2xl",
-            )}
-          >
-            <Figure text={value} />
-          </div>
-          {spark && spark.length > 1 && <Sparkline data={spark} good={deltaGood} />}
+        <div
+          data-kpi-value
+          className={cn(
+            "mt-2 num shrink-0 font-semibold tracking-tight",
+            size === "lg" ? "text-3xl" : "text-2xl",
+          )}
+        >
+          <Figure text={value} />
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {delta && (
             <span
+              data-kpi-delta
+              data-versus={versus}
               className={cn(
-                "num inline-flex items-center rounded-full px-1.5 py-0.5 font-medium",
+                "num inline-flex items-center whitespace-nowrap rounded-full px-1.5 py-0.5 font-medium",
                 tone === undefined
                   ? "bg-muted"
                   : tone
@@ -423,7 +424,7 @@ export function Kpi({
               )}
             >
               {tone === undefined || !sign ? "" : sign > 0 ? "▲ " : "▼ "}
-              {delta}
+              {delta} {versus}
             </span>
           )}
           {caption && <span>{caption}</span>}
@@ -436,41 +437,6 @@ export function Kpi({
         </p>
       )}
     </div>
-  );
-}
-
-export function Sparkline({ data, good }: { data: number[]; good?: boolean | undefined }) {
-  const w = 84,
-    h = 30;
-  const min = Math.min(...data),
-    max = Math.max(...data);
-  const d = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w;
-      const y = h - 2 - ((v - min) / (max - min || 1)) * (h - 4);
-      return `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const stroke = good === false ? "var(--critical)" : good ? "var(--success)" : "var(--primary)";
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      preserveAspectRatio="none"
-      aria-hidden
-      data-sparkline
-      className="h-[30px] w-[84px] min-w-0 shrink"
-    >
-      <path d={`${d} L${w},${h} L0,${h} Z`} fill={stroke} opacity={0.08} />
-      <path
-        d={d}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={1.6}
-        vectorEffect="non-scaling-stroke"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 

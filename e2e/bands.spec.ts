@@ -42,7 +42,7 @@ for (const [width, height] of [
   [768, 1024],
   [390, 844],
 ] as const) {
-  test(`KPI bands fill their rows, share a baseline and hold their sparklines at ${width}px`, async ({
+  test(`KPI bands fill their rows, share a baseline and hold no drawing at ${width}px`, async ({
     page,
   }) => {
     test.setTimeout(240_000);
@@ -77,12 +77,11 @@ for (const [width, height] of [
               out.push(`row ending ${name}: value bottoms ${bottoms.join(",")}`);
           }
           for (const t of tiles) {
-            const spark = t.querySelector("svg[data-sparkline]");
-            if (!spark) continue;
-            const edge =
-              t.getBoundingClientRect().right - parseFloat(getComputedStyle(t).paddingRight);
-            const over = Math.round(spark.getBoundingClientRect().right - edge);
-            if (over > 0) out.push(`${t.dataset["definition"]}: sparkline ${over}px past the tile`);
+            const drawn = [...t.querySelectorAll("svg")].filter(
+              (s) => !s.closest('[aria-label^="Definition of"]'),
+            );
+            if (drawn.length)
+              out.push(`${t.dataset["definition"]}: ${drawn.length} drawing in the tile`);
           }
         }
         return { bands: bands.length, out };
