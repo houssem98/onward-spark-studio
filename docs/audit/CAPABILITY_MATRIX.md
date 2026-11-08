@@ -62,7 +62,7 @@ History: L0 T4 wrote 32 rows (partial 17, mocked 13, broken 1, absent 1). L0 T3 
 
 ## Exports
 
-Since L3 T5 every export asks the server before it downloads (`src/repo/export.ts#export async function exportFile(`): in production the database checks the role and writes an audit event, refusals included, and only executive, reviewer, model validator and admin may export; the demo adapter records the event and allows it (`src/repo/demo.ts#module: "Export"`). The file itself is still built in the browser from data the user could already read (`src/lib/calc.ts#export function downloadFile(`).
+Since L3 T5 every export asks the server before it downloads (`src/repo/export.ts#export async function exportFile(`): in production the database checks the role and writes an audit event, refusals included, and only executive, reviewer, model validator and admin may export; the demo adapter records the event and allows it (`src/repo/demo.ts#module: "Export"`). The file itself is still built in the browser from data the user could already read (`src/lib/calc.ts#export function downloadFile(`). So the export check governs the app's export buttons only. Any role can read its org's records straight from the data API, as CSV too, without asking the server and without an event; the L3 T8 council reproduced this as a credit analyst. A database cannot tell an export from a read, so holding data back from a role means not letting that role read it.
 
 | kind | id | status | evidence | known by |
 |---|---|---|---|---|

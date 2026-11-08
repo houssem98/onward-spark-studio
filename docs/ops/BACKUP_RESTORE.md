@@ -10,7 +10,7 @@ How BankIntelli's Postgres database on Supabase is backed up, how it is restored
 ## What a backup is made of
 
 - **Schema:** the migrations in `supabase/migrations/`, kept in git. Rebuilding a database from them is tested on every gate run (`src/test/migrations.test.ts#every migration and the seed apply cleanly to an empty database`).
-- **Data:** a data-only dump of the database, `auth.users` included.
+- **Data:** a data-only dump of the database. Supabase's restore guide states that this dump includes `auth.users`, so user accounts come back with it.
 - **Not in any dump:** project settings kept in the Supabase dashboard: API keys and JWT secret, sign-up and leaked-password settings, auth providers, email (SMTP). Record them when they change and set them again by hand after a restore.
 
 ## Retention policy
@@ -19,7 +19,7 @@ Decided by the product owner on 2026-11-08.
 
 - **Test project:** no backups. Its data is synthetic and is rebuilt from the migrations and `supabase/seed.sql`.
 - **Production, once it exists on the Pro plan or higher:** Supabase's daily backups, which the platform keeps for 7 days, plus a weekly data dump kept for 90 days off-site.
-- **Audit events:** retention is not decided. The bank's compliance owner sets it before go-live. Until then nothing deletes an audit event: the database refuses every update, delete and truncate of one, its owner included (`src/test/migrations.test.ts#audit events stay append-only, even for the database's owner`).
+- **Audit events:** retention is not decided. The bank's compliance owner sets it before go-live. Until then no statement deletes an audit event: the database refuses every update, delete and truncate of one, whoever sends it, the owner included (`src/test/migrations.test.ts#audit events stay append-only, even for the database's owner`). The owner can still switch that guard off, by disabling or dropping its triggers, or by loading with `session_replication_role = replica` as the restore below does. So who holds the database password is part of this policy.
 - **Point-in-time recovery:** not enabled. It is a paid add-on; decide before go-live whether a day of possible loss between daily backups is acceptable.
 
 ## Back up (weekly, production)
@@ -46,7 +46,7 @@ Store `data.sql` off-site with the date in its name, and delete dumps older than
    ```
 
    Triggers must be off: the audit triggers would otherwise write a second event for every restored record. The restore test fails when this line is left out.
-4. Check: compare row counts per table with the source, and sign in as a known user.
+4. Check every table in `public`, and `auth.users`, against the source: the row count and a hash of the rows, `select md5(string_agg(t::text, '' order by t::text)) from <table> t`. Equal counts alone would miss a row loaded wrong. Then sign in as a known user.
 5. Set the dashboard settings listed above again, and give the new project URL and publishable key to the app's `.env`.
 
 ## How the restore is tested
