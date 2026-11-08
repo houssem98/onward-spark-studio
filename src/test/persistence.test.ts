@@ -100,16 +100,22 @@ describe("persistence", () => {
   });
 
   it("an approval outlives its client and names the approver the server knows", async () => {
+    const submitted = await (
+      await fresh()
+    )
+      .from("submissions")
+      .insert({ kind: "model", subject: `MDL-T-${run}` });
+    expect(submitted.error).toBeNull();
     await as("VALIDATOR");
-    await productionRepo.models.decide("MDL-T", "Approved", `Approved in run ${run}`);
+    await productionRepo.models.decide(`MDL-T-${run}`, "Approved", `Approved in run ${run}`);
     const { data } = await (
       await fresh()
     )
       .from("approvals")
-      .select("model, decision, by:decided_by")
+      .select("model:subject, decision, by:decided_by")
       .eq("comment", `Approved in run ${run}`)
       .single();
-    expect(data).toEqual({ model: "MDL-T", decision: "Approved", by: "Test Validator" });
+    expect(data).toEqual({ model: `MDL-T-${run}`, decision: "Approved", by: "Test Validator" });
   });
 
   it("an audit event outlives its client, and the client cannot choose its actor", async () => {

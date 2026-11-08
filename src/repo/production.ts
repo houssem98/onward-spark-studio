@@ -67,7 +67,8 @@ export const productionRepo: Repository = {
     explain: notConfigured,
     selectVersion: notConfigured,
     decide: async (model, decision, comment) => {
-      ok(await db().from("approvals").insert({ model, decision, comment }));
+      // Refused unless someone else submitted the model and it has no decision yet.
+      ok(await db().from("approvals").insert({ kind: "model", subject: model, decision, comment }));
     },
     setFindingStatus: notConfigured,
     updateDrift: notConfigured,
