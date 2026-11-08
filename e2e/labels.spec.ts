@@ -43,7 +43,9 @@ for (const [width, height] of [
   [1440, 900],
   [390, 844],
 ] as const) {
-  test(`small labels are sentence case at normal tracking at ${width}px`, async ({ page }) => {
+  test(`no small label is set in capitals or tracked wide, on a page, its tabs or its sheets, at ${width}px`, async ({
+    page,
+  }) => {
     test.setTimeout(240_000);
     await page.setViewportSize({ width, height });
     const found = new Map<string, string>();
@@ -64,6 +66,19 @@ for (const [width, height] of [
         }).toPass();
         await look(`${route} › ${(await tab.textContent())?.trim()}`);
       }
+    }
+    // Below md the sidebar's labels live only in the navigation sheet.
+    await page.goto("/");
+    await expect(page.locator("h1")).toHaveCount(1);
+    const sheet = page.getByRole("dialog");
+    for (const name of width < 768 ? ["Open navigation", "Copilot"] : ["Copilot"]) {
+      await expect(async () => {
+        await page.getByRole("button", { name, exact: true }).click();
+        await expect(sheet).toBeVisible({ timeout: 1000 });
+      }).toPass();
+      await look(name);
+      await page.keyboard.press("Escape");
+      await expect(sheet).toBeHidden();
     }
     expect([...found].map(([item, where]) => `${where}: ${item}`)).toEqual([]);
   });

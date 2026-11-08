@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-/** The alpha channel of a computed colour, in rgb(), rgba(), oklch() or color() notation. */
+/** The alpha channel of a computed colour; a notation it cannot read fails instead of passing as opaque. */
 const alpha = (color: string) => {
   const slash = /\/\s*([\d.]+)(%?)\s*\)\s*$/.exec(color);
   if (slash) return parseFloat(slash[1]!) / (slash[2] ? 100 : 1);
   const comma = /^rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\s*\)$/.exec(color);
-  return comma ? parseFloat(comma[1]!) : 1;
+  if (comma) return parseFloat(comma[1]!);
+  if (/^(rgb|hsl|hwb|lab|lch|oklab|oklch|color)\(/.test(color)) return 1;
+  throw new Error(`unreadable colour: ${color}`);
 };
 
 test("the top bar is the opaque card surface with a hairline and no blur", async ({ page }) => {
@@ -15,15 +17,28 @@ test("the top bar is the opaque card surface with a hairline and no blur", async
   await expect(bar).toHaveCount(1);
   const style = await bar.evaluate((el) => {
     const s = getComputedStyle(el);
+    // The tokens as this page computes them, read from a probe element.
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "var(--card)";
+    probe.style.borderBottomColor = "var(--border)";
+    document.body.append(probe);
+    const t = getComputedStyle(probe);
+    const tokens = { card: t.backgroundColor, border: t.borderBottomColor };
+    probe.remove();
     return {
       blur: s.backdropFilter,
       background: s.backgroundColor,
       hairline: `${s.borderBottomWidth} ${s.borderBottomStyle}`,
+      hairlineColor: s.borderBottomColor,
+      ...tokens,
     };
   });
   expect(style.blur).toBe("none");
   expect(alpha(style.background), style.background).toBe(1);
+  expect(style.background).toBe(style.card);
   expect(style.hairline).toBe("1px solid");
+  expect(style.hairlineColor).toBe(style.border);
+  expect(alpha(style.hairlineColor), style.hairlineColor).toBeGreaterThan(0);
 });
 
 test("the mobile navigation sheet is 272 px wide, a step of the 4 px grid", async ({ page }) => {
