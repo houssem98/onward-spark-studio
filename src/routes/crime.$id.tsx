@@ -20,7 +20,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useActions, useStore } from "@/store/app-store";
-import { downloadFile, fmtNum } from "@/lib/calc";
+import { fmtNum } from "@/lib/calc";
+import { exportFile } from "@/repo/export";
 import { cn } from "@/lib/utils";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
 
@@ -61,8 +62,7 @@ function CasePage() {
 
   const exportSummary = () => {
     const md = `# Case summary — ${c.id}\n\n_Fictional synthetic data. Customer identifiers are fictional._\n\n- Type: ${c.type}\n- Status: ${c.status}\n- Priority: ${c.priority}\n- Assignee: ${c.assignee}\n\n## Summary\n${c.summary}\n\n## Evidence\n${c.evidence.map((e) => `- ${e.label}: ${e.state} (${e.source})`).join("\n")}\n\n## Timeline\n${c.timeline.map((t) => `- ${t.at} ${t.event}`).join("\n")}\n`;
-    downloadFile(`${c.id}-summary.md`, md, "text/markdown");
-    toast.success("Case summary exported");
+    void exportFile(`${c.id}-summary.md`, md, "text/markdown", "Case summary exported");
   };
 
   return (

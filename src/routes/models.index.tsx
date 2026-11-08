@@ -9,7 +9,8 @@ import { DataTable, FilterSelect, type Column } from "@/components/DataTable";
 import { Kpi, PageHeader, Panel, StatusBadge, KpiBand } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/store/app-store";
-import { downloadFile, toCSV } from "@/lib/calc";
+import { toCSV } from "@/lib/calc";
+import { exportFile } from "@/repo/export";
 import { DEMO_DATE } from "@/lib/definitions";
 
 export const Route = createFileRoute("/models/")({
@@ -108,7 +109,7 @@ function ModelsPage() {
             variant="outline"
             size="sm"
             onClick={() =>
-              downloadFile(
+              void exportFile(
                 "model-inventory.csv",
                 toCSV(
                   models.map((m) => ({

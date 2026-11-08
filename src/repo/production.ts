@@ -27,11 +27,8 @@ function changed({ data, error }: { data: unknown[] | null; error: unknown }) {
   if (!data?.length) throw new Error("Not permitted");
 }
 
-// The database sets each event's org, actor and time from the session.
-const log = async (module: string, entity: string, action: string, detail: string) => {
-  ok(await db().from("audit_events").insert({ module, entity, action, detail }));
-};
-
+// Every write below is audited by the database in the same transaction; the server sets each event's
+// org, actor, authority, outcome and time.
 export const productionRepo: Repository = {
   environment: "production",
   session: {
@@ -71,7 +68,6 @@ export const productionRepo: Repository = {
     selectVersion: notConfigured,
     decide: async (model, decision, comment) => {
       ok(await db().from("approvals").insert({ model, decision, comment }));
-      await log("Models", model, decision, comment);
     },
     setFindingStatus: notConfigured,
     updateDrift: notConfigured,
@@ -100,24 +96,24 @@ export const productionRepo: Repository = {
     },
     create: async (inv) => {
       ok(await db().from("investigations").insert(inv));
-      await log("Investigations", inv.id, "Created", inv.question);
     },
     setStatus: async (id, status) => {
       changed(await db().from("investigations").update({ status }).eq("id", id).select("id"));
-      await log("Investigations", id, "Status changed", status);
     },
     addAction: async (a) => {
       const actions = db().from("actions");
       const { action, ...rest } = a;
       ok(await actions.insert({ ...rest, title: action }));
-      await log("Investigations", rest.finding, "Action created", action);
     },
     updateAction: async (id, p) => {
       const actions = db().from("actions");
       const { action, ...rest } = p;
-      const patch = action === undefined ? rest : { ...rest, title: action };
-      changed(await actions.update(patch).eq("id", id).select("id"));
-      await log("Investigations", id, "Action updated", Object.keys(patch).join(", "));
+      changed(
+        await actions
+          .update(action === undefined ? rest : { ...rest, title: action })
+          .eq("id", id)
+          .select("id"),
+      );
     },
   },
   audit: {
@@ -128,6 +124,10 @@ export const productionRepo: Repository = {
           .select("id, at, actor, module, entity, action, detail")
           .order("at", { ascending: false }),
       ),
-    log,
+    log: async (module, entity, action, detail) => {
+      ok(await db().from("audit_events").insert({ module, entity, action, detail }));
+    },
+    export: async (file, detail) =>
+      ok(await db().rpc("record_export", { p_entity: file, p_detail: detail })) === true,
   },
 };

@@ -44,7 +44,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useActions, useStore } from "@/store/app-store";
-import { classificationMetrics, downloadFile, fmtFixed, psi, psiBand } from "@/lib/calc";
+import { classificationMetrics, fmtFixed, psi, psiBand } from "@/lib/calc";
+import { exportFile } from "@/repo/export";
 import { MODEL_METRICS } from "@/lib/definitions";
 
 const TABS = [
@@ -140,8 +141,7 @@ function ModelDetail() {
       .join(
         "\n",
       )}\n\n## Limitations\n${m.limitations.map((l) => `- ${l}`).join("\n")}\n\n## Findings\n${m.findings.map((f) => `- ${f.id} [${f.severity}] ${f.title} — ${fStatus[f.id]}`).join("\n") || "- None"}\n`;
-    downloadFile(`${m.id}-model-card.md`, md, "text/markdown");
-    toast.success("Model card exported");
+    void exportFile(`${m.id}-model-card.md`, md, "text/markdown", "Model card exported");
   };
 
   return (

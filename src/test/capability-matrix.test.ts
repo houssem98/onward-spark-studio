@@ -60,10 +60,11 @@ describe("capability matrix", () => {
     expect([...called].filter((name) => !covered.has(name)).sort()).toEqual([]);
   });
 
-  it("has an export row for every file that calls downloadFile", () => {
+  it("has an export row for every file that calls downloadFile or exportFile", () => {
+    const definitions = ["src/lib/calc.ts", "src/repo/export.ts"];
     const exporters = walk("src")
-      .filter((f) => /\.tsx?$/.test(f) && f !== "src/lib/calc.ts" && !/\.test\.tsx?$/.test(f))
-      .filter((f) => /\bdownloadFile\(/.test(read(f)));
+      .filter((f) => /\.tsx?$/.test(f) && !definitions.includes(f) && !/\.test\.tsx?$/.test(f))
+      .filter((f) => /\b(?:downloadFile|exportFile)\(/.test(read(f)));
     const ids = new Set(
       rows()
         .filter((r) => r.kind === "export")

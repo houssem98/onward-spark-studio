@@ -183,5 +183,7 @@ export interface Repository {
   audit: {
     read(): Promise<AuditEvent[]>;
     log(module: string, entity: string, action: string, detail: string): Promise<void>;
+    /** Records an export attempt and answers whether the user may go ahead. */
+    export(file: string, detail: string): Promise<boolean>;
   };
 }

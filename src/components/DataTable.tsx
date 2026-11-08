@@ -3,8 +3,8 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from "lucide-react"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { downloadFile, toCSV } from "@/lib/calc";
-import { toast } from "sonner";
+import { toCSV } from "@/lib/calc";
+import { exportFile } from "@/repo/export";
 import { StateBoundary, type DataState } from "@/components/states";
 import { isWhole, REGISTER_BOX, REGISTER_HEAD } from "@/lib/register";
 
@@ -99,8 +99,12 @@ export function DataTable<T extends object>({
     const data = filtered.map((r) =>
       Object.fromEntries(columns.map((c) => [c.header, c.csv ? c.csv(r) : val(r, c)])),
     );
-    downloadFile(`${exportName}.csv`, toCSV(data));
-    toast.success(`Exported ${data.length} synthetic records`);
+    void exportFile(
+      `${exportName}.csv`,
+      toCSV(data),
+      undefined,
+      `Exported ${data.length} synthetic records`,
+    );
   };
 
   return (

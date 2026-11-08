@@ -14,7 +14,6 @@ import {
   YAxis,
 } from "recharts";
 import { Download } from "lucide-react";
-import { toast } from "sonner";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { FilterSelect } from "@/components/DataTable";
 import { StateBoundary } from "@/components/states";
@@ -32,7 +31,8 @@ import {
 } from "@/components/kit";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
-import { downloadFile, fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
+import { fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
+import { exportFile } from "@/repo/export";
 import { creditQuery, explanationsQuery, financeQuery, modelsQuery } from "@/repo/queries";
 import { revenueGapInvestigation, useStore } from "@/store/app-store";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
@@ -158,8 +158,12 @@ function CreditPage() {
 
   const report = () => {
     const md = `# Credit performance report (synthetic)\n\nScope: segment=${segment}, product=${product}, region=${region}, band=${band}, channel=${channel}, industry=${industry} · FY2025 · USD M\n\n| Measure | Type | Value |\n|---|---|---|\n| Outstanding balance | Balance | ${bal.toFixed(1)} |\n| Balance growth | Ratio | ${fmtPct(growth(bal, prior))} |\n| Originations | Flow | ${orig.toFixed(1)} |\n| Interest & fee revenue | Flow | ${rev.toFixed(1)} |\n| NPL ratio | Ratio | ${fmtPct(pct(npl, bal), 2)} |\n| ECL (model output) | Accounting | ${ecl.toFixed(1)} |\n| Net write-offs | Flow | ${(wo - rec).toFixed(1)} |\n\nNot for production credit decisions.\n`;
-    downloadFile("credit-performance-report.md", md, "text/markdown");
-    toast.success("Credit performance report generated");
+    void exportFile(
+      "credit-performance-report.md",
+      md,
+      "text/markdown",
+      "Credit performance report generated",
+    );
   };
 
   return (

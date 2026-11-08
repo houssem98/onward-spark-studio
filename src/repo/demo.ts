@@ -392,5 +392,9 @@ export const demoRepo: Repository = {
   audit: {
     read: async () => tag(state.audit),
     log: (module, entity, action, detail) => set(() => ({}), { module, entity, action, detail }),
+    export: async (file, detail) => {
+      await set(() => ({}), { module: "Export", entity: file, action: "Exported", detail });
+      return true;
+    },
   },
 };
