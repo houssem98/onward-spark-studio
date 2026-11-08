@@ -230,7 +230,7 @@ function CreditPage() {
       </div>
 
       <StateBoundary state={empty} label="portfolio slices">
-        <KpiBand label="Portfolio KPIs" className="grid-cols-2 md:grid-cols-4 xl:grid-cols-6">
+        <KpiBand label="Portfolio KPIs" className="grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
           <Kpi
             def="outstanding_balance"
             value={fmtM(bal, 0)}

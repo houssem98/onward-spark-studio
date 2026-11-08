@@ -42,7 +42,7 @@ for (const [width, height] of [
   [768, 1024],
   [390, 844],
 ] as const) {
-  test(`KPI bands fill their rows, share a baseline and hold no drawing at ${width}px`, async ({
+  test(`KPI bands fill their rows, share a baseline, keep their content inside and hold no drawing at ${width}px`, async ({
     page,
   }) => {
     test.setTimeout(240_000);
@@ -77,11 +77,22 @@ for (const [width, height] of [
               out.push(`row ending ${name}: value bottoms ${bottoms.join(",")}`);
           }
           for (const t of tiles) {
-            const drawn = [...t.querySelectorAll("svg")].filter(
-              (s) => !s.closest('[aria-label^="Definition of"]'),
-            );
+            const drawn = [
+              ...t.querySelectorAll(
+                "svg, canvas, img, picture, video, progress, meter, [role=img], [role=progressbar], [role=meter], [style*='width']",
+              ),
+            ].filter((s) => !s.closest('[aria-label^="Definition of"]'));
             if (drawn.length)
               out.push(`${t.dataset["definition"]}: ${drawn.length} drawing in the tile`);
+            const edge =
+              t.getBoundingClientRect().right - parseFloat(getComputedStyle(t).paddingRight);
+            for (const el of t.querySelectorAll("*")) {
+              const over = Math.round(el.getBoundingClientRect().right - edge);
+              if (over > 0)
+                out.push(
+                  `${t.dataset["definition"]}: ${el.tagName.toLowerCase()} "${el.textContent?.trim().slice(0, 24)}" ${over}px past the tile`,
+                );
+            }
           }
         }
         return { bands: bands.length, out };

@@ -62,7 +62,7 @@ const measure = (page: Page, href: string, busy: number, delay = 0) =>
       let prev = 0;
       let dropped = 0;
       let frames = 0;
-      // The framed charts (KPI sparklines never animate, nor does the bridge waterfall), read from
+      // The framed charts (the bridge waterfall never animates), read from
       // SVG attributes only and sparingly: one series path per chart each frame, the axis ticks
       // every fifth frame. Joining every path of every chart cost the frames it was counting.
       let shapes: string[] | null = null;

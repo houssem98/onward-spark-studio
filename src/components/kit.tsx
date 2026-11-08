@@ -403,7 +403,7 @@ export function Kpi({
         <div
           data-kpi-value
           className={cn(
-            "mt-2 num shrink-0 font-semibold tracking-tight",
+            "mt-2 num font-semibold tracking-tight",
             size === "lg" ? "text-3xl" : "text-2xl",
           )}
         >
