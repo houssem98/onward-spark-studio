@@ -79,3 +79,34 @@ it("refuses a record whose lists are not lists or whose status is unknown", asyn
   await expect(insert(`('GOOD', '${ALPHA}', 'x', '[]', 'Draft')`)).resolves.toBeDefined();
   await db.close();
 }, 60_000);
+
+it("lets only a recorded approval make a report Approved, in its own org, and nothing an investigation", async () => {
+  const db = await migrated();
+  await expect(
+    db.exec(
+      `insert into public.investigations (id, org_id, title, status) values ('BY-HAND', '${ALPHA}', 'x', 'Approved')`,
+    ),
+  ).rejects.toThrow(/approval/);
+  await expect(
+    db.exec(`update public.investigations set status = 'Approved' where id = 'INV-A1'`),
+  ).rejects.toThrow(/approval/);
+  await expect(
+    db.exec(
+      `insert into public.reports (id, org_id, title, status) values ('BY-HAND', '${ALPHA}', 'x', 'Approved')`,
+    ),
+  ).rejects.toThrow(/approval/);
+  await db.exec(`
+    insert into auth.users (id) values ('${USER}');
+    insert into public.reports (id, org_id, title) values ('RPT-A1', '${BRAVO}', 'same id');
+    insert into public.submissions (kind, subject, org_id, submitted_by) values ('report', 'RPT-A1', '${ALPHA}', '${USER}');
+    insert into public.approvals (kind, subject, org_id, decision, decided_by) values ('report', 'RPT-A1', '${ALPHA}', 'Approved', 'Checker');
+  `);
+  const { rows } = await db.query(
+    "select org_id, status from public.reports where id = 'RPT-A1' order by org_id",
+  );
+  expect(rows).toEqual([
+    { org_id: ALPHA, status: "Approved" },
+    { org_id: BRAVO, status: "Draft" },
+  ]);
+  await db.close();
+}, 60_000);

@@ -63,7 +63,9 @@ function InvDetail() {
               onChange={(e) => actions.setInvestigationStatus(id, e.target.value as InvStatus)}
             >
               {["Draft", "In Progress", "Pending Review", "Approved", "Closed"].map((s) => (
-                <option key={s}>{s}</option>
+                <option key={s} disabled={s === "Approved"}>
+                  {s}
+                </option>
               ))}
             </select>
             {inv.report && (

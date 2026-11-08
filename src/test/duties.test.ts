@@ -115,3 +115,39 @@ it("lets two orgs submit work under the same name", async () => {
   expect(await submit("ANALYST", "model", subject)).toBeNull();
   expect(await submit("INVESTIGATOR", "model", subject)).toBeNull();
 });
+
+describe("Approved", () => {
+  it("is never written by a client into an investigation or a report", async () => {
+    const id = `inv-by-hand-${run}`;
+    const investigations = () => db.INVESTIGATOR.from("investigations");
+    expect(
+      (await investigations().insert({ id, title: "By hand", status: "Approved" })).error,
+    ).not.toBeNull();
+    expect((await investigations().insert({ id, title: "By hand" })).error).toBeNull();
+    expect(
+      (await investigations().update({ status: "Approved" }).eq("id", id)).error,
+    ).not.toBeNull();
+    expect(
+      (await investigations().update({ status: "Closed" }).eq("id", id).select("status")).data,
+    ).toEqual([{ status: "Closed" }]);
+    expect(
+      (
+        await db.INVESTIGATOR.from("reports").insert({
+          id: `report-by-hand-${run}`,
+          title: "By hand",
+          status: "Approved",
+        })
+      ).error,
+    ).not.toBeNull();
+  });
+
+  it("comes to a report when its approval is recorded", async () => {
+    const subject = await make("INVESTIGATOR", "report", "approved");
+    const status = async () =>
+      (await db.INVESTIGATOR.from("reports").select("status").eq("id", subject).single()).data;
+    expect(await status()).toEqual({ status: "Draft" });
+    expect(await submit("INVESTIGATOR", "report", subject)).toBeNull();
+    expect(await decide("VALIDATOR", "report", subject, "Approved")).toBeNull();
+    expect(await status()).toEqual({ status: "Approved" });
+  });
+});
