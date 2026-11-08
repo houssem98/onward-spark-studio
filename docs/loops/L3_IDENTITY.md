@@ -6,15 +6,17 @@ Target: `BankIntelli_Elite_Premium_Design_Roadmap.md#no production data is acces
 
 Deciding rule, fixed before T2 starts: T0 to T8 are ticked, `npm run gate` exits 0, and the human's signoff line (T9) is in the Journal.
 
-## Current state (read 2026-10-28; T0 re-verifies)
+## Current state (read 2026-10-28; re-verified 2026-11-08 in T0)
 
 - There is no backend: `src/server.ts` only wraps the TanStack Start SSR entry and its error page. Every decision lives in browser memory (`src/repo/demo.ts#let state: State = {`) and is lost on reload.
 - Identity is a constant (`src/repo/demo.ts#const USER = { name: "Sarah Mitchell", role: "Chief Risk Officer" };`), so audit events name whoever that constant says (`src/repo/demo.ts#actor: USER.name`).
 - The maker can approve its own work: `src/repo/demo.ts#decide: (model, decision, comment) =>`.
+- Since L2 every route reads through one interface (`src/repo/types.ts#export interface Repository {`) whose adapter the build picks (`src/repo/queries.ts#export const repo: Repository =`): the demo adapter, which tags every record synthetic (`src/repo/demo.ts#const tag = <T extends object>(records: readonly T[]) =>`) and signs in the constant user (`src/repo/demo.ts#session: { read: async () => ({ user: tagOne(USER) }) },`), or the production adapter, whose every method throws (`src/repo/production.ts#throw new Error("Production data source not configured");`). T2 fills that production adapter; the overview already greets whoever the session returns (`src/routes/index.tsx#Welcome back, ${user.name.split(" ")[0]}.`).
+- An audit event carries an id, a time, an actor name, a module, an entity, an action and a detail (`src/repo/types.ts#export interface AuditEvent {`); the authority, outcome and correlation id T5 asks for are not fields yet.
 
 ## Tasks
 
-- [ ] T0 Re-verify. needs: none. Run graph-lint and refresh citations L2 changed. Evidence: graph-lint exits 0.
+- [x] T0 Re-verify. needs: none. Run graph-lint and refresh citations L2 changed. Evidence: graph-lint exits 0.
 - [ ] T1 (human) Backend. needs: T0. New infrastructure, so the human decides. Recommended: Lovable Cloud (Supabase: auth, Postgres, row-level security), because the project is Lovable-connected and RLS puts tenant checks in the database; alternative: TanStack Start server functions over `node:sqlite`. Also decide the role list (recommended: executive, credit analyst, investigator, reviewer, model validator, admin) and where secrets live. Evidence: the decision lines in the Journal.
 - [ ] T2 Identity. needs: T1. A production repository adapter (L2 T5) backed by the chosen store; sign-in and sign-out; the role comes from the server, never the client; the constant user remains only in the demo adapter. Evidence: tests: an unauthenticated read is refused; a client-sent role is ignored; a signed-out session is refused.
 - [ ] T3 Tenancy and permissions. needs: T2. Every read, update, search and export checks tenant and role on the server (RLS policies or one guard module that every server function calls). Evidence: tests: org B reads, updates, searches and exports org A's investigation, report, action and audit event by id and is refused each time.
@@ -26,3 +28,6 @@ Deciding rule, fixed before T2 starts: T0 to T8 are ticked, `npm run gate` exits
 - [ ] T9 (human) Signoff. needs: T8. Includes signing in as two users of two orgs. Evidence: the signoff line in the Journal.
 
 ## Journal
+
+- 2026-11-08 · L3/T0 · started T0 (tree clean at 6b426f9; the main driver picks L3, the first unticked loop whose needs are ticked; tick 1 of 20)
+- 2026-11-08 · L3/T0 · passed · gate green · commit see `git log --grep "loop(L3/T0)"` · tick 1 of 20. Every claim in the Current state still holds and its citation resolves; two lines added for what L2 built: the repository interface whose adapter the build picks (demo: synthetic records and the constant user; production: every method throws), and an audit event that lacks the authority, outcome and correlation id T5 asks for. Evidence: `graph-lint: 22 docs · 582 citations (179 file, 0 line range, 398 literal, 5 planned)`, `graph-lint: clean`, exit 0; a probe that changed one new citation's literal gave `literal not found in file`, exit 1, and the restore gave `graph-lint: clean` again. Gate `GATE EXIT 0 · 673s`: `Tests  276 passed (276)`, `bundle-scan: clean` for production and demo, `121 passed (8.2m)`, `gate-guard: clean · HEAD..working tree`; lint `✖ 12 problems (0 errors, 12 warnings)`. Before the gate: 1.77 GB RAM, 9.46 GB commit and 11.62 GB disk free, Docker stopped. Direction: goal unchanged; L3 is the trust path's next step and its real work waits on T1. Next: L3 T1 (human).
