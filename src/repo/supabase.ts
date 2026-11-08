@@ -16,7 +16,8 @@ export async function signIn(email: string, password: string) {
   if (error) throw error;
 }
 
+// Ends this device's session on the server; the user's sessions elsewhere stay signed in.
 export async function signOut() {
-  const { error } = await supabase().auth.signOut();
+  const { error } = await supabase().auth.signOut({ scope: "local" });
   if (error) throw error;
 }

@@ -14,6 +14,24 @@ const ROLE: Record<string, string> = {
   admin: "Admin",
 };
 
+const db = () => supabase();
+
+function ok<T>({ data, error }: { data: T | null; error: unknown }): T {
+  if (error) throw error;
+  return data as T;
+}
+
+/** An update that row-level security refuses matches no row and reports no error; say so. */
+function changed({ data, error }: { data: unknown[] | null; error: unknown }) {
+  if (error) throw error;
+  if (!data?.length) throw new Error("Not permitted");
+}
+
+// The database sets each event's org, actor and time from the session.
+const log = async (module: string, entity: string, action: string, detail: string) => {
+  ok(await db().from("audit_events").insert({ module, entity, action, detail }));
+};
+
 export const productionRepo: Repository = {
   environment: "production",
   session: {
@@ -51,16 +69,65 @@ export const productionRepo: Repository = {
     read: notConfigured,
     explain: notConfigured,
     selectVersion: notConfigured,
-    decide: notConfigured,
+    decide: async (model, decision, comment) => {
+      ok(await db().from("approvals").insert({ model, decision, comment }));
+      await log("Models", model, decision, comment);
+    },
     setFindingStatus: notConfigured,
     updateDrift: notConfigured,
   },
   investigations: {
-    read: notConfigured,
-    create: notConfigured,
-    setStatus: notConfigured,
-    addAction: notConfigured,
-    updateAction: notConfigured,
+    read: async () => {
+      const [investigations, actions, reports] = await Promise.all([
+        db()
+          .from("investigations")
+          .select(
+            "id, title, question, module, department, owner, created, period, priority, status, state, report, outstanding, findings, contradictions, limitations",
+          ),
+        db()
+          .from("actions")
+          .select("id, action:title, finding, owner, due, priority, status, outcome, evidence"),
+        db()
+          .from("reports")
+          .select("id, title, owner, period, investigation, state, status, updated"),
+      ]);
+      return {
+        investigations: ok(investigations),
+        actions: ok(actions),
+        reports: ok(reports),
+        nextSteps: [],
+      };
+    },
+    create: async (inv) => {
+      ok(await db().from("investigations").insert(inv));
+      await log("Investigations", inv.id, "Created", inv.question);
+    },
+    setStatus: async (id, status) => {
+      changed(await db().from("investigations").update({ status }).eq("id", id).select("id"));
+      await log("Investigations", id, "Status changed", status);
+    },
+    addAction: async (a) => {
+      const actions = db().from("actions");
+      const { action, ...rest } = a;
+      ok(await actions.insert({ ...rest, title: action }));
+      await log("Investigations", rest.finding, "Action created", action);
+    },
+    updateAction: async (id, p) => {
+      const actions = db().from("actions");
+      const { action, ...rest } = p;
+      const patch = action === undefined ? rest : { ...rest, title: action };
+      changed(await actions.update(patch).eq("id", id).select("id"));
+      await log("Investigations", id, "Action updated", Object.keys(patch).join(", "));
+    },
   },
-  audit: { read: notConfigured, log: notConfigured },
+  audit: {
+    read: async () =>
+      ok(
+        await db()
+          .from("audit_events")
+          .select("id, at, actor, module, entity, action, detail")
+          .order("at", { ascending: false }),
+      ),
+    log,
+  },
 };
