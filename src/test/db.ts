@@ -7,9 +7,10 @@ const PLATFORM = `
   create role anon; create role authenticated;
   create schema auth;
   create table auth.users (id uuid primary key);
-  create table auth.sessions (id uuid primary key);
-  create function auth.uid() returns uuid language sql as 'select null::uuid';
-  create function auth.jwt() returns jsonb language sql as 'select ''{}''::jsonb';
+  create table auth.sessions (id uuid primary key, not_after timestamptz);
+  create function auth.jwt() returns jsonb language sql
+    as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
+  create function auth.uid() returns uuid language sql as $$ select (auth.jwt() ->> 'sub')::uuid $$;
 `;
 
 /** An empty Postgres built from every migration in order, and seeded unless told not to be. */

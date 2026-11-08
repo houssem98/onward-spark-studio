@@ -100,4 +100,31 @@ describe("audit", () => {
       }),
     ]);
   });
+
+  it("a client cannot write an audit event itself", async () => {
+    const db = await as("INVESTIGATOR");
+    const forged = await db
+      .from("audit_events")
+      .insert({ module: "Export", entity: `forged-${run}`, action: "Exported", detail: "forged" });
+    expect(forged.error).not.toBeNull();
+    expect((await db.from("audit_events").select("id").eq("entity", `forged-${run}`)).data).toEqual(
+      [],
+    );
+  });
+
+  it("an event gets a correlation id even when the header is empty, and names its actor's user id", async () => {
+    const db = await as("VALIDATOR");
+    const file = `blank-${run}.csv`;
+    await db
+      .rpc("record_export", { p_entity: file, p_detail: "Blank header" })
+      .setHeader("x-correlation-id", "");
+    const { data } = await db
+      .from("audit_events")
+      .select("correlation_id, actor_id")
+      .eq("entity", file)
+      .single();
+    const me = (await db.auth.getUser()).data.user?.id;
+    expect(data?.correlation_id).toBeTruthy();
+    expect(data?.actor_id).toBe(me);
+  });
 });

@@ -120,12 +120,20 @@ describe("persistence", () => {
 
   it("an audit event outlives its client, and the client cannot choose its actor", async () => {
     await as("INVESTIGATOR");
-    await productionRepo.audit.log("Investigations", `INV-T-${run}`, "Viewed", `Audit ${run}`);
+    await productionRepo.investigations.addAction({
+      action: `Audit ${run}`,
+      finding: "F-T-3",
+      owner: "Test Investigator",
+      due: "2026-12-01",
+      priority: "Low",
+      status: "Open",
+      outcome: "Its creation is audited",
+    });
     const events = await productionRepo.audit.read();
     expect(events.find((e) => e.detail === `Audit ${run}`)).toMatchObject({
       actor: "Test Investigator",
       module: "Investigations",
-      action: "Viewed",
+      action: "Created",
     });
     const spoof = await (await fresh()).from("audit_events").insert({
       module: "Investigations",
@@ -135,5 +143,17 @@ describe("persistence", () => {
       actor: "Someone else",
     });
     expect(spoof.error).not.toBeNull();
+  });
+
+  it("refuses a record whose lists are not lists or whose status is unknown", async () => {
+    const db = await fresh();
+    const bad = await db
+      .from("investigations")
+      .insert({ id: `INV-BAD-${run}`, title: "Bad", findings: {} });
+    expect(bad.error).not.toBeNull();
+    const unknown = await db
+      .from("investigations")
+      .insert({ id: `INV-ODD-${run}`, title: "Odd", status: "Bogus" });
+    expect(unknown.error).not.toBeNull();
   });
 });
