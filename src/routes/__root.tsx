@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -13,7 +14,11 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
+import { repo } from "@/repo/queries";
 import { storeQuery } from "@/store/app-store";
+
+// In production the shell needs a signed-in user to load, so the sign-in page renders without it.
+const standsAlone = (path: string) => path === "/sign-in" && repo.environment === "production";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -42,9 +47,32 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
+  const signedOut = error instanceof Error && error.message === "Not signed in";
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    if (!signedOut) reportLovableError(error, { boundary: "tanstack_root_error_component" });
+  }, [error, signedOut]);
+
+  if (signedOut)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Sign in to continue
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            BankIntelli shows its data only to a signed-in user.
+          </p>
+          <div className="mt-6">
+            <Link
+              to="/sign-in"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -78,8 +106,8 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureQueryData(storeQuery);
+  loader: async ({ context: { queryClient }, location }) => {
+    if (!standsAlone(location.pathname)) await queryClient.ensureQueryData(storeQuery);
   },
   head: () => ({
     meta: [
@@ -127,13 +155,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const path = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={150}>
-        <AppShell>
+        {standsAlone(path) ? (
           <Outlet />
-        </AppShell>
+        ) : (
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        )}
         <Toaster position="bottom-right" />
       </TooltipProvider>
     </QueryClientProvider>

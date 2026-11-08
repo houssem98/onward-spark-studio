@@ -48,6 +48,7 @@ describe("environment", () => {
   });
 
   it("has a production adapter that serves no data and accepts no write", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "");
     expect(productionRepo.environment).toBe("production");
     const answered: string[] = [];
     for (const [domain, api] of domains(productionRepo))
