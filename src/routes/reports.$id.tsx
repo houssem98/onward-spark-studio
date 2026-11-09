@@ -1,5 +1,6 @@
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useStep } from "@/hooks/use-step";
 import { Stagger } from "@/components/motion";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Download, Printer, Save } from "lucide-react";
@@ -47,6 +48,15 @@ function ReportPage() {
   const actions = useStore((s) => s.actions);
   const issues = useStore((s) => s.issues);
   const audit = useStore((s) => s.audit);
+  // Saved is said only once the version is stored; a failure says why and can be retried.
+  const saving = useStep(
+    (snapshot: ReportSnapshot) => repo.reports.save(id, snapshot),
+    async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: reportsQuery.queryKey });
+      toast.success(`Version ${saved.version} saved`);
+      void navigate({ search: { v: saved.version } });
+    },
+  );
 
   if (!inv)
     return (
@@ -80,12 +90,6 @@ function ReportPage() {
     ...(approved ? { signoff: { by: approved.by, at: approved.at } } : {}),
   });
   const file = version ? `${id}-v${version.version}` : id;
-  const save = async () => {
-    const saved = await repo.reports.save(id, live);
-    await queryClient.invalidateQueries({ queryKey: reportsQuery.queryKey });
-    toast.success(`Version ${saved.version} saved`);
-    void navigate({ search: { v: saved.version } });
-  };
 
   return (
     <Stagger className="space-y-section">
@@ -97,9 +101,22 @@ function ReportPage() {
           <div className="no-print flex flex-wrap items-center gap-2">
             <EvidenceBadge state={doc.state} />
             {!version && (
-              <Button size="sm" onClick={save}>
-                <Save className="h-3.5 w-3.5" /> Save version
+              <Button
+                size="sm"
+                onClick={() => void saving.run(live)}
+                disabled={saving.status === "running"}
+              >
+                <Save className="h-3.5 w-3.5" />{" "}
+                {saving.status === "running" ? "Saving…" : "Save version"}
               </Button>
+            )}
+            {saving.status === "error" && (
+              <span role="alert" className="text-xs text-warning">
+                Not saved: {saving.error}{" "}
+                <Button size="sm" variant="outline" onClick={() => void saving.retry()}>
+                  Retry
+                </Button>
+              </span>
             )}
             <Button size="sm" variant="outline" onClick={() => window.print()}>
               <Printer className="h-3.5 w-3.5" /> Print

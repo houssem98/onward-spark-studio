@@ -29,6 +29,7 @@ import { answer, metricLabel, SUGGESTIONS, type CopilotAnswer } from "@/lib/copi
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
 import type { Chosen } from "@/lib/scope";
+import { useStep } from "@/hooks/use-step";
 import { CommandPalette } from "@/components/CommandPalette";
 import { crimeQuery, datasetsQuery, financeQuery, modelsQuery, repo } from "@/repo/queries";
 import type { Repository } from "@/repo/types";
@@ -201,21 +202,33 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const queryClient = useQueryClient();
   // `chosen` answers what an earlier answer asked; `picked` is how those choices read on screen.
-  const ask = async (text: string, chosen: Chosen = {}, picked: string[] = []) => {
+  // The question stays in the box until its answer arrives, so a failure or a cancel loses nothing.
+  const answering = useStep(
+    async (text: string, chosen: Chosen, picked: string[]) => {
+      // fetchQuery refetches what a write has made stale; ensureQueryData would not.
+      const [finance, models, datasets, crime] = await Promise.all([
+        queryClient.fetchQuery(financeQuery),
+        queryClient.fetchQuery(modelsQuery),
+        queryClient.fetchQuery(datasetsQuery),
+        queryClient.fetchQuery(crimeQuery),
+      ]);
+      return {
+        q: text,
+        a: answer(text, { finance, models, datasets, crime }, chosen),
+        chosen,
+        picked,
+      };
+    },
+    (entry) => {
+      setHistory((h) => [entry, ...h]);
+      setQ("");
+    },
+  );
+  const ask = (text: string, chosen: Chosen = {}, picked: string[] = []) => {
     if (!text.trim()) return;
-    setQ("");
+    setQ(text);
     setOpen(true);
-    // fetchQuery refetches what a write has made stale; ensureQueryData would not.
-    const [finance, models, datasets, crime] = await Promise.all([
-      queryClient.fetchQuery(financeQuery),
-      queryClient.fetchQuery(modelsQuery),
-      queryClient.fetchQuery(datasetsQuery),
-      queryClient.fetchQuery(crimeQuery),
-    ]);
-    setHistory((h) => [
-      { q: text, a: answer(text, { finance, models, datasets, crime }, chosen), chosen, picked },
-      ...h,
-    ]);
+    void answering.run(text, chosen, picked);
   };
   copilotBus.ask = ask;
 
@@ -390,8 +403,33 @@ export function AppShell({ children }: { children: ReactNode }) {
               onChange={(e) => setQ(e.target.value)}
               placeholder="Ask a question…"
             />
-            <Button type="submit">Ask</Button>
+            <Button type="submit" disabled={answering.status === "running"}>
+              Ask
+            </Button>
           </form>
+          {answering.status === "running" && (
+            <div
+              role="status"
+              aria-label="Answering"
+              className="mt-3 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
+            >
+              <span>Answering: reading finance, models, datasets and cases…</span>
+              <Button size="sm" variant="outline" onClick={answering.cancel}>
+                Cancel
+              </Button>
+            </div>
+          )}
+          {answering.status === "error" && (
+            <div
+              role="alert"
+              className="mt-3 flex items-center justify-between gap-2 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning"
+            >
+              <span>Could not answer: {answering.error}</span>
+              <Button size="sm" variant="outline" onClick={() => void answering.retry()}>
+                Retry
+              </Button>
+            </div>
+          )}
           {history.length === 0 && (
             <div className="mt-4 space-y-1.5">
               <p className="eyebrow">Suggested</p>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Stagger } from "@/components/motion";
 import { useMemo, useState } from "react";
+import { useStep } from "@/hooks/use-step";
 import {
   Bar,
   BarChart,
@@ -205,10 +206,21 @@ function PerformancePage() {
   const wr = reconcileBridge(wb);
   const [createdId, setCreatedId] = useState<string | null>(null);
 
+  // Created is said only once the investigation is stored; a failure keeps the wizard's input.
+  const creating = useStep(
+    async (id: string, inv: Parameters<typeof actions.createInvestigation>[0]) => {
+      await actions.createInvestigation(inv);
+      return id;
+    },
+    (id) => {
+      setCreatedId(id);
+      toast.success(`${id} created`);
+    },
+  );
   const finish = () => {
     const id = `INV-2026-${String(10 + invs.length).padStart(3, "0")}`;
     const base = template;
-    actions.createInvestigation({
+    void creating.run(id, {
       ...base,
       id,
       title: wq,
@@ -219,8 +231,6 @@ function PerformancePage() {
       owner: user.name,
       findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })),
     });
-    setCreatedId(id);
-    toast.success(`${id} created`);
   };
 
   return (
@@ -891,7 +901,19 @@ function PerformancePage() {
                     )}
                   </p>
                 ) : (
-                  <Button onClick={finish}>Create investigation</Button>
+                  <div className="space-y-2">
+                    <Button onClick={finish} disabled={creating.status === "running"}>
+                      {creating.status === "running" ? "Creating…" : "Create investigation"}
+                    </Button>
+                    {creating.status === "error" && (
+                      <p role="alert" className="text-xs text-warning">
+                        Not created: {creating.error}{" "}
+                        <Button size="sm" variant="outline" onClick={() => void creating.retry()}>
+                          Retry
+                        </Button>
+                      </p>
+                    )}
+                  </div>
                 ))}
               {step === 10 && (
                 <div className="space-y-2">
