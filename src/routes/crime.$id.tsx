@@ -7,6 +7,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import type { AlertStatus } from "@/data/crime";
 import { crimeQuery } from "@/repo/queries";
 import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -151,6 +152,7 @@ function CasePage() {
                   <th className={cn(REGISTER_TH, "text-right")}>Amount</th>
                   <th className={REGISTER_TH}>Counterparty</th>
                   <th className={REGISTER_TH}>Flag</th>
+                  <th className={REGISTER_TH}>{RELIABILITY}</th>
                 </tr>
               </thead>
               <tbody>
@@ -165,6 +167,12 @@ function CasePage() {
                     <td className="px-cell-x py-cell-y">{t.counterparty}</td>
                     <td className="px-cell-x py-cell-y">
                       {t.flag && <StatusBadge value={t.flag} tone="warning" />}
+                    </td>
+                    <td
+                      data-reliability
+                      className="px-cell-x py-cell-y text-xs text-muted-foreground"
+                    >
+                      {reliabilityOf("Payments transactions")}
                     </td>
                   </tr>
                 ))}

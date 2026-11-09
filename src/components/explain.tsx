@@ -16,6 +16,7 @@ import {
 
 import { ChartFrame, Waterfall } from "@/components/charts";
 import { CHART, TYPE } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
 import { StateBoundary } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,7 @@ export function InputsStage({ explanation: e }: { explanation: ModelExplanation 
               <th className={REGISTER_TH}>Definition</th>
               <th className={REGISTER_TH}>Range</th>
               <th className={REGISTER_TH}>Missing</th>
+              <th className={REGISTER_TH}>{RELIABILITY}</th>
             </tr>
           </thead>
           <tbody>
@@ -125,6 +127,9 @@ export function InputsStage({ explanation: e }: { explanation: ModelExplanation 
                       : UNAVAILABLE}
                   </td>
                   <td className="num px-3 py-2">{vs.length - present.length}</td>
+                  <td data-reliability className="px-3 py-2 text-muted-foreground">
+                    {reliabilityOf(e.source)}
+                  </td>
                 </tr>
               );
             })}

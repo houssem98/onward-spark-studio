@@ -19,7 +19,7 @@ export type EvidenceState = z.infer<typeof EvidenceStateSchema>;
 // Which findings a page lists beside its contradictions, and which beside its gaps.
 export const SHOWN_WITH = {
   contradictions: ["CONFLICTING_EVIDENCE"],
-  gaps: ["PARTIALLY_VERIFIED", "UNVERIFIED", "NOT_AVAILABLE"],
+  gaps: ["PARTIALLY_VERIFIED", "UNVERIFIED", "NOT_AVAILABLE", "HYPOTHESIS", "DRAFT"],
 } satisfies Record<string, EvidenceState[]>;
 
 const text = z.string().trim().min(1);

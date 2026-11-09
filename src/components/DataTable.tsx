@@ -4,9 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toCSV } from "@/lib/calc";
-import { exportFile } from "@/repo/export";
+import { exportedRecords, exportFile } from "@/repo/export";
 import { StateBoundary, type DataState } from "@/components/states";
 import { isWhole, REGISTER_BOX, REGISTER_HEAD } from "@/lib/register";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
+import { repo } from "@/repo/queries";
 
 export interface Column<T> {
   key: string;
@@ -30,6 +32,7 @@ export function DataTable<T extends object>({
   selectedKey,
   state,
   stateNote,
+  source,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -42,6 +45,8 @@ export function DataTable<T extends object>({
   selectedKey?: string | undefined;
   state?: DataState;
   stateNote?: string;
+  /** Where the figures come from; a table of records with no figures leaves it out. */
+  source?: string;
 }) {
   // Only a table showing rows offers actions on them; disabled, denied, failed or loading offers none.
   const live = !state || state === "success" || state === "stale" || state === "partial";
@@ -103,7 +108,7 @@ export function DataTable<T extends object>({
       `${exportName}.csv`,
       toCSV(data),
       undefined,
-      `Exported ${data.length} synthetic records`,
+      exportedRecords(data.length, repo.environment),
     );
   };
 
@@ -135,7 +140,7 @@ export function DataTable<T extends object>({
       </div>
       <StateBoundary state={state} label="records" note={stateNote}>
         <div className={REGISTER_BOX}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" data-records={source ? undefined : ""}>
             <thead>
               <tr>
                 {columns.map((c) => {
@@ -178,13 +183,16 @@ export function DataTable<T extends object>({
                     </th>
                   );
                 })}
+                {source && (
+                  <th className={cn(REGISTER_HEAD, "px-cell-x py-cell-y")}>{RELIABILITY}</th>
+                )}
               </tr>
             </thead>
             <tbody ref={body}>
               {visible.length === 0 && (
                 <tr>
                   <td
-                    colSpan={columns.length}
+                    colSpan={columns.length + (source ? 1 : 0)}
                     className="px-3 py-8 text-center text-muted-foreground"
                   >
                     No records match the current filters.
@@ -228,6 +236,14 @@ export function DataTable<T extends object>({
                         {c.cell ? c.cell(r) : String(val(r, c) ?? "—")}
                       </td>
                     ))}
+                    {source && (
+                      <td
+                        data-reliability
+                        className="px-cell-x py-cell-y text-xs text-muted-foreground"
+                      >
+                        {reliabilityOf(source)}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

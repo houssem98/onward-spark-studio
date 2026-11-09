@@ -29,6 +29,7 @@ import {
   TYPE,
   KpiBand,
 } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
 import { ChartFrame } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -192,6 +193,7 @@ function DataPage() {
             columns={cols}
             rowKey={(d) => d.id}
             exportName="data-catalog"
+            source="Data catalog"
             onRowClick={setDs}
             selectedKey={ds?.id}
             toolbar={
@@ -417,6 +419,7 @@ function DataPage() {
                     <th className={REGISTER_TH}>Severity</th>
                     <th className={REGISTER_TH}>Owner</th>
                     <th className={REGISTER_TH}>Status</th>
+                    <th className={REGISTER_TH}>{RELIABILITY}</th>
                   </tr>
                 </thead>
                 <tbody ref={issueRows}>
@@ -454,6 +457,12 @@ function DataPage() {
                       <td className="px-cell-x py-cell-y">{i.owner}</td>
                       <td className="px-cell-x py-cell-y">
                         <StatusBadge value={i.status} />
+                      </td>
+                      <td
+                        data-reliability
+                        className="px-cell-x py-cell-y text-xs text-muted-foreground"
+                      >
+                        {reliabilityOf("Simulated quality checks")}
                       </td>
                     </tr>
                   ))}

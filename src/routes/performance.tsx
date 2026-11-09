@@ -29,6 +29,7 @@ import {
   TYPE,
   KpiBand,
 } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
 import { ChartFrame, Waterfall } from "@/components/charts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -326,6 +327,7 @@ function PerformancePage() {
                     <th className={cn(REGISTER_TH, "text-right")}>Expenses</th>
                     <th className={cn(REGISTER_TH, "text-right")}>Contribution</th>
                     <th className={cn(REGISTER_TH, "text-right")}>CIR</th>
+                    <th className={REGISTER_TH}>{RELIABILITY}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -356,6 +358,12 @@ function PerformancePage() {
                       </td>
                       <td className="num px-cell-x py-cell-y text-right">
                         {d.costCenter ? "Cost center" : fmtPct(costToIncome(d.expenses, d.revenue))}
+                      </td>
+                      <td
+                        data-reliability
+                        className="px-cell-x py-cell-y text-xs text-muted-foreground"
+                      >
+                        {reliabilityOf(`${financeData.id} ${financeData.name}`)}
                       </td>
                     </tr>
                   ))}
@@ -456,7 +464,8 @@ function PerformancePage() {
           </div>
           <Panel title="Source register & comparability" bodyClass="p-0">
             <div className={REGISTER_BOX}>
-              <table className="w-full text-sm">
+              {/* A register of sources, not of figures. */}
+              <table className="w-full text-sm" data-records>
                 <thead>
                   <tr>
                     <th className={REGISTER_TH}>Institution</th>

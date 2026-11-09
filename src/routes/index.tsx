@@ -74,7 +74,7 @@ const SEVERITY_RANK = { Critical: 0, High: 1, Medium: 2, Low: 3 } as const;
 
 function Overview() {
   const navigate = useNavigate();
-  const { departments, quarterlyRevenue, peers } = useSuspenseQuery(financeQuery).data;
+  const { departments, quarterlyRevenue, peers, scorecard } = useSuspenseQuery(financeQuery).data;
   const { slices } = useSuspenseQuery(creditQuery).data;
   const { dimensions: dqDimensions, datasets } = useSuspenseQuery(datasetsQuery).data;
   const { reports, nextSteps } = useSuspenseQuery(investigationsQuery).data;
@@ -274,7 +274,10 @@ function Overview() {
           basis
           def="operating_income"
           value={fmtM(rev, 0)}
-          inputs={departments.map((d) => ({ label: d.name, value: fmtM(d.revenue) }))}
+          inputs={[
+            { label: "Net interest income", value: fmtM(scorecard.FY2025.nii) },
+            { label: "Non-interest income", value: fmtM(scorecard.FY2025.nonInterest) },
+          ]}
           delta={fmtPct(growth(rev, prior))}
           versus="vs FY2024"
           deltaGood

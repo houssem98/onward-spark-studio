@@ -29,6 +29,7 @@ import {
   TYPE,
   KpiBand,
 } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
 import { ChartFrame } from "@/components/charts";
 import { Button } from "@/components/ui/button";
 import { fmtFixed, fmtM, fmtNum, fmtPct, growth, pct, round, sum } from "@/lib/calc";
@@ -437,6 +438,7 @@ function CreditPage() {
                 <th className={cn(REGISTER_TH, "text-right")}>Balance (USD M)</th>
                 <th className={cn(REGISTER_TH, "text-right")}>NPL %</th>
                 <th className={REGISTER_TH}>Signal</th>
+                <th className={REGISTER_TH}>{RELIABILITY}</th>
               </tr>
             </thead>
             <tbody>
@@ -454,6 +456,12 @@ function CreditPage() {
                   </td>
                   <td className="px-cell-x py-cell-y">
                     <StatusBadge value={w.riskBand === "D" ? "High" : "Watch"} />
+                  </td>
+                  <td
+                    data-reliability
+                    className="px-cell-x py-cell-y text-xs text-muted-foreground"
+                  >
+                    {reliabilityOf("Credit portfolio")}
                   </td>
                 </tr>
               ))}

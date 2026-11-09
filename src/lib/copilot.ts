@@ -88,6 +88,9 @@ export function answer(
     const b = bridges.find((x) => x.id === "peer")!;
     const r = reconcileBridge(b);
     const credit = departments.find((d) => d.id === "credit")!;
+    const priorVolume = bridges
+      .find((x) => x.id === "prior")!
+      .steps.find((x) => x.label === "Volume")!.value;
     return decided({
       intent: "Credit performance vs peer group",
       scope: "Credit division · FY2025 · USD M · peers: Harborline, Meridian, Cascade",
@@ -101,9 +104,14 @@ export function answer(
         },
       ],
       summary: [
-        "Measured: volume −$18.0M, pricing −$7.0M, product mix −$3.0M; residual −$2.0M unexplained.",
+        `Measured: ${b.steps
+          .filter((x) => x.kind === "measured")
+          .map((x) => `${x.label.toLowerCase()} ${fmtM(x.value)}`)
+          .join(
+            ", ",
+          )}; residual ${fmtM(b.steps.find((x) => x.kind === "residual")!.value)} unexplained.`,
         "Hypothesis (unverified): SME underwriting delays may have reduced originations.",
-        "Contradiction: volume grew +$9.0M year on year — the shortfall is relative to peers.",
+        `Contradiction: volume grew +${fmtM(priorVolume)} year on year — the shortfall is relative to peers.`,
       ],
       assessments: [peerGap()],
       missing: [

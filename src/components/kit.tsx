@@ -439,7 +439,11 @@ export function Kpi({
             <PopoverTrigger className="rounded-sm text-left decoration-dotted underline-offset-4 hover:underline">
               <Figure text={value} />
             </PopoverTrigger>
-            <PopoverContent data-number-detail className="w-80 space-y-1 text-xs">
+            <PopoverContent
+              data-number-detail
+              aria-label={`${d.label}: definition, formula, inputs and source`}
+              className="w-80 space-y-1 text-xs"
+            >
               <p className="font-medium">
                 {d.label}: {value}
               </p>

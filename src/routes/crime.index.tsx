@@ -202,6 +202,7 @@ function CrimePage() {
         columns={cols}
         rowKey={(r) => r.id}
         exportName="crime-alerts"
+        source="Alert queue"
         onRowClick={(r) => setSel(r.id)}
         selectedKey={sel ?? undefined}
         toolbar={

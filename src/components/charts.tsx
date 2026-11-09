@@ -18,6 +18,8 @@ import {
 import { Children, cloneElement, isValidElement, useId, useState, type ReactNode } from "react";
 import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
 import { axisProps, CHART, SyntheticTag, tooltipStyle, TYPE } from "@/components/kit";
+import { RELIABILITY, reliabilityOf } from "@/lib/reliability";
+import { describeFigure } from "@/lib/evidence";
 import { repo } from "@/repo/queries";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
 import { StateBoundary, type DataState } from "@/components/states";
@@ -84,7 +86,12 @@ export function ChartFrame({
     (c) => c.key !== "reliability",
   );
   const demo = repo.environment === "demo";
-  const reliability = `${demo ? "Synthetic demo figure" : "Not assessed"} · Source: ${source}`;
+  // A row whose figure is unavailable has no reliable figure, whatever the frame's source.
+  const reliable = (r: (typeof rows)[number]) =>
+    r["reliability"] ||
+    (cols.some((c) => r[c.key] === null)
+      ? describeFigure({ reliability: "unavailable", reason: `${source} gives no value for it` })
+      : reliabilityOf(source));
   const reduced = useReducedMotion();
   const ms = useMotionMs("--duration-data");
   const motion =
@@ -123,9 +130,7 @@ export function ChartFrame({
                         {c.header}
                       </th>
                     ))}
-                    <th className="px-2 py-1 text-left font-semibold">
-                      How reliable is this figure?
-                    </th>
+                    <th className="px-2 py-1 text-left font-semibold">{RELIABILITY}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,7 +146,7 @@ export function ChartFrame({
                         </td>
                       ))}
                       <td data-reliability className="px-2 py-1">
-                        {r["reliability"] ?? reliability}
+                        {reliable(r)}
                       </td>
                     </tr>
                   ))}
