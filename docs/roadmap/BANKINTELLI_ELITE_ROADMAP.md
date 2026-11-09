@@ -28,7 +28,7 @@ A front-end proof of concept for the fictional Northstar Bank, built in Lovable.
 | Data | fixtures imported straight into pages (behind a demo repository since L2 T4) | `src/repo/demo.ts#export const demoRepo: Repository = {` |
 | Persistence | browser memory, lost on reload | `src/repo/demo.ts#let state: State = {` |
 | Identity | one hard-coded Chief Risk Officer | `src/repo/demo.ts#const USER = { name: "Sarah Mitchell", role: "Chief Risk Officer" };` |
-| Evidence states | typed, hand-assigned, VERIFIED included | `src/lib/copilot.ts#state: "VERIFIED",` |
+| Evidence states | typed, hand-assigned, VERIFIED included; since L4 T3 the policy sets them | `src/lib/evidence-policy.ts#export function assignEvidenceState(a: Assessment): Decision {` |
 | AI | canned regex routing, labeled in code only | `src/lib/copilot.ts#no live LLM is connected` |
 | Approvals | the maker approves its own model to Production | `src/repo/demo.ts#decide: (model, decision, comment) =>` |
 | Reconciliation | exact, untested | `src/lib/calc.ts#export function reconcileBridge(b: Bridge) {` |

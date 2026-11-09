@@ -221,8 +221,9 @@ function InvDetail() {
         </Panel>
       </div>
       <Notice>
-        Narrative, figures and evidence states on this page come from the demo data; no automated
-        verification has run.
+        Narrative, figures and the facts behind each evidence state come from the synthetic demo
+        data; the evidence policy sets each state from those facts, and nothing real has been
+        checked.
       </Notice>
     </Stagger>
   );

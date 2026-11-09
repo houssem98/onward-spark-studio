@@ -1,4 +1,13 @@
-import type { EvidenceState } from "@/lib/evidence";
+import { DEMO_DATE } from "@/lib/definitions";
+import { DEMO_ENTITY, demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
+import {
+  assignEvidenceState,
+  summarizeStates,
+  type Assessment,
+  type Facts,
+} from "@/lib/evidence-policy";
+import { DATASETS } from "./datasets";
+import { BRIDGES } from "./finance";
 
 export type { EvidenceState };
 export type InvStatus = "Draft" | "In Progress" | "Pending Review" | "Approved" | "Closed";
@@ -12,10 +21,48 @@ export interface Finding {
   method: string;
   impact?: string;
   state: EvidenceState;
+  /** What the finding's sources say; the policy sets `state` from it. */
+  facts?: Facts;
   kind: "Measured" | "Hypothesis";
   limitations: string;
   next: string;
 }
+
+export const findingAssessment = (
+  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts">,
+): Assessment => ({
+  claim: { id: f.id, text: f.claim, kind: f.kind === "Hypothesis" ? "hypothesis" : "measured" },
+  scope: { entity: DEMO_ENTITY, period: f.period },
+  today: DEMO_DATE,
+  ...(f.facts ?? { sources: [] }),
+});
+
+// A finding cites catalog datasets; `by` gives what each says (null: it gives no value).
+const facts = (
+  period: string,
+  by: Record<string, number | null>,
+  more: Partial<Facts> = {},
+): Facts => ({
+  sources: Object.keys(by).map((id) =>
+    sourceOf(
+      DATASETS.find((d) => d.id === id)!,
+      period,
+    ),
+  ),
+  values: Object.entries(by).flatMap(([sourceId, value]) =>
+    value === null ? [] : [{ sourceId, value }],
+  ),
+  ...more,
+});
+
+const peer = BRIDGES.find((b) => b.id === "peer")!;
+const step = (label: string) => peer.steps.find((s) => s.label === label)!.value;
+const measuredEffects = peer.steps
+  .filter((s) => s.kind === "measured")
+  .reduce((t, s) => t + s.value, 0);
+// debt_service_coverage's PSI from the drift data; calc.ts cannot be imported here (it loads the
+// repository), so a test holds this to psi() of the drift bins.
+export const DSC_PSI = 0.09;
 
 export interface Investigation {
   id: string;
@@ -36,7 +83,26 @@ export interface Investigation {
   limitations: string[];
 }
 
-export const INVESTIGATIONS: Investigation[] = [
+export type InvestigationFixture = Omit<Investigation, "state" | "findings"> & {
+  findings: Omit<Finding, "state">[];
+};
+
+export function assessInvestigation(i: InvestigationFixture): Investigation {
+  const findings = i.findings.map((f) => ({
+    ...f,
+    state: assignEvidenceState(findingAssessment(f)).state,
+  }));
+  return {
+    ...i,
+    findings,
+    state: summarizeStates(
+      findings.map((f) => f.state),
+      i.outstanding,
+    ),
+  };
+}
+
+export const INVESTIGATIONS: InvestigationFixture[] = [
   {
     id: "INV-2025-014",
     title: "Credit revenue growth vs peers",
@@ -49,7 +115,6 @@ export const INVESTIGATIONS: Investigation[] = [
     period: "FY2025",
     priority: "High",
     status: "Pending Review",
-    state: "PARTIALLY_VERIFIED",
     report: "RPT-FY25-PERF",
     outstanding: 2,
     findings: [
@@ -61,7 +126,8 @@ export const INVESTIGATIONS: Investigation[] = [
         period: "FY2025",
         method: "Volume effect = (Vol_NS − Vol_peer) × Yield_peer",
         impact: "−$18.0M",
-        state: "PARTIALLY_VERIFIED",
+        // The effect is measured against peer volumes, which only the third-party feed gives.
+        facts: facts("FY2025", { "DS-002": null, "DS-011": step("Volume") }, { claimed: -18 }),
         kind: "Measured",
         limitations: "Peer volumes derived from public disclosures; Cascade includes leasing.",
         next: "Confirm peer balance definitions with Strategy team.",
@@ -74,7 +140,7 @@ export const INVESTIGATIONS: Investigation[] = [
         period: "FY2025",
         method: "Price effect = (Yield_NS − Yield_peer) × Vol_NS",
         impact: "−$7.0M",
-        state: "VERIFIED",
+        facts: facts("FY2025", { "DS-009": null, "DS-011": step("Pricing") }, { claimed: -7 }),
         kind: "Measured",
         limitations: "Internal yields reconcile to GL; peer yields are illustrative.",
         next: "Review SME pricing grid.",
@@ -87,7 +153,12 @@ export const INVESTIGATIONS: Investigation[] = [
         period: "FY2025",
         method: "Mix effect (segment-weighted)",
         impact: "−$3.0M",
-        state: "PARTIALLY_VERIFIED",
+        // DQ-101: the curated dataset does not reconcile to the GL.
+        facts: facts(
+          "FY2025",
+          { "DS-010": step("Product mix") },
+          { claimed: -3, reconciles: false },
+        ),
         kind: "Measured",
         limitations: "DQ-101 reconciliation issue open on source dataset.",
         next: "Resolve DQ-101 before sign-off.",
@@ -99,7 +170,18 @@ export const INVESTIGATIONS: Investigation[] = [
         source: "Credit funnel (synthetic)",
         period: "FY2025",
         method: "Hypothesis — correlation only",
-        state: "UNVERIFIED",
+        facts: {
+          sources: [
+            demoSource({
+              id: "FUNNEL",
+              name: "Credit funnel (synthetic)",
+              authority: "synthetic",
+              period: "FY2025",
+              asOf: DEMO_DATE,
+              freshForDays: 35,
+            }),
+          ],
+        },
         kind: "Hypothesis",
         limitations: "No causal test; capacity data incomplete.",
         next: "Run cohort comparison of approval time vs acceptance.",
@@ -112,7 +194,15 @@ export const INVESTIGATIONS: Investigation[] = [
         period: "FY2025",
         method: "Gap − Σ measured effects",
         impact: "−$2.0M",
-        state: "VERIFIED",
+        // The residual is the gap to the peer benchmark less the measured effects.
+        facts: facts(
+          "FY2025",
+          { "DS-009": null, "DS-011": step("Other / unexplained") },
+          {
+            claimed: -2,
+            calculation: { output: -2, reproduced: peer.actual - peer.base - measuredEffects },
+          },
+        ),
         kind: "Measured",
         limitations: "Residual is unexplained, not attributed.",
         next: "Investigate fee waivers and funding costs.",
@@ -137,7 +227,6 @@ export const INVESTIGATIONS: Investigation[] = [
     period: "Q4-25",
     priority: "Critical",
     status: "In Progress",
-    state: "UNVERIFIED",
     outstanding: 3,
     findings: [
       {
@@ -147,7 +236,8 @@ export const INVESTIGATIONS: Investigation[] = [
         source: "DS-012 Model predictions",
         period: "Q4-25 vs H1-24",
         method: "PSI",
-        state: "VERIFIED",
+        // The claim states the 0.10 threshold; the drift data's own PSI is what the source gives.
+        facts: facts("Q4-25 vs H1-24", { "DS-012": DSC_PSI }, { claimed: 0.1 }),
         kind: "Measured",
         limitations: "Drift does not by itself prove the model is inaccurate.",
         next: "Outcome-based backtest once 12-month defaults mature.",
@@ -167,7 +257,6 @@ export const INVESTIGATIONS: Investigation[] = [
     period: "Dec-25",
     priority: "High",
     status: "In Progress",
-    state: "PARTIALLY_VERIFIED",
     outstanding: 1,
     findings: [
       {
@@ -178,7 +267,7 @@ export const INVESTIGATIONS: Investigation[] = [
         period: "Dec-25",
         method: "Control total reconciliation",
         impact: "$4.2M",
-        state: "VERIFIED",
+        facts: facts("Dec-25", { "DS-010": null, "DS-001": 4.2 }, { claimed: 4.2 }),
         kind: "Measured",
         limitations: "Mapping root cause unconfirmed.",
         next: "Confirm migration batch with Data Platform.",
@@ -198,7 +287,6 @@ export const INVESTIGATIONS: Investigation[] = [
     period: "Dec-25 – Jan-26",
     priority: "Critical",
     status: "In Progress",
-    state: "PARTIALLY_VERIFIED",
     outstanding: 1,
     findings: [
       {
@@ -208,7 +296,7 @@ export const INVESTIGATIONS: Investigation[] = [
         source: "DS-004",
         period: "Dec-25",
         method: "Scenario AML-02",
-        state: "VERIFIED",
+        facts: facts("Dec-25", { "DS-004": 14 }, { claimed: 14 }),
         kind: "Measured",
         limitations: "Indicator, not a determination.",
         next: "Obtain source-of-funds documentation.",
@@ -284,14 +372,25 @@ export const ACTIONS: Action[] = [
   },
 ];
 
-export const REPORTS = [
+export interface Report {
+  id: string;
+  title: string;
+  owner: string;
+  period: string;
+  investigation: string;
+  /** The state of the investigation the report is built on. */
+  state: EvidenceState;
+  status: string;
+  updated: string;
+}
+
+export const REPORTS: Omit<Report, "state">[] = [
   {
     id: "RPT-FY25-PERF",
     title: "FY2025 Full-Year Performance Review",
     owner: "CFO Office",
     period: "FY2025",
     investigation: "INV-2025-014",
-    state: "PARTIALLY_VERIFIED" as EvidenceState,
     status: "Pending Review",
     updated: "2026-01-13",
   },
@@ -301,7 +400,6 @@ export const REPORTS = [
     owner: "CRO Office",
     period: "Q4-25",
     investigation: "INV-2026-002",
-    state: "UNVERIFIED" as EvidenceState,
     status: "Draft",
     updated: "2026-01-12",
   },

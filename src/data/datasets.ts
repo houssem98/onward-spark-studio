@@ -1,6 +1,10 @@
+import type { Source } from "@/lib/evidence";
+
 export type Certification = "Certified" | "Pending" | "Not certified" | "Revoked";
 
 export interface Dataset {
+  /** Who stands behind the data as evidence; the bank's own systems unless stated. */
+  authority?: Source["authority"];
   id: string;
   name: string;
   description: string;
@@ -206,6 +210,7 @@ export const DATASETS: Dataset[] = [
   },
   {
     id: "DS-011",
+    authority: "third_party",
     name: "Competitor financial metrics",
     description: "Peer KPIs from public disclosures and licensed feeds (illustrative).",
     domain: "Strategy",

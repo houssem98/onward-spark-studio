@@ -1,5 +1,8 @@
 // All customers, transactions and entities are fictional and synthetic.
-import type { EvidenceState } from "@/lib/evidence";
+import { DEMO_DATE } from "@/lib/definitions";
+import { DEMO_ENTITY, demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
+import { assignEvidenceState, type Assessment, type Facts } from "@/lib/evidence-policy";
+import { DATASETS } from "./datasets";
 
 export type AlertStatus = "New" | "Triage" | "Investigation" | "Review" | "Closed" | "Escalated";
 
@@ -148,17 +151,51 @@ export interface CaseRecord {
     flag?: string;
   }[];
   entities: { id: string; name: string; relation: string; risk: "Low" | "Medium" | "High" }[];
-  evidence: {
-    id: string;
-    label: string;
-    state: EvidenceState;
-    source: string;
-  }[];
+  evidence: CaseEvidence[];
   notes: { author: string; role: "Investigator" | "Reviewer"; at: string; text: string }[];
   timeline: { at: string; event: string }[];
 }
 
-export const CASES: CaseRecord[] = [
+export interface CaseEvidence {
+  id: string;
+  label: string;
+  state: EvidenceState;
+  source: string;
+  /** What the evidence's sources give; the policy sets `state` from it. */
+  facts?: Facts;
+}
+
+// Case evidence is judged within the case's own window, and each value counts the records found.
+const CASE_WINDOW = "Case window";
+
+export const caseAssessment = (e: Pick<CaseEvidence, "id" | "label" | "facts">): Assessment => ({
+  claim: { id: e.id, text: e.label, kind: "measured" },
+  scope: { entity: DEMO_ENTITY, period: CASE_WINDOW },
+  today: DEMO_DATE,
+  ...(e.facts ?? { sources: [] }),
+});
+
+const records = (id: string, count: number, asOf?: string): Facts => ({
+  sources: [
+    sourceOf(
+      DATASETS.find((d) => d.id === id)!,
+      CASE_WINDOW,
+      asOf,
+    ),
+  ],
+  values: [{ sourceId: id, value: count }],
+});
+
+export type CaseFixture = Omit<CaseRecord, "evidence"> & {
+  evidence: Omit<CaseEvidence, "state">[];
+};
+
+export const assessCase = (c: CaseFixture): CaseRecord => ({
+  ...c,
+  evidence: c.evidence.map((e) => ({ ...e, state: assignEvidenceState(caseAssessment(e)).state })),
+});
+
+export const CASES: CaseFixture[] = [
   {
     id: "CASE-0917",
     title: "Repeated sub-threshold cash deposits",
@@ -249,19 +286,31 @@ export const CASES: CaseRecord[] = [
       {
         id: "EV-1",
         label: "Cash deposit pattern (14 txns)",
-        state: "VERIFIED",
+        facts: { ...records("DS-004", 14), claimed: 14 },
         source: "DS-004 Payments transactions",
       },
       {
         id: "EV-2",
         label: "Customer occupation vs cash volume",
-        state: "PARTIALLY_VERIFIED",
+        // The KYC record was last refreshed in 2023.
+        facts: records("DS-003", 1, "2023-12-31"),
         source: "DS-003 Customer master (KYC refreshed 2023)",
       },
       {
         id: "EV-3",
         label: "Beneficiary ownership",
-        state: "NOT_AVAILABLE",
+        facts: {
+          sources: [
+            demoSource({
+              id: "BO-REGISTRY",
+              name: "External beneficial-ownership registry (not connected)",
+              authority: "third_party",
+              period: CASE_WINDOW,
+              asOf: DEMO_DATE,
+              freshForDays: 30,
+            }),
+          ],
+        },
         source: "External registry — not connected",
       },
     ],
@@ -324,13 +373,25 @@ export const CASES: CaseRecord[] = [
       {
         id: "EV-4",
         label: "Device change log",
-        state: "VERIFIED",
+        facts: {
+          sources: [
+            demoSource({
+              id: "CHANNEL-LOGS",
+              name: "Digital channel logs (simulated)",
+              authority: "internal",
+              period: CASE_WINDOW,
+              asOf: "2026-01-12",
+              freshForDays: 2,
+            }),
+          ],
+          values: [{ sourceId: "CHANNEL-LOGS", value: 1 }],
+        },
         source: "Digital channel logs (simulated)",
       },
       {
         id: "EV-5",
         label: "Customer confirmation call",
-        state: "UNVERIFIED",
+        facts: { sources: [] },
         source: "Pending outreach",
       },
     ],

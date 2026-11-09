@@ -9,6 +9,7 @@ import type { Certification, QualityIssue } from "@/data/datasets";
 import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
 import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
+import { summarizeStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
   AccessRequest,
@@ -102,8 +103,12 @@ let state: State = {
     },
   ],
   alerts: crime.ALERTS.map((a) => ({ ...a })),
-  cases: crime.CASES.map((c) => ({ ...c, notes: [...c.notes], timeline: [...c.timeline] })),
-  investigations: investigations.INVESTIGATIONS.map((i) => ({ ...i })),
+  cases: crime.CASES.map((c) => ({
+    ...crime.assessCase(c),
+    notes: [...c.notes],
+    timeline: [...c.timeline],
+  })),
+  investigations: investigations.INVESTIGATIONS.map(investigations.assessInvestigation),
   actions: investigations.ACTIONS.map((a) => ({ ...a })),
   audit: [
     {
@@ -357,7 +362,15 @@ export const demoRepo: Repository = {
     read: async () => ({
       investigations: tag(state.investigations),
       actions: tag(state.actions),
-      reports: tag(investigations.REPORTS),
+      reports: tag(
+        investigations.REPORTS.map((r) => ({
+          ...r,
+          state: summarizeStates(
+            state.investigations.filter((i) => i.id === r.investigation).map((i) => i.state),
+            0,
+          ),
+        })),
+      ),
       nextSteps: tag(investigations.NEXT_STEPS),
     }),
     create: (inv) =>

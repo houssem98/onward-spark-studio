@@ -105,8 +105,9 @@ export function StatusBadge({
   );
 }
 
-// Every state in this demo comes from the sample data; no verification policy exists yet.
-const SAMPLE = " In this demo the state is set in the sample data; no automated check has run.";
+// The evidence policy sets every state, but in this demo from synthetic facts.
+const SAMPLE =
+  " In this demo the policy sets the state from facts written into the synthetic sample data; nothing real has been checked.";
 
 const EV: Record<
   EvidenceState,

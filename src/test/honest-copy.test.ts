@@ -84,7 +84,9 @@ describe("honest copy", () => {
 
   it("says on every evidence-state explanation that the state comes from the sample data", () => {
     const kit = text("src/components/kit.tsx");
-    expect(kit).toMatch(/const SAMPLE =\s*"[^"]*In this demo the state is set in the sample data/);
+    expect(kit).toMatch(
+      /const SAMPLE =\s*"[^"]*In this demo the policy sets the state from facts written into the synthetic sample data/,
+    );
     expect([...kit.matchAll(/\bdesc: "/g)]).toHaveLength(EVIDENCE_STATES.length);
     expect([...kit.matchAll(/\bdesc: "[^"]*" \+ SAMPLE,/g)]).toHaveLength(EVIDENCE_STATES.length);
   });

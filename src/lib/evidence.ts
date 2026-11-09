@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { Dataset } from "@/data/datasets";
 import { DEFINITIONS, type DefinitionId } from "@/lib/definitions";
 
 export const EVIDENCE_STATES = [
@@ -32,6 +33,39 @@ export const SourceSchema = z
   })
   .strict();
 export type Source = z.infer<typeof SourceSchema>;
+
+export const DEMO_ENTITY = "Northstar Bank (fictional)";
+
+// A source stays fresh for one refresh cycle plus a day's grace.
+const FRESH_FOR_DAYS: Record<string, number> = {
+  Hourly: 1,
+  "Streaming (batch replica)": 1,
+  Daily: 2,
+  Weekly: 8,
+  Monthly: 35,
+  Quarterly: 100,
+};
+
+export const demoSource = (
+  s: Pick<Source, "id" | "name" | "authority" | "period" | "asOf" | "freshForDays">,
+): Source => ({
+  ...s,
+  entity: DEMO_ENTITY,
+  unit: "as claimed",
+  licence: "Synthetic demo data",
+  version: s.asOf,
+});
+
+/** A catalog dataset as the source of a claim about `period`; `asOf` overrides its last refresh. */
+export const sourceOf = (d: Dataset, period: string, asOf = d.lastRefresh.slice(0, 10)): Source =>
+  demoSource({
+    id: d.id,
+    name: `${d.id} ${d.name}`,
+    authority: d.authority ?? "internal",
+    period,
+    asOf,
+    freshForDays: FRESH_FOR_DAYS[d.frequency] ?? 1,
+  });
 
 const METRIC_IDS = Object.keys(DEFINITIONS) as [DefinitionId, ...DefinitionId[]];
 

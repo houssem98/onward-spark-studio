@@ -142,7 +142,7 @@ export interface ModelsData {
 export interface InvestigationsData {
   investigations: investigations.Investigation[];
   actions: investigations.Action[];
-  reports: typeof investigations.REPORTS;
+  reports: investigations.Report[];
   nextSteps: typeof investigations.NEXT_STEPS;
 }
 

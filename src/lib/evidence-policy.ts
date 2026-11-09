@@ -19,6 +19,9 @@ export interface Assessment {
   today: string;
 }
 
+/** What a record states about its evidence; the claim, scope and date come from the record. */
+export type Facts = Omit<Assessment, "claim" | "scope" | "today">;
+
 export interface Decision {
   state: EvidenceState;
   reasons: string[];
@@ -95,4 +98,17 @@ export function assignEvidenceState(a: Assessment): Decision {
         state: "VERIFIED",
         reasons: ["An in-scope, fresh, authoritative source supports it and every check passed."],
       };
+}
+
+// One state for a set of claims; anything still open, or any standing hypothesis, keeps it short of VERIFIED.
+export function summarizeStates(states: EvidenceState[], open: number): EvidenceState {
+  if (states.length === 0) return "NOT_AVAILABLE";
+  const measured = states.filter((s) => s !== "HYPOTHESIS" && s !== "DRAFT");
+  if (measured.length === 0) return "UNVERIFIED";
+  if (measured.includes("CONFLICTING_EVIDENCE")) return "CONFLICTING_EVIDENCE";
+  if (measured.every((s) => s === "VERIFIED"))
+    return open === 0 && measured.length === states.length ? "VERIFIED" : "PARTIALLY_VERIFIED";
+  if (measured.some((s) => s === "VERIFIED" || s === "PARTIALLY_VERIFIED"))
+    return "PARTIALLY_VERIFIED";
+  return measured.every((s) => s === "NOT_AVAILABLE") ? "NOT_AVAILABLE" : "UNVERIFIED";
 }
