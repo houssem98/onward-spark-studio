@@ -137,6 +137,16 @@ export const FigureSchema = z
         asOf: isoDate,
       })
       .strict(),
+    // Synthetic or illustrative: a value to read, never confirmed, dated by its period alone.
+    z
+      .object({
+        reliability: z.literal("synthetic"),
+        value: z.number().finite(),
+        unit: text,
+        sourceId: text,
+        period: text,
+      })
+      .strict(),
     z
       .object({
         reliability: z.literal("third_party_estimate"),
@@ -175,6 +185,8 @@ export function describeFigure(f: Figure): string {
   switch (f.reliability) {
     case "confirmed":
       return `Confirmed: ${f.sourceId}, as of ${day(f.asOf)}`;
+    case "synthetic":
+      return `Synthetic, illustrative: ${f.sourceId}, ${f.period} (synthetic)`;
     case "third_party_estimate":
       return `Estimate by ${f.estimator}: ${f.low} to ${f.high} ${f.unit}, as of ${day(f.asOf)}`;
     case "not_disclosed":
@@ -191,9 +203,12 @@ const SOURCE_WORDS: Record<SourceType, string> = {
   NOT_AVAILABLE: "no permitted source",
 };
 
-/** A bank's figure for one metric as a reliability class; a fiscal-year figure is dated at its year end. */
+/**
+ * A bank's figure for one metric as a reliability class. A figure from a real filing is dated at
+ * its fiscal year end; a synthetic or illustrative one is its own class, dated by its period alone.
+ */
 export function peerFigure(
-  p: Pick<Peer, "name" | "period" | "source" | "warning" | "notDisclosed">,
+  p: Pick<Peer, "name" | "period" | "source" | "warning" | "notDisclosed" | "synthetic">,
   value: number | null,
   unit: string,
 ): Figure {
@@ -211,11 +226,13 @@ export function peerFigure(
       reliability: "unavailable",
       reason: `${p.name}'s ${p.period} ${SOURCE_WORDS[p.source]} does not give it.`,
     };
+  const sourceId = `${p.name} ${p.period} ${SOURCE_WORDS[p.source]}`;
+  if (p.synthetic) return { reliability: "synthetic", value, unit, sourceId, period: p.period };
   return {
     reliability: "confirmed",
     value,
     unit,
-    sourceId: `${p.name} ${p.period} ${SOURCE_WORDS[p.source]}`,
+    sourceId,
     asOf: `${year}-12-31`,
   };
 }

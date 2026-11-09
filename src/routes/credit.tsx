@@ -245,22 +245,72 @@ function CreditPage() {
           />
           <Kpi def="new_originations" value={fmtM(orig, 0)} />
           <Kpi def="interest_fee_revenue" value={fmtM(rev)} />
-          <Kpi def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
-          <Kpi def="dpd30_rate" value={fmtPct(pct(dpd, bal), 2)} />
+          <Kpi
+            def="npl_ratio"
+            value={fmtPct(pct(npl, bal), 2)}
+            inputs={[
+              { label: "Non-performing balance", value: fmtM(npl) },
+              { label: "Outstanding balance", value: fmtM(bal) },
+            ]}
+          />
+          <Kpi
+            def="dpd30_rate"
+            value={fmtPct(pct(dpd, bal), 2)}
+            inputs={[
+              { label: "30+ DPD balance", value: fmtM(dpd) },
+              { label: "Outstanding balance", value: fmtM(bal) },
+            ]}
+          />
           <Kpi def="ecl" value={fmtM(ecl)} />
           <Kpi
             def="net_write_offs"
             value={fmtM(wo - rec)}
             sub={`WO ${fmtM(wo)} · Rec ${fmtM(rec)}`}
+            inputs={[
+              { label: "Write-offs", value: fmtM(wo) },
+              { label: "Recoveries", value: fmtM(rec) },
+            ]}
           />
-          <Kpi def="approval_rate" value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))} />
-          <Kpi def="app_to_disbursement" value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))} />
+          <Kpi
+            def="approval_rate"
+            value={fmtPct(pct(funnel[3]!.count, funnel[0]!.count))}
+            inputs={[
+              { label: "Approvals", value: fmtNum(funnel[3]!.count) },
+              { label: "Applications", value: fmtNum(funnel[0]!.count) },
+            ]}
+          />
+          <Kpi
+            def="app_to_disbursement"
+            value={fmtPct(pct(funnel[6]!.count, funnel[0]!.count))}
+            inputs={[
+              { label: "Disbursements", value: fmtNum(funnel[6]!.count) },
+              { label: "Applications", value: fmtNum(funnel[0]!.count) },
+            ]}
+          />
           <Kpi
             def="avg_loan_size"
             value={loans ? `$${((bal * 1e6) / loans / 1000).toFixed(1)}k` : fmtFixed(null)}
+            inputs={[
+              { label: "Outstanding balance", value: fmtM(bal) },
+              { label: "Number of loans", value: fmtNum(loans) },
+            ]}
           />
-          <Kpi def="limit_utilization" value={fmtPct(pct(bal, lim))} />
-          <Kpi def="collateral_coverage" value={fmtPct(pct(coll, bal), 0)} />
+          <Kpi
+            def="limit_utilization"
+            value={fmtPct(pct(bal, lim))}
+            inputs={[
+              { label: "Outstanding balance", value: fmtM(bal) },
+              { label: "Committed limits", value: fmtM(lim) },
+            ]}
+          />
+          <Kpi
+            def="collateral_coverage"
+            value={fmtPct(pct(coll, bal), 0)}
+            inputs={[
+              { label: "Collateral value", value: fmtM(coll) },
+              { label: "Outstanding balance", value: fmtM(bal) },
+            ]}
+          />
         </KpiBand>
       </StateBoundary>
       <p className="text-xs text-muted-foreground">
@@ -406,12 +456,20 @@ function CreditPage() {
               <Kpi
                 def="stressed_ecl"
                 value={fmtM(ecl * sc.eclMultiplier)}
+                inputs={[
+                  { label: "ECL", value: fmtM(ecl) },
+                  { label: "Scenario multiplier", value: `×${sc.eclMultiplier}` },
+                ]}
                 delta={`×${sc.eclMultiplier}`}
                 versus="vs Baseline"
               />
               <Kpi
                 def="stressed_npl_ratio"
                 value={fmtPct(nplRatio === null ? null : nplRatio + sc.nplShift, 2)}
+                inputs={[
+                  { label: "NPL ratio", value: fmtPct(nplRatio, 2) },
+                  { label: "Scenario shift", value: `+${sc.nplShift}pp` },
+                ]}
                 delta={`+${sc.nplShift}pp`}
                 versus="vs Baseline"
               />

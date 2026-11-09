@@ -165,7 +165,7 @@ function PerformancePage() {
       const f = peerFigure(p, value, unit);
       return {
         name,
-        value: f.reliability === "confirmed" ? f.value : null,
+        value: f.reliability === "confirmed" || f.reliability === "synthetic" ? f.value : null,
         src: p.source,
         period: p.period,
         reliability: describeFigure(f),
@@ -174,7 +174,12 @@ function PerformancePage() {
     return [
       row(
         bank.short,
-        { name: bank.name, period: "FY2025", source: "INTERNAL" },
+        {
+          name: bank.name,
+          period: "FY2025",
+          source: "INTERNAL",
+          ...("synthetic" in bank ? { synthetic: true as const } : {}),
+        },
         round(ns[metric], 2),
       ),
       ...peers.filter((p) => peerSel.includes(p.id)).map((p) => row(shortName(p), p, p[metric])),
@@ -229,6 +234,10 @@ function PerformancePage() {
             <Kpi
               def="operating_income"
               value={fmtM(rev, 0)}
+              inputs={[
+                { label: "Net interest income", value: fmtM(a.nii) },
+                { label: "Non-interest income", value: fmtM(a.nonInterest) },
+              ]}
               delta={fmtPct(growth(rev, b.nii + b.nonInterest))}
               versus="vs FY2024"
               deltaGood
@@ -243,6 +252,10 @@ function PerformancePage() {
             <Kpi
               def="nim"
               value={fmtPct(nim, 2)}
+              inputs={[
+                { label: "Net interest income", value: fmtM(a.nii) },
+                { label: "Average earning assets", value: fmtM(a.avgEarningAssets, 0) },
+              ]}
               delta={fmtFixed(diff(nim, pct(b.nii, b.avgEarningAssets)), 2, "pp")}
               versus="vs FY2024"
               deltaGood={false}
@@ -261,11 +274,46 @@ function PerformancePage() {
               versus="vs FY2024"
               deltaGood={false}
             />
-            <Kpi def="cost_to_income" value={fmtPct(ns.cir)} />
-            <Kpi def="roa" value={fmtPct(ns.roa, 2)} />
-            <Kpi def="roe" value={fmtPct(ns.roe)} />
-            <Kpi def="credit_growth" value={fmtPct(ns.creditGrowth)} />
-            <Kpi def="deposit_growth" value={fmtPct(ns.depositGrowth)} />
+            <Kpi
+              def="cost_to_income"
+              value={fmtPct(ns.cir)}
+              inputs={[
+                { label: "Operating expenses", value: fmtM(opex) },
+                { label: "Operating income", value: fmtM(rev) },
+              ]}
+            />
+            <Kpi
+              def="roa"
+              value={fmtPct(ns.roa, 2)}
+              inputs={[
+                { label: "Net income", value: fmtM(a.netIncome) },
+                { label: "Average total assets", value: fmtM(a.avgAssets, 0) },
+              ]}
+            />
+            <Kpi
+              def="roe"
+              value={fmtPct(ns.roe)}
+              inputs={[
+                { label: "Net income", value: fmtM(a.netIncome) },
+                { label: "Average equity", value: fmtM(a.avgEquity, 0) },
+              ]}
+            />
+            <Kpi
+              def="credit_growth"
+              value={fmtPct(ns.creditGrowth)}
+              inputs={[
+                { label: "Loans FY2025", value: fmtM(a.loans, 0) },
+                { label: "Loans FY2024", value: fmtM(a.priorLoans, 0) },
+              ]}
+            />
+            <Kpi
+              def="deposit_growth"
+              value={fmtPct(ns.depositGrowth)}
+              inputs={[
+                { label: "Deposits FY2025", value: fmtM(a.deposits, 0) },
+                { label: "Deposits FY2024", value: fmtM(a.priorDeposits, 0) },
+              ]}
+            />
           </KpiBand>
           <Notice>
             Market share is not shown: no comparable market-size data source is available.

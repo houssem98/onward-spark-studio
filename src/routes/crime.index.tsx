@@ -28,7 +28,7 @@ import { ChartFrame } from "@/components/charts";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import type { CrimeAlert } from "@/data/crime";
-import { fmtFixed, fmtNum, mean } from "@/lib/calc";
+import { fmtFixed, fmtNum, mean, sum } from "@/lib/calc";
 import { crimeQuery } from "@/repo/queries";
 import { useActions, useStore } from "@/store/app-store";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -138,7 +138,17 @@ function CrimePage() {
             cases.filter((c) => c.priority === "Critical" && c.status !== "Closed").length,
           )}
         />
-        <Kpi def="avg_alert_age" value={fmtFixed(mean(open.map((x) => x.ageDays)), 1, "d")} />
+        <Kpi
+          def="avg_alert_age"
+          value={fmtFixed(mean(open.map((x) => x.ageDays)), 1, "d")}
+          inputs={[
+            {
+              label: "Sum of open alerts' ages",
+              value: `${fmtNum(sum(open.map((x) => x.ageDays)))}d`,
+            },
+            { label: "Number of open alerts", value: fmtNum(open.length) },
+          ]}
+        />
         <Kpi def="sla_breaches" value={String(open.filter((x) => x.ageDays > 10).length)} />
         <Kpi def="false_positive_rate" value="N/A" />
       </KpiBand>

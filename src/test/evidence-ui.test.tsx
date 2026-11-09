@@ -70,10 +70,13 @@ describe("evidence UI (L4 T5)", () => {
     const row = (name: string) =>
       [...table.querySelectorAll("tbody tr")].find((r) => r.textContent?.startsWith(name))
         ?.textContent ?? "";
+    // Since T6e the demo's fictional peers are the synthetic class, dated by their period alone.
     expect(row("Harborline")).toContain(
-      "Confirmed: Harborline Financial FY2025 public disclosure, as of 31 Dec 2025",
+      "Synthetic, illustrative: Harborline Financial FY2025 public disclosure, FY2025 (synthetic)",
     );
-    expect(row("Cascade")).toContain("Confirmed: Cascade Federal FY2025 licensed data");
+    expect(row("Cascade")).toContain(
+      "Synthetic, illustrative: Cascade Federal FY2025 licensed data, FY2025 (synthetic)",
+    );
     expect(row("Ironwood")).toContain("Not disclosed. Disclosed instead: nine-month FY2025");
     expect(row("Ironwood")).toContain("Unavailable");
     expect(row("Solent")).toContain("No reliable figure: Private institution");

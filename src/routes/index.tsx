@@ -313,10 +313,21 @@ function Overview() {
           basis
           def="dq_dimension_mean"
           value={fmtFixed(dqAvg)}
-          inputs={dqDimensions.map((d) => ({
-            label: d.dimension,
-            value: d.score === null ? "not measurable, left out" : String(d.score),
-          }))}
+          inputs={[
+            {
+              label: "Sum of measurable dimension scores",
+              value: fmtFixed(
+                sum(dqDimensions.flatMap((d) => (d.score === null ? [] : [d.score]))),
+              ),
+            },
+            {
+              label: "Number of measurable dimensions",
+              value: `${dqDimensions.filter((d) => d.score !== null).length} of ${dqDimensions.length}; ${dqDimensions
+                .filter((d) => d.score === null)
+                .map((d) => d.dimension)
+                .join(", ")} not measurable, left out`,
+            },
+          ]}
         />
       </KpiBand>
 

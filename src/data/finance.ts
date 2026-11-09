@@ -190,6 +190,8 @@ export interface Peer {
   warning?: string;
   /** The full-year figures are not disclosed: what is, and why it is not the same figure. */
   notDisclosed?: { instead: string; why: string };
+  /** Set on every record the demo serves: the figures are illustrative, not from a filing. */
+  synthetic?: true;
 }
 
 export const PEERS: Peer[] = [

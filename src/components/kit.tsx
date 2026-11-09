@@ -406,6 +406,7 @@ export function Kpi({
         className,
       )}
       data-definition={def}
+      data-inputs={inputs?.map((i) => i.label).join("|")}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="eyebrow">{d.label}</span>
@@ -461,7 +462,7 @@ export function Kpi({
                   </ul>
                 </>
               ) : (
-                <p>Inputs: the terms the formula names; not itemised for this figure.</p>
+                <p>No inputs listed: the figure comes from {d.source} by the formula above.</p>
               )}
               <p className="text-muted-foreground">
                 Source: {d.source} · {d.unit} · {d.period}
