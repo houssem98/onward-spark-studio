@@ -142,6 +142,18 @@ const EV: Record<
     label: "Not available",
     desc: "Means: the required evidence is not accessible here." + SAMPLE,
   },
+  DRAFT: {
+    tone: "neutral",
+    icon: CircleDashed,
+    label: "Draft",
+    desc: "Means: the claim is written but its evidence has not been assessed." + SAMPLE,
+  },
+  HYPOTHESIS: {
+    tone: "info",
+    icon: CircleHelp,
+    label: "Hypothesis",
+    desc: "Means: a possible explanation to test, not a measured finding." + SAMPLE,
+  },
 };
 
 export function EvidenceBadge({

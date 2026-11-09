@@ -1,4 +1,6 @@
 // All customers, transactions and entities are fictional and synthetic.
+import type { EvidenceState } from "@/lib/evidence";
+
 export type AlertStatus = "New" | "Triage" | "Investigation" | "Review" | "Closed" | "Escalated";
 
 export interface CrimeAlert {
@@ -149,7 +151,7 @@ export interface CaseRecord {
   evidence: {
     id: string;
     label: string;
-    state: "VERIFIED" | "PARTIALLY_VERIFIED" | "UNVERIFIED" | "NOT_AVAILABLE";
+    state: EvidenceState;
     source: string;
   }[];
   notes: { author: string; role: "Investigator" | "Reviewer"; at: string; text: string }[];

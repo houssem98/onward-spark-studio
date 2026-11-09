@@ -2,6 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { EVIDENCE_STATES } from "@/lib/evidence";
+
 const root = process.cwd();
 const walk = (dir: string): string[] =>
   readdirSync(join(root, dir)).flatMap((f) => {
@@ -83,7 +85,7 @@ describe("honest copy", () => {
   it("says on every evidence-state explanation that the state comes from the sample data", () => {
     const kit = text("src/components/kit.tsx");
     expect(kit).toMatch(/const SAMPLE =\s*"[^"]*In this demo the state is set in the sample data/);
-    expect([...kit.matchAll(/\bdesc: "/g)]).toHaveLength(5);
-    expect([...kit.matchAll(/\bdesc: "[^"]*" \+ SAMPLE,/g)]).toHaveLength(5);
+    expect([...kit.matchAll(/\bdesc: "/g)]).toHaveLength(EVIDENCE_STATES.length);
+    expect([...kit.matchAll(/\bdesc: "[^"]*" \+ SAMPLE,/g)]).toHaveLength(EVIDENCE_STATES.length);
   });
 });

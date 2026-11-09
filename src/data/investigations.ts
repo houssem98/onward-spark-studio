@@ -1,5 +1,6 @@
-export type EvidenceState =
-  "VERIFIED" | "PARTIALLY_VERIFIED" | "UNVERIFIED" | "CONFLICTING_EVIDENCE" | "NOT_AVAILABLE";
+import type { EvidenceState } from "@/lib/evidence";
+
+export type { EvidenceState };
 export type InvStatus = "Draft" | "In Progress" | "Pending Review" | "Approved" | "Closed";
 
 export interface Finding {
