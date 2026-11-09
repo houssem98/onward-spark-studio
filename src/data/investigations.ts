@@ -1,4 +1,4 @@
-import { DEMO_DATE } from "@/lib/definitions";
+import { DEMO_DATE, type DefinitionId } from "@/lib/definitions";
 import { demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
 import { findingAssessment, withPolicyStates, type Facts } from "@/lib/evidence-policy";
 import { DATASETS } from "./datasets";
@@ -19,14 +19,17 @@ export interface Finding {
   state: EvidenceState;
   /** What the finding's sources say; the policy sets `state` from it. */
   facts?: Facts;
+  /** The registry metric a measured finding states; without one it stops short of Verified. */
+  metricId?: DefinitionId;
   kind: "Measured" | "Hypothesis";
   limitations: string;
   next: string;
 }
 
-// A finding cites catalog datasets; `by` gives what each says (null: it gives no value).
+// A finding cites catalog datasets; `by` gives what each says, in `unit` (null: it gives no value).
 const facts = (
   period: string,
+  unit: string,
   by: Record<string, number | null>,
   more: Partial<Facts> = {},
 ): Facts => ({
@@ -34,6 +37,7 @@ const facts = (
     sourceOf(
       DATASETS.find((d) => d.id === id)!,
       period,
+      unit,
     ),
   ),
   values: Object.entries(by).flatMap(([sourceId, value]) =>
@@ -103,7 +107,12 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         method: "Volume effect = (Vol_NS − Vol_peer) × Yield_peer",
         impact: "−$18.0M",
         // The effect is measured against peer volumes, which only the third-party feed gives.
-        facts: facts("FY2025", { "DS-002": null, "DS-011": step("Volume") }, { claimed: -18 }),
+        facts: facts(
+          "FY2025",
+          "USD M",
+          { "DS-002": null, "DS-011": step("Volume") },
+          { claimed: -18, unit: "USD M" },
+        ),
         kind: "Measured",
         limitations: "Peer volumes derived from public disclosures; Cascade includes leasing.",
         next: "Confirm peer balance definitions with Strategy team.",
@@ -116,7 +125,12 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         period: "FY2025",
         method: "Price effect = (Yield_NS − Yield_peer) × Vol_NS",
         impact: "−$7.0M",
-        facts: facts("FY2025", { "DS-009": null, "DS-011": step("Pricing") }, { claimed: -7 }),
+        facts: facts(
+          "FY2025",
+          "USD M",
+          { "DS-009": null, "DS-011": step("Pricing") },
+          { claimed: -7, unit: "USD M" },
+        ),
         kind: "Measured",
         limitations: "Internal yields reconcile to GL; peer yields are illustrative.",
         next: "Review SME pricing grid.",
@@ -132,8 +146,9 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         // DQ-101: the curated dataset does not reconcile to the GL.
         facts: facts(
           "FY2025",
+          "USD M",
           { "DS-010": step("Product mix") },
-          { claimed: -3, reconciles: false },
+          { claimed: -3, unit: "USD M", reconciles: false },
         ),
         kind: "Measured",
         limitations: "DQ-101 reconciliation issue open on source dataset.",
@@ -155,6 +170,7 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
               period: "FY2025",
               asOf: DEMO_DATE,
               freshForDays: 35,
+              unit: "days",
             }),
           ],
         },
@@ -173,9 +189,11 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         // The residual is the gap to the peer benchmark less the measured effects.
         facts: facts(
           "FY2025",
+          "USD M",
           { "DS-009": null, "DS-011": step("Other / unexplained") },
           {
             claimed: -2,
+            unit: "USD M",
             calculation: { output: -2, reproduced: peer.actual - peer.base - measuredEffects },
           },
         ),
@@ -213,7 +231,7 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         period: "Q4-25 vs H1-24",
         method: "PSI",
         // The claim states the 0.10 threshold; the drift data's own PSI is what the source gives.
-        facts: facts("Q4-25 vs H1-24", { "DS-012": DSC_PSI }, { exceeds: 0.1 }),
+        facts: facts("Q4-25 vs H1-24", "PSI", { "DS-012": DSC_PSI }, { exceeds: 0.1, unit: "PSI" }),
         kind: "Measured",
         limitations: "Drift does not by itself prove the model is inaccurate.",
         next: "Outcome-based backtest once 12-month defaults mature.",
@@ -243,7 +261,12 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         period: "Dec-25",
         method: "Control total reconciliation",
         impact: "$4.2M",
-        facts: facts("Dec-25", { "DS-010": null, "DS-001": 4.2 }, { claimed: 4.2 }),
+        facts: facts(
+          "Dec-25",
+          "USD M",
+          { "DS-010": null, "DS-001": 4.2 },
+          { claimed: 4.2, unit: "USD M" },
+        ),
         kind: "Measured",
         limitations: "Mapping root cause unconfirmed.",
         next: "Confirm migration batch with Data Platform.",
@@ -272,7 +295,12 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         source: "DS-004",
         period: "Dec-25",
         method: "Scenario AML-02",
-        facts: facts("Dec-25", { "DS-004": 14 }, { claimed: 14 }),
+        facts: facts(
+          "Dec-25",
+          "transactions",
+          { "DS-004": 14 },
+          { claimed: 14, unit: "transactions" },
+        ),
         kind: "Measured",
         limitations: "Indicator, not a determination.",
         next: "Obtain source-of-funds documentation.",

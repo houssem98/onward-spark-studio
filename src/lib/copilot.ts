@@ -50,8 +50,8 @@ const figure = (
 });
 
 const AS_OF = `As of ${DEMO_DATE}`;
-const system = (id: string, name: string, authority: Source["authority"]) =>
-  demoSource({ id, name, authority, period: AS_OF, asOf: DEMO_DATE, freshForDays: 2 });
+const system = (id: string, name: string, authority: Source["authority"], unit: string) =>
+  demoSource({ id, name, authority, period: AS_OF, asOf: DEMO_DATE, freshForDays: 2, unit });
 
 export function answer(
   q: string,
@@ -66,10 +66,11 @@ export function answer(
     issues: data.datasets.issues,
     cases: data.crime.cases,
   };
-  const ds = (id: string, period: string) =>
+  const ds = (id: string, period: string, unit: string) =>
     sourceOf(
       datasets.find((d) => d.id === id)!,
       period,
+      unit,
     );
   const peerGap = () => {
     const r = reconcileBridge(bridges.find((x) => x.id === "peer")!);
@@ -77,7 +78,7 @@ export function answer(
       "Credit revenue gap to the peer benchmark",
       "FY2025",
       r.gap,
-      [ds("DS-009", "FY2025"), ds("DS-011", "FY2025")],
+      [ds("DS-009", "FY2025", "USD M"), ds("DS-011", "FY2025", "USD M")],
       "DS-011",
       "revenue_gap",
     );
@@ -142,7 +143,7 @@ export function answer(
           "Revenue-generating units below their FY2025 target",
           "FY2025",
           missed.length,
-          [ds("DS-009", "FY2025")],
+          [ds("DS-009", "FY2025", "business units")],
           "DS-009",
         ),
       ],
@@ -178,7 +179,7 @@ export function answer(
                 "Net interest margin, FY2025",
                 "FY2025",
                 n1,
-                [ds("DS-009", "FY2025")],
+                [ds("DS-009", "FY2025", "%")],
                 "DS-009",
                 "nim",
               ),
@@ -206,7 +207,7 @@ export function answer(
           "Datasets feeding the executive reports",
           AS_OF,
           feeding.length,
-          [system("LINEAGE", "Lineage (illustrative)", "synthetic")],
+          [system("LINEAGE", "Lineage (illustrative)", "synthetic", "datasets")],
           "LINEAGE",
         ),
       ],
@@ -232,7 +233,7 @@ export function answer(
           "Open data-quality issues on credit datasets",
           AS_OF,
           iss.length,
-          [system("DQ-RULES", "Data-quality rules (simulated)", "internal")],
+          [system("DQ-RULES", "Data-quality rules (simulated)", "internal", "issues")],
           "DQ-RULES",
           "open_dq_issues",
         ),
@@ -256,7 +257,7 @@ export function answer(
           "Models overdue for review",
           AS_OF,
           overdue.length,
-          [system("INVENTORY", "Model inventory (simulated)", "internal")],
+          [system("INVENTORY", "Model inventory (simulated)", "internal", "models")],
           "INVENTORY",
           "overdue_reviews",
         ),
@@ -281,7 +282,13 @@ export function answer(
         (c) => `${c.id}: ${c.title} — suspicious activity indicator, pending review.`,
       ),
       assessments: [
-        figure("Open financial crime cases", AS_OF, open.length, [ds("DS-008", AS_OF)], "DS-008"),
+        figure(
+          "Open financial crime cases",
+          AS_OF,
+          open.length,
+          [ds("DS-008", AS_OF, "cases")],
+          "DS-008",
+        ),
       ],
       missing: ["Beneficial ownership registry not connected"],
       links: [{ label: "Financial crime center", to: "/crime" }],

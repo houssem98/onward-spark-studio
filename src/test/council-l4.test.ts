@@ -22,7 +22,7 @@ const ledger: Source = {
   version: "1",
 };
 const verified: Assessment = {
-  claim: { id: "C", text: "Revenue was 1,240", kind: "measured" },
+  claim: { id: "C", text: "Revenue was 1,240", kind: "measured", metricId: "operating_income" },
   claimed: 1240,
   scope: { entity: DEMO_ENTITY, period: "FY2025" },
   sources: [ledger],

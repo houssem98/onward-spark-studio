@@ -80,13 +80,15 @@ describe("evidence states come from the policy (L4 T3)", () => {
     const { investigations } = await demoRepo.investigations.read();
     const finding = (id: string) =>
       investigations.flatMap((i) => i.findings).find((f) => f.id === id)!;
-    expect(finding("F-014-2").state).toBe("PARTIALLY_VERIFIED");
+    // Since T6d the peer dataset is about the peers, so no source in scope gives Northstar's figure.
+    expect(finding("F-014-2").state).toBe("NOT_AVAILABLE");
     expect(finding("F-014-4").state).toBe("HYPOTHESIS");
     expect(finding("F-002-1").state).toBe("CONFLICTING_EVIDENCE");
     const { cases } = await demoRepo.crime.read();
     const ev = (id: string) => cases.flatMap((c) => c.evidence).find((e) => e.id === id)!;
+    // Since T6d a measured claim that names no registry metric, as EV-1 does not, stops short of Verified.
     expect([ev("EV-1").state, ev("EV-2").state, ev("EV-3").state, ev("EV-5").state]).toEqual([
-      "VERIFIED",
+      "PARTIALLY_VERIFIED",
       "PARTIALLY_VERIFIED",
       "NOT_AVAILABLE",
       "UNVERIFIED",

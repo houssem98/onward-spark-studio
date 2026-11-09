@@ -37,6 +37,8 @@ export const SourceSchema = z
     unit: text,
     licence: text,
     version: text,
+    /** Set for a catalog dataset: whether it is certified. */
+    certified: z.boolean().optional(),
   })
   .strict();
 export type Source = z.infer<typeof SourceSchema>;
@@ -54,25 +56,38 @@ const FRESH_FOR_DAYS: Record<string, number> = {
 };
 
 export const demoSource = (
-  s: Pick<Source, "id" | "name" | "authority" | "period" | "asOf" | "freshForDays">,
+  s: Pick<Source, "id" | "name" | "authority" | "period" | "asOf" | "freshForDays" | "unit">,
 ): Source => ({
   ...s,
   entity: DEMO_ENTITY,
-  unit: "as claimed",
   licence: "Synthetic demo data",
   version: s.asOf,
 });
 
-/** A catalog dataset as the source of a claim about `period`; `asOf` overrides its last refresh. */
-export const sourceOf = (d: Dataset, period: string, asOf = d.lastRefresh.slice(0, 10)): Source =>
-  demoSource({
+/**
+ * A catalog dataset as the source of a figure in `unit` for a claim about `period`; `asOf`
+ * overrides its last refresh. Entity, coverage and certification are the dataset's own, so a
+ * dataset that does not hold the period says what it does hold, and the scope rule can fail.
+ */
+export const sourceOf = (
+  d: Dataset,
+  period: string,
+  unit: string,
+  asOf = d.lastRefresh.slice(0, 10),
+): Source => ({
+  ...demoSource({
     id: d.id,
     name: `${d.id} ${d.name}`,
     authority: d.authority ?? "internal",
-    period,
+    period:
+      d.coverage === "continuous" || d.coverage.includes(period) ? period : d.coverage.join(", "),
     asOf,
     freshForDays: FRESH_FOR_DAYS[d.frequency] ?? 1,
-  });
+    unit,
+  }),
+  entity: d.entity,
+  certified: d.certification === "Certified",
+});
 
 const METRIC_IDS = Object.keys(DEFINITIONS) as [DefinitionId, ...DefinitionId[]];
 

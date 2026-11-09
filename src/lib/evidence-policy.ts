@@ -1,5 +1,5 @@
 import type { Finding, Investigation } from "@/data/investigations";
-import { DEMO_DATE } from "@/lib/definitions";
+import { DEFINITIONS, DEMO_DATE } from "@/lib/definitions";
 import {
   DEMO_ENTITY,
   SourceSchema,
@@ -16,6 +16,8 @@ export interface Assessment {
   claimed?: number;
   /** The threshold the claim says the figure is above, when it states a threshold instead. */
   exceeds?: number;
+  /** The unit of the claimed figure; a registry metric's own unit when the claim names one. */
+  unit?: string;
   /** The entity and period the claim is about; a source about anything else cannot support it. */
   scope: { entity: string; period: string };
   sources: Source[];
@@ -74,6 +76,15 @@ export function assignEvidenceState(a: Assessment): Decision {
   if (values.length === 0)
     return { state: "NOT_AVAILABLE", reasons: ["No in-scope source gives a value."] };
 
+  const statesFigure = a.claimed !== undefined || a.exceeds !== undefined;
+  const unit = a.unit ?? (a.claim.metricId && DEFINITIONS[a.claim.metricId].unit);
+  const otherUnit = inScope.find((s) => values.some((v) => v.sourceId === s.id) && s.unit !== unit);
+  if (statesFigure && unit && otherUnit)
+    return {
+      state: "CONFLICTING_EVIDENCE",
+      reasons: [`${otherUnit.name} gives the figure in ${otherUnit.unit}, the claim in ${unit}.`],
+    };
+
   if (a.exceeds !== undefined && values.some((v) => v.value <= a.exceeds!))
     return {
       state: "CONFLICTING_EVIDENCE",
@@ -102,8 +113,11 @@ export function assignEvidenceState(a: Assessment): Decision {
     };
 
   const limits: string[] = [];
-  if (a.claimed === undefined && a.exceeds === undefined)
+  if (!statesFigure)
     limits.push("The claim states no figure of its own, so nothing it says was compared.");
+  else if (!unit) limits.push("The claim states no unit, so only the numbers were compared.");
+  if (a.claim.metricId === undefined)
+    limits.push("The claim names no metric from the definitions registry.");
   if (a.calculation && a.calculation.reproduced === null)
     limits.push("The calculation could not be reproduced.");
   if (a.reconciles === false) limits.push("The figure's parts do not reconcile to its total.");
@@ -111,6 +125,8 @@ export function assignEvidenceState(a: Assessment): Decision {
     (s) => AUTHORITATIVE.has(s.authority) && values.some((v) => v.sourceId === s.id),
   );
   if (backing.length === 0) limits.push("Only third-party or synthetic sources support it.");
+  if (backing.some((s) => s.certified === false))
+    limits.push("A dataset it rests on is not certified.");
   else if (!backing.some((s) => isFresh(s, a.today)))
     limits.push("Its authoritative sources are stale.");
 
@@ -137,11 +153,16 @@ export function summarizeStates(states: EvidenceState[], open: number): Evidence
 
 // The record's own claim, scope and date come last, so nothing in its facts can replace them.
 export const findingAssessment = (
-  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts">,
+  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts" | "metricId">,
   today = DEMO_DATE,
 ): Assessment => ({
   ...(f.facts ?? { sources: [] }),
-  claim: { id: f.id, text: f.claim, kind: f.kind === "Hypothesis" ? "hypothesis" : "measured" },
+  claim: {
+    id: f.id,
+    text: f.claim,
+    kind: f.kind === "Hypothesis" ? "hypothesis" : "measured",
+    ...(f.metricId ? { metricId: f.metricId } : {}),
+  },
   scope: { entity: DEMO_ENTITY, period: f.period },
   today,
 });

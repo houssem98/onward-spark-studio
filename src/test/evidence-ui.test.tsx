@@ -57,9 +57,7 @@ describe("evidence UI (L4 T5)", () => {
 
   it("keeps a finding's gap on screen beside the investigation's limitations", async () => {
     await open("/investigations/INV-2025-014");
-    expect(panel("Limitations")).toContain(
-      "F-014-2: Only third-party or synthetic sources support it.",
-    );
+    expect(panel("Limitations")).toContain("F-014-2: No in-scope source gives a value.");
   });
 
   it("says next to each peer figure how reliable it is", async () => {

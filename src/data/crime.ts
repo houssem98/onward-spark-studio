@@ -176,11 +176,12 @@ export const caseAssessment = (e: Pick<CaseEvidence, "id" | "label" | "facts">):
   today: DEMO_DATE,
 });
 
-const records = (id: string, count: number, asOf?: string): Facts => ({
+const records = (id: string, count: number, unit: string, asOf?: string): Facts => ({
   sources: [
     sourceOf(
       DATASETS.find((d) => d.id === id)!,
       CASE_WINDOW,
+      unit,
       asOf,
     ),
   ],
@@ -287,14 +288,14 @@ export const CASES: CaseFixture[] = [
       {
         id: "EV-1",
         label: "Cash deposit pattern (14 txns)",
-        facts: { ...records("DS-004", 14), claimed: 14 },
+        facts: { ...records("DS-004", 14, "transactions"), claimed: 14, unit: "transactions" },
         source: "DS-004 Payments transactions",
       },
       {
         id: "EV-2",
         label: "Customer occupation vs cash volume",
         // The KYC record was last refreshed in 2023.
-        facts: records("DS-003", 1, "2023-12-31"),
+        facts: records("DS-003", 1, "customer records", "2023-12-31"),
         source: "DS-003 Customer master (KYC refreshed 2023)",
       },
       {
@@ -309,6 +310,7 @@ export const CASES: CaseFixture[] = [
               period: CASE_WINDOW,
               asOf: DEMO_DATE,
               freshForDays: 30,
+              unit: "ownership records",
             }),
           ],
         },
@@ -383,6 +385,7 @@ export const CASES: CaseFixture[] = [
               period: CASE_WINDOW,
               asOf: "2026-01-12",
               freshForDays: 2,
+              unit: "device changes",
             }),
           ],
           values: [{ sourceId: "CHANNEL-LOGS", value: 1 }],
