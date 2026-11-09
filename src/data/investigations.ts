@@ -389,6 +389,16 @@ export interface Report {
   updated: string;
 }
 
+// Who the demo offers as a report's reviewer; the session user is among them.
+export const REVIEWERS = ["Sarah Mitchell", "A. Haddad", "G. Rossi", "T. Ibrahim", "F. Leclerc"];
+// RPT-FY25-PERF is Pending Review: its owner's first version waits for the session user's review.
+export const SUBMITTED_REVIEW = {
+  report: "RPT-FY25-PERF",
+  submittedBy: "A. Haddad",
+  reviewer: "Sarah Mitchell",
+  at: "2026-01-13 09:00",
+};
+
 export const REPORTS: Omit<Report, "state">[] = [
   {
     id: "RPT-FY25-PERF",

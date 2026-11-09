@@ -194,20 +194,25 @@ function InvDetail() {
               {form?.finding === f.id ? (
                 <form
                   className="flex flex-wrap gap-2"
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     if (!form.text.trim()) return;
-                    actions.addAction({
-                      action: form.text,
-                      finding: f.id,
-                      owner: form.owner,
-                      due: form.due,
-                      priority: "Medium",
-                      status: "Open",
-                      outcome: f.next,
-                    });
-                    setForm(null);
-                    toast.success("Action created");
+                    // Success is said only once the action is stored; a refusal says why.
+                    try {
+                      await actions.addAction({
+                        action: form.text,
+                        finding: f.id,
+                        owner: form.owner,
+                        due: form.due,
+                        priority: "Medium",
+                        status: "Open",
+                        outcome: f.next,
+                      });
+                      setForm(null);
+                      toast.success("Action created");
+                    } catch (err) {
+                      toast.error((err as Error).message);
+                    }
                   }}
                 >
                   <Input

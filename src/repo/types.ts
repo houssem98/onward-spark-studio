@@ -6,6 +6,7 @@ import type * as investigations from "@/data/investigations";
 import type * as models from "@/data/models";
 import type { Bridge } from "@/lib/calc";
 import type { ReportSnapshot, ReportVersion } from "@/lib/report";
+import type { Review } from "@/lib/review";
 
 export interface User {
   name: string;
@@ -182,10 +183,19 @@ export interface Repository {
     updateAction(id: string, patch: Partial<investigations.Action>): Promise<void>;
   };
   reports: {
-    /** Every saved report version, oldest first; each is immutable. */
-    read(): Promise<{ versions: ReportVersion[] }>;
+    /** Every saved report version, oldest first, each immutable; their reviews; who may review. */
+    read(): Promise<{ versions: ReportVersion[]; reviews: Review[]; reviewers: string[] }>;
     /** Stores a new version; nothing updates or deletes one. */
     save(id: string, snapshot: ReportSnapshot): Promise<ReportVersion>;
+    /** Each refuses, with its reason, what separation of duties forbids (`src/lib/review.ts`). */
+    submit(id: string, version: number, reviewer: string): Promise<void>;
+    comment(id: string, version: number, text: string): Promise<void>;
+    decide(
+      id: string,
+      version: number,
+      decision: "Approved" | "Rejected",
+      comment: string,
+    ): Promise<void>;
   };
   audit: {
     read(): Promise<AuditEvent[]>;

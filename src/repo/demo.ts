@@ -11,7 +11,8 @@ import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
 import { DEMO_DATE } from "@/lib/definitions";
 import { frozenCopy } from "@/lib/frozen";
-import type { ReportVersion } from "@/lib/report";
+import type { ReportSnapshot, ReportVersion } from "@/lib/report";
+import * as review from "@/lib/review";
 import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
@@ -155,6 +156,21 @@ let state: State = {
 
 let seq = 5;
 const versions: ReportVersion[] = [];
+const reviews: review.Review[] = [];
+const refuse = <T>(r: T | string): T => {
+  if (typeof r === "string") throw new Error(r);
+  return r;
+};
+const reviewOf = (id: string, version: number) => {
+  const i = reviews.findIndex((r) => r.report === id && r.version === version);
+  if (i < 0) throw new Error(`Version ${version} of ${id} is not submitted.`);
+  return i;
+};
+const valid = <T extends object>(a: T): T => {
+  const p = review.actionProblem(a);
+  if (p) throw new Error(p);
+  return a;
+};
 
 async function set(
   fn: (s: State) => Partial<State>,
@@ -399,23 +415,33 @@ export const demoRepo: Repository = {
         { module: "Investigations", entity: id, action: "Status changed", detail: status },
       ),
     addAction: (a) =>
-      set((s) => ({ actions: [{ ...a, id: `ACT-${101 + s.actions.length}` }, ...s.actions] }), {
-        module: "Investigations",
-        entity: a.finding,
-        action: "Action created",
-        detail: a.action,
-      }),
+      set(
+        (s) => ({ actions: [{ ...valid(a), id: `ACT-${101 + s.actions.length}` }, ...s.actions] }),
+        {
+          module: "Investigations",
+          entity: a.finding,
+          action: "Action created",
+          detail: a.action,
+        },
+      ),
     updateAction: (id, patch) =>
-      set((s) => ({ actions: s.actions.map((a) => (a.id === id ? { ...a, ...patch } : a)) }), {
-        module: "Investigations",
-        entity: id,
-        action: "Action updated",
-        detail: describePatch(patch),
-      }),
+      set(
+        (s) => ({ actions: s.actions.map((a) => (a.id === id ? { ...a, ...valid(patch) } : a)) }),
+        {
+          module: "Investigations",
+          entity: id,
+          action: "Action updated",
+          detail: describePatch(patch),
+        },
+      ),
   },
   reports: {
-    read: async () => ({ versions }),
+    read: async () => {
+      await seedReview();
+      return { versions, reviews, reviewers: investigations.REVIEWERS };
+    },
     save: async (id, snapshot) => {
+      await seedReview();
       const v = frozenCopy({
         report: id,
         version: versions.filter((x) => x.report === id).length + 1,
@@ -433,6 +459,42 @@ export const demoRepo: Repository = {
       });
       return v;
     },
+    submit: async (id, version, reviewer) => {
+      await seedReview();
+      const saved = versions.filter((v) => v.report === id).map((v) => v.version);
+      const r = refuse(
+        review.submit(reviews, saved, { report: id, version, reviewer }, USER.name, now()),
+      );
+      reviews.push({ ...r, synthetic: true });
+      await set(() => ({}), {
+        module: "Reports",
+        entity: id,
+        action: "Submitted for review",
+        detail: `Version ${version} to ${reviewer}`,
+      });
+    },
+    comment: async (id, version, text) => {
+      await seedReview();
+      const i = reviewOf(id, version);
+      reviews[i] = refuse(review.comment(reviews[i]!, USER.name, text, now()));
+      await set(() => ({}), {
+        module: "Reports",
+        entity: id,
+        action: "Review comment",
+        detail: text,
+      });
+    },
+    decide: async (id, version, decision, note) => {
+      await seedReview();
+      const i = reviewOf(id, version);
+      reviews[i] = refuse(review.decide(reviews[i]!, USER.name, decision, note, now()));
+      await set(() => ({}), {
+        module: "Reports",
+        entity: id,
+        action: `Review ${decision.toLowerCase()}`,
+        detail: `Version ${version}${note ? `: ${note}` : ""}`,
+      });
+    },
   },
   audit: {
     read: async () => tag(state.audit),
@@ -443,3 +505,33 @@ export const demoRepo: Repository = {
     },
   },
 };
+
+// The owner's first version of a Pending Review report, built from the data as the demo opens it,
+// waiting for the session user's review. Seeded once, by the first call that needs it.
+let seeding: Promise<void> | undefined;
+function seedReview() {
+  return (seeding ??= (async () => {
+    const s = investigations.SUBMITTED_REVIEW;
+    const { investigations: invs, reports, actions } = await demoRepo.investigations.read();
+    const report = reports.find((r) => r.id === s.report)!;
+    const snapshot: ReportSnapshot = {
+      report,
+      inv: invs.find((i) => i.id === report.investigation)!,
+      finance: await demoRepo.finance.read(),
+      issues: (await demoRepo.datasets.read()).issues,
+      actions,
+      audit: await demoRepo.audit.read(),
+    };
+    versions.push(
+      frozenCopy({
+        report: s.report,
+        version: 1,
+        savedAt: s.at,
+        savedBy: s.submittedBy,
+        snapshot,
+        synthetic: true as const,
+      }),
+    );
+    reviews.push({ ...s, version: 1, comments: [], synthetic: true });
+  })());
+}
