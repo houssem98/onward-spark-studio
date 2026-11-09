@@ -38,7 +38,7 @@ it("a data dump restores into an empty database rebuilt from the migrations, row
       ('${MAKER}', 'Restore Maker', 'investigator', '${ALPHA}'),
       ('${CHECKER}', 'Restore Checker', 'reviewer', '${ALPHA}');
     insert into public.investigations (id, org_id, title, question, findings) values
-      ('INV-R1', '${ALPHA}', 'Restore case', 'Does it survive a restore?', '[{"id": "F-R1"}]');
+      ('INV-R1', '${ALPHA}', 'Restore case', 'Does it survive a restore?', '[{"id": "F-R1", "state": "UNVERIFIED"}]');
     insert into public.submissions (kind, subject, org_id, submitted_by) values
       ('report', 'RPT-A1', '${ALPHA}', '${MAKER}');
     insert into public.approvals (kind, subject, org_id, decision, decided_by, decided_by_id, comment)

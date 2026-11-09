@@ -1,4 +1,6 @@
-import { refuseUnearnedVerified } from "@/lib/evidence-policy";
+import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
+
+const today = () => new Date().toISOString().slice(0, 10);
 import { supabase } from "./supabase";
 import type { Repository } from "./types";
 
@@ -89,17 +91,25 @@ export const productionRepo: Repository = {
           .from("reports")
           .select("id, title, owner, period, investigation, state, status, updated"),
       ]);
+      // Stored states are not trusted: the policy sets every one from the record's facts.
+      const invs = ok(investigations).map((i) => withPolicyStates(i, today()));
       return {
-        investigations: ok(investigations),
+        investigations: invs,
         actions: ok(actions),
-        reports: ok(reports),
+        reports: ok(reports).map((r) => ({
+          ...r,
+          state: summarizeStates(
+            invs.filter((i) => i.id === r.investigation).map((i) => i.state),
+            0,
+          ),
+        })),
         nextSteps: [],
       };
     },
     create: async (inv) => {
       const table = db().from("investigations");
-      refuseUnearnedVerified(inv, new Date().toISOString().slice(0, 10));
-      ok(await table.insert(inv));
+      refuseUnearnedVerified(inv, today());
+      ok(await table.insert(withPolicyStates(inv, today())));
     },
     setStatus: async (id, status) => {
       changed(await db().from("investigations").update({ status }).eq("id", id).select("id"));

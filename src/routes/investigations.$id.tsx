@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useActions, useStore } from "@/store/app-store";
 import type { EvidenceState, Finding, InvStatus } from "@/data/investigations";
 import { DEMO_DATE } from "@/lib/definitions";
+import { SHOWN_WITH } from "@/lib/evidence";
 import { assignEvidenceState, findingAssessment } from "@/lib/evidence-policy";
 import { investigationsQuery, repo } from "@/repo/queries";
 
@@ -50,6 +51,7 @@ function Evidence({ f, today, hidden }: { f: Finding; today: string; hidden: boo
     >
       <p>Why this state: {assignEvidenceState(a).reasons.join(" ")}</p>
       {a.claimed !== undefined && <p>Claimed figure: {a.claimed}</p>}
+      {a.exceeds !== undefined && <p>Claimed: above {a.exceeds}</p>}
       {a.sources.length ? (
         <ul className="list-disc pl-4">
           {a.sources.map((s) => (
@@ -96,11 +98,8 @@ function InvDetail() {
     inv.findings
       .filter((f) => states.includes(f.state))
       .map((f) => `${f.id}: ${assignEvidenceState(findingAssessment(f, today)).reasons.join(" ")}`);
-  const contradictions = [...inv.contradictions, ...why(["CONFLICTING_EVIDENCE"])];
-  const limitations = [
-    ...inv.limitations,
-    ...why(["PARTIALLY_VERIFIED", "UNVERIFIED", "NOT_AVAILABLE"]),
-  ];
+  const contradictions = [...inv.contradictions, ...why(SHOWN_WITH.contradictions)];
+  const limitations = [...inv.limitations, ...why(SHOWN_WITH.gaps)];
 
   return (
     <Stagger className="space-y-section">

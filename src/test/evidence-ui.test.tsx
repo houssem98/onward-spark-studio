@@ -44,14 +44,14 @@ describe("evidence UI (L4 T5)", () => {
     const ev = screen.getByRole("region", { name: "Evidence for F-002-1" }).textContent;
     expect(ev).toContain("DS-012 AI model predictions · internal");
     expect(ev).toContain("gives 0.09");
-    expect(ev).toContain("Claimed figure: 0.1");
-    expect(ev).toContain("The claim and its sources do not give the same figure.");
+    expect(ev).toContain("Claimed: above 0.1");
+    expect(ev).toContain("A source gives a figure that is not above the claimed 0.1.");
   });
 
   it("keeps a finding's contradiction on screen without a click", async () => {
     await open("/investigations/INV-2026-002");
     expect(panel("Contradictory evidence")).toContain(
-      "F-002-1: The claim and its sources do not give the same figure.",
+      "F-002-1: A source gives a figure that is not above the claimed 0.1.",
     );
   });
 

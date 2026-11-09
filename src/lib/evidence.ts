@@ -16,6 +16,12 @@ export const EVIDENCE_STATES = [
 export const EvidenceStateSchema = z.enum(EVIDENCE_STATES);
 export type EvidenceState = z.infer<typeof EvidenceStateSchema>;
 
+// Which findings a page lists beside its contradictions, and which beside its gaps.
+export const SHOWN_WITH = {
+  contradictions: ["CONFLICTING_EVIDENCE"],
+  gaps: ["PARTIALLY_VERIFIED", "UNVERIFIED", "NOT_AVAILABLE"],
+} satisfies Record<string, EvidenceState[]>;
+
 const text = z.string().trim().min(1);
 const isoDate = z.string().date();
 
@@ -89,9 +95,11 @@ export const CalculationSchema = z
     id: text,
     formula: text,
     inputs: z
-      .array(z.object({ name: text, value: z.number(), unit: text, sourceId: text }).strict())
+      .array(
+        z.object({ name: text, value: z.number().finite(), unit: text, sourceId: text }).strict(),
+      )
       .min(1),
-    output: z.object({ value: z.number(), unit: text }).strict(),
+    output: z.object({ value: z.number().finite(), unit: text }).strict(),
   })
   .strict();
 export type Calculation = z.infer<typeof CalculationSchema>;
@@ -108,7 +116,7 @@ export const FigureSchema = z
     z
       .object({
         reliability: z.literal("confirmed"),
-        value: z.number(),
+        value: z.number().finite(),
         unit: text,
         sourceId: text,
         asOf: isoDate,
@@ -118,8 +126,8 @@ export const FigureSchema = z
       .object({
         reliability: z.literal("third_party_estimate"),
         estimator: text,
-        low: z.number(),
-        high: z.number(),
+        low: z.number().finite(),
+        high: z.number().finite(),
         unit: text,
         asOf: isoDate,
       })
@@ -133,7 +141,7 @@ export const FigureSchema = z
       .strict(),
     z.object({ reliability: z.literal("unavailable"), reason: text }).strict(),
   ])
-  .refine((f) => f.reliability !== "third_party_estimate" || f.low <= f.high, {
+  .refine((f) => f.reliability !== "third_party_estimate" || f.low < f.high, {
     message: "An estimate's range runs from low to high",
     path: ["low"],
   });

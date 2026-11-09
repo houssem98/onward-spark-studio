@@ -100,6 +100,36 @@ it("refuses a VERIFIED written by hand, in a record or its findings, and takes D
   await db.close();
 }, 60_000);
 
+it("refuses a finding with no state or an unknown one, and a VERIFIED finding added beside another (L4 T6a C7, C8)", async () => {
+  const db = await migrated();
+  const insert = (id: string, findings: string) =>
+    db.exec(
+      `insert into public.investigations (id, org_id, title, findings) values ('${id}', '${ALPHA}', 'x', '${findings}')`,
+    );
+  await expect(insert("NS-1", '[{"id": "F", "claim": "x"}]')).rejects.toThrow(
+    /seven evidence states/,
+  );
+  await expect(insert("NS-2", '[{"id": "F", "state": "Verified"}]')).rejects.toThrow(
+    /seven evidence states/,
+  );
+  await db.exec(`
+    set session_replication_role = replica;
+    insert into public.investigations (id, org_id, title, findings) values ('OLD-V', '${ALPHA}', 'x', '[{"id": "F1", "state": "VERIFIED"}]');
+    set session_replication_role = origin;
+  `);
+  await expect(
+    db.exec(
+      `update public.investigations set findings = findings || '[{"id": "F2", "state": "VERIFIED"}]' where id = 'OLD-V'`,
+    ),
+  ).rejects.toThrow(/evidence policy/);
+  await expect(
+    db.exec(
+      `update public.investigations set findings = findings || '[{"id": "F3", "state": "UNVERIFIED"}]' where id = 'OLD-V'`,
+    ),
+  ).resolves.toBeDefined();
+  await db.close();
+}, 60_000);
+
 it("lets only a recorded approval make a report Approved, in its own org, and nothing an investigation", async () => {
   const db = await migrated();
   await expect(

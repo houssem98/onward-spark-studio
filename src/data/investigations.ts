@@ -1,11 +1,6 @@
 import { DEMO_DATE } from "@/lib/definitions";
 import { demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
-import {
-  assignEvidenceState,
-  findingAssessment,
-  summarizeStates,
-  type Facts,
-} from "@/lib/evidence-policy";
+import { findingAssessment, withPolicyStates, type Facts } from "@/lib/evidence-policy";
 import { DATASETS } from "./datasets";
 import { BRIDGES } from "./finance";
 
@@ -80,18 +75,7 @@ export type InvestigationFixture = Omit<Investigation, "state" | "findings"> & {
 };
 
 export function assessInvestigation(i: InvestigationFixture): Investigation {
-  const findings = i.findings.map((f) => ({
-    ...f,
-    state: assignEvidenceState(findingAssessment(f)).state,
-  }));
-  return {
-    ...i,
-    findings,
-    state: summarizeStates(
-      findings.map((f) => f.state),
-      i.outstanding,
-    ),
-  };
+  return withPolicyStates(i);
 }
 
 export const INVESTIGATIONS: InvestigationFixture[] = [
@@ -229,7 +213,7 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
         period: "Q4-25 vs H1-24",
         method: "PSI",
         // The claim states the 0.10 threshold; the drift data's own PSI is what the source gives.
-        facts: facts("Q4-25 vs H1-24", { "DS-012": DSC_PSI }, { claimed: 0.1 }),
+        facts: facts("Q4-25 vs H1-24", { "DS-012": DSC_PSI }, { exceeds: 0.1 }),
         kind: "Measured",
         limitations: "Drift does not by itself prove the model is inaccurate.",
         next: "Outcome-based backtest once 12-month defaults mature.",

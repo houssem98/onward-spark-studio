@@ -10,7 +10,7 @@ import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
 import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
 import { DEMO_DATE } from "@/lib/definitions";
-import { refuseUnearnedVerified, summarizeStates } from "@/lib/evidence-policy";
+import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
   AccessRequest,
@@ -207,7 +207,8 @@ export const demoRepo: Repository = {
   crime: {
     read: async () => ({
       alerts: tag(state.alerts),
-      cases: tag(state.cases),
+      // The policy sets every evidence state on the way out, whatever an update wrote.
+      cases: tag(state.cases.map(crime.assessCase)),
       trend: tag(crime.CRIME_TREND),
       investigators: crime.INVESTIGATORS_LIST,
     }),
@@ -360,23 +361,27 @@ export const demoRepo: Repository = {
       ),
   },
   investigations: {
-    read: async () => ({
-      investigations: tag(state.investigations),
-      actions: tag(state.actions),
-      reports: tag(
-        investigations.REPORTS.map((r) => ({
-          ...r,
-          state: summarizeStates(
-            state.investigations.filter((i) => i.id === r.investigation).map((i) => i.state),
-            0,
-          ),
-        })),
-      ),
-      nextSteps: tag(investigations.NEXT_STEPS),
-    }),
+    read: async () => {
+      const invs = state.investigations.map((i) => withPolicyStates(i, DEMO_DATE));
+      return {
+        investigations: tag(invs),
+        actions: tag(state.actions),
+        reports: tag(
+          investigations.REPORTS.map((r) => ({
+            ...r,
+            state: summarizeStates(
+              invs.filter((i) => i.id === r.investigation).map((i) => i.state),
+              0,
+            ),
+          })),
+        ),
+        nextSteps: tag(investigations.NEXT_STEPS),
+      };
+    },
     create: async (inv) => {
       refuseUnearnedVerified(inv, DEMO_DATE);
-      return set((s) => ({ investigations: [inv, ...s.investigations] }), {
+      const assessed = withPolicyStates(inv, DEMO_DATE);
+      return set((s) => ({ investigations: [assessed, ...s.investigations] }), {
         module: "Investigations",
         entity: inv.id,
         action: "Created",

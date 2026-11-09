@@ -9,6 +9,7 @@ import { psi } from "@/lib/calc";
 import { SUGGESTIONS, answer } from "@/lib/copilot";
 import { assignEvidenceState, summarizeStates } from "@/lib/evidence-policy";
 import { demoRepo } from "@/repo/demo";
+import { handWrittenStates } from "./state-scan";
 
 const root = process.cwd();
 const walk = (dir: string): string[] =>
@@ -19,21 +20,13 @@ const walk = (dir: string): string[] =>
 
 // The schema names the states and the policy assigns them; nothing else may write one.
 const ALLOWED = new Set(["src/lib/evidence.ts", "src/lib/evidence-policy.ts"]);
-const STATES =
-  "VERIFIED|PARTIALLY_VERIFIED|UNVERIFIED|CONFLICTING_EVIDENCE|NOT_AVAILABLE|DRAFT|HYPOTHESIS";
-// A state written to a `state`, or typed as one; `source: "NOT_AVAILABLE"` on peer data is not one.
-const LITERAL = new RegExp(
-  `\\bstate\\s*[:=][^,;]*"(${STATES})"|"(${STATES})"\\s+as\\s+EvidenceState|EvidenceState\\s*=\\s*"(${STATES})"`,
-);
 
 describe("evidence states come from the policy (L4 T3)", () => {
   it("writes no evidence state as a literal outside the schema and the policy", () => {
     const hits = walk("src")
       .filter((p) => /\.tsx?$/.test(p) && !p.startsWith("src/test/") && !ALLOWED.has(p))
       .flatMap((p) =>
-        readFileSync(join(root, p), "utf8")
-          .split("\n")
-          .flatMap((line, i) => (LITERAL.test(line) ? [`${p}:${i + 1}: ${line.trim()}`] : [])),
+        handWrittenStates(readFileSync(join(root, p), "utf8")).map((hit) => `${p}:${hit}`),
       );
     expect(hits).toEqual([]);
   });
@@ -63,7 +56,7 @@ describe("evidence states come from the policy (L4 T3)", () => {
       expect(inv.state, inv.id).toBe(
         summarizeStates(
           inv.findings.map((f) => f.state),
-          inv.outstanding,
+          inv.outstanding + inv.contradictions.length,
         ),
       );
     }

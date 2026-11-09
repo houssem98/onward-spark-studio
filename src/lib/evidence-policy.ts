@@ -1,6 +1,12 @@
 import type { Finding, Investigation } from "@/data/investigations";
 import { DEMO_DATE } from "@/lib/definitions";
-import { DEMO_ENTITY, type Claim, type EvidenceState, type Source } from "@/lib/evidence";
+import {
+  DEMO_ENTITY,
+  SourceSchema,
+  type Claim,
+  type EvidenceState,
+  type Source,
+} from "@/lib/evidence";
 
 // The only code that may decide an evidence state. Pure: everything it needs is in the input,
 // the assessment date included, so the same input always gives the same state.
@@ -8,6 +14,8 @@ export interface Assessment {
   claim: Claim;
   /** The figure the claim states, when it states one. */
   claimed?: number;
+  /** The threshold the claim says the figure is above, when it states a threshold instead. */
+  exceeds?: number;
   /** The entity and period the claim is about; a source about anything else cannot support it. */
   scope: { entity: string; period: string };
   sources: Source[];
@@ -29,10 +37,10 @@ export interface Decision {
   reasons: string[];
 }
 
-// Two values agree when they differ by at most half a percent of the larger.
+// Figures agree when the widest gap between any two is at most half a percent of the largest.
 const TOLERANCE = 0.005;
-const agree = (a: number, b: number) =>
-  Math.abs(a - b) <= TOLERANCE * Math.max(Math.abs(a), Math.abs(b));
+const agree = (xs: number[]) =>
+  xs.length < 2 || Math.max(...xs) - Math.min(...xs) <= TOLERANCE * Math.max(...xs.map(Math.abs));
 
 const AUTHORITATIVE: ReadonlySet<Source["authority"]> = new Set([
   "regulatory",
@@ -40,17 +48,21 @@ const AUTHORITATIVE: ReadonlySet<Source["authority"]> = new Set([
   "internal",
 ]);
 const DAY = 86_400_000;
-const isFresh = (s: Source, today: string) =>
-  (Date.parse(today) - Date.parse(s.asOf)) / DAY <= s.freshForDays;
+// A source dated after the assessment is not evidence of anything at that date.
+const isFresh = (s: Source, today: string) => {
+  const age = (Date.parse(today) - Date.parse(s.asOf)) / DAY;
+  return age >= 0 && age <= s.freshForDays;
+};
 
 export function assignEvidenceState(a: Assessment): Decision {
   if (a.claim.kind === "hypothesis")
     return { state: "HYPOTHESIS", reasons: ["A hypothesis is tested, not verified."] };
   if (a.sources.length === 0) return { state: "UNVERIFIED", reasons: ["No source is linked."] };
+  const valid = a.sources.filter((s) => SourceSchema.safeParse(s).success);
+  if (valid.length === 0)
+    return { state: "UNVERIFIED", reasons: ["No linked source is a well-formed source record."] };
 
-  const inScope = a.sources.filter(
-    (s) => s.entity === a.scope.entity && s.period === a.scope.period,
-  );
+  const inScope = valid.filter((s) => s.entity === a.scope.entity && s.period === a.scope.period);
   if (inScope.length === 0)
     return {
       state: "UNVERIFIED",
@@ -62,11 +74,17 @@ export function assignEvidenceState(a: Assessment): Decision {
   if (values.length === 0)
     return { state: "NOT_AVAILABLE", reasons: ["No in-scope source gives a value."] };
 
-  const all =
-    a.claimed === undefined
-      ? values.map((v) => v.value)
-      : [a.claimed, ...values.map((v) => v.value)];
-  if (all.some((v) => !agree(v, all[0]!)))
+  if (a.exceeds !== undefined && values.some((v) => v.value <= a.exceeds!))
+    return {
+      state: "CONFLICTING_EVIDENCE",
+      reasons: [`A source gives a figure that is not above the claimed ${a.exceeds}.`],
+    };
+  const figures = [
+    ...(a.claimed === undefined ? [] : [a.claimed]),
+    ...values.map((v) => v.value),
+    ...(a.calculation ? [a.calculation.output] : []),
+  ];
+  if (!agree(figures))
     return {
       state: "CONFLICTING_EVIDENCE",
       reasons: ["The claim and its sources do not give the same figure."],
@@ -74,7 +92,7 @@ export function assignEvidenceState(a: Assessment): Decision {
   if (
     a.calculation &&
     a.calculation.reproduced !== null &&
-    !agree(a.calculation.output, a.calculation.reproduced)
+    !agree([a.calculation.output, a.calculation.reproduced])
   )
     return {
       state: "CONFLICTING_EVIDENCE",
@@ -84,6 +102,8 @@ export function assignEvidenceState(a: Assessment): Decision {
     };
 
   const limits: string[] = [];
+  if (a.claimed === undefined && a.exceeds === undefined)
+    limits.push("The claim states no figure of its own, so nothing it says was compared.");
   if (a.calculation && a.calculation.reproduced === null)
     limits.push("The calculation could not be reproduced.");
   if (a.reconciles === false) limits.push("The figure's parts do not reconcile to its total.");
@@ -115,24 +135,44 @@ export function summarizeStates(states: EvidenceState[], open: number): Evidence
   return measured.every((s) => s === "NOT_AVAILABLE") ? "NOT_AVAILABLE" : "UNVERIFIED";
 }
 
+// The record's own claim, scope and date come last, so nothing in its facts can replace them.
 export const findingAssessment = (
   f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts">,
   today = DEMO_DATE,
 ): Assessment => ({
+  ...(f.facts ?? { sources: [] }),
   claim: { id: f.id, text: f.claim, kind: f.kind === "Hypothesis" ? "hypothesis" : "measured" },
   scope: { entity: DEMO_ENTITY, period: f.period },
   today,
-  ...(f.facts ?? { sources: [] }),
 });
+
+type Unassessed = Omit<Investigation, "state" | "findings"> & {
+  findings: Omit<Finding, "state">[];
+};
+
+/** The record with every state the policy's, whatever states it came with; a recorded contradiction counts as open. */
+export function withPolicyStates(i: Unassessed, today = DEMO_DATE): Investigation {
+  const findings = i.findings.map((f) => ({
+    ...f,
+    state: assignEvidenceState(findingAssessment(f, today)).state,
+  }));
+  return {
+    ...i,
+    findings,
+    state: summarizeStates(
+      findings.map((f) => f.state),
+      i.outstanding + i.contradictions.length,
+    ),
+  };
+}
 
 // A record may say VERIFIED only where the policy, on the record's own facts, says so too.
 export function refuseUnearnedVerified(inv: Investigation, today: string): void {
-  const states = inv.findings.map((f) => assignEvidenceState(findingAssessment(f, today)).state);
+  const earned = withPolicyStates(inv, today);
   const forged = inv.findings
-    .filter((f, i) => f.state === "VERIFIED" && states[i] !== "VERIFIED")
+    .filter((f, i) => f.state === "VERIFIED" && earned.findings[i]!.state !== "VERIFIED")
     .map((f) => f.id);
-  if (inv.state === "VERIFIED" && summarizeStates(states, inv.outstanding) !== "VERIFIED")
-    forged.push(inv.id);
+  if (inv.state === "VERIFIED" && earned.state !== "VERIFIED") forged.push(inv.id);
   if (forged.length)
     throw new Error(`Only the evidence policy sets Verified: ${forged.join(", ")}`);
 }

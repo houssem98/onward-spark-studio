@@ -45,7 +45,8 @@ describe("persistence", () => {
       period: "FY2025",
       priority: "Low",
       status: "Draft",
-      state: "UNVERIFIED",
+      // What the policy gives an investigation with no findings; since L4 T6a nothing else is stored.
+      state: "NOT_AVAILABLE",
       outstanding: 0,
       findings: [],
       contradictions: [],
@@ -80,6 +81,29 @@ describe("persistence", () => {
         .error,
     ).not.toBeNull();
     expect((await insert("draft", { state: "DRAFT" })).error).toBeNull();
+  });
+
+  it("shows the policy's state for a row whose stored states were written by hand (L4 T6a C1)", async () => {
+    const db = await fresh();
+    const id = `INV-HAND-${run}`;
+    const findings = [
+      { id: "F", claim: "x", kind: "Measured", period: "FY2025", state: "PARTIALLY_VERIFIED" },
+    ];
+    expect(
+      (
+        await db
+          .from("investigations")
+          .insert({ id, title: "By hand", state: "PARTIALLY_VERIFIED", findings })
+      ).error,
+    ).toBeNull();
+    await as("INVESTIGATOR");
+    const shown = (await productionRepo.investigations.read()).investigations.find(
+      (i) => i.id === id,
+    );
+    expect([shown?.state, shown?.findings.map((f) => f.state)]).toEqual([
+      "UNVERIFIED",
+      ["UNVERIFIED"],
+    ]);
   });
 
   it("an action and its update outlive the client that made them", async () => {

@@ -168,11 +168,12 @@ export interface CaseEvidence {
 // Case evidence is judged within the case's own window, and each value counts the records found.
 const CASE_WINDOW = "Case window";
 
+// The evidence's own claim, scope and date come last, so nothing in its facts can replace them.
 export const caseAssessment = (e: Pick<CaseEvidence, "id" | "label" | "facts">): Assessment => ({
+  ...(e.facts ?? { sources: [] }),
   claim: { id: e.id, text: e.label, kind: "measured" },
   scope: { entity: DEMO_ENTITY, period: CASE_WINDOW },
   today: DEMO_DATE,
-  ...(e.facts ?? { sources: [] }),
 });
 
 const records = (id: string, count: number, asOf?: string): Facts => ({
