@@ -15,7 +15,7 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 1. The active loop is the first unticked loop below whose needs are all ticked.
 2. In the active loop's ledger, take the first unticked task whose needs are all ticked and that is not marked (human).
 3. If no such task exists in the active loop, try the next unticked loop whose needs are all ticked. If none has an agent task, stop and escalate, naming the (human) tasks that block.
-4. Only the human ticks a loop line, after that loop's signoff task is ticked and `npm run gate` passes.
+4. Only the human ticks a loop line, after that loop's signoff task is ticked and `npm run gate` passes. Exception: under the human's delegation of 2026-11-09 (`docs/LOOP_CONVENTIONS.md`), the loop does Signoff tasks and ticks loop lines itself, each marked "delegated signoff, not reviewed by the human"; other (human) tasks still stop it.
 5. A loop's budget is ticks (entries in its Journal) or spend, whichever runs out first. The author picked these defaults; they are not cost estimates. Edit them here.
 6. Tracks. L0 to L8 are the trust program; L9 to L12 are the design track, L9 to L11 from `docs/roadmap/DESIGN_MOTION_ROADMAP.md` and L12 from the human's unslop audit. `BANKINTELLI_LOOP.md` applies rules 1 to 3 over every loop; `BANKINTELLI_DESIGN_LOOP.md` applies them over L9 to L12 only and, when none has an agent task, stops and escalates instead of crossing into the trust program. Run one driver at a time: both write to the same tree and index.
 
@@ -24,7 +24,7 @@ Phases come from `BankIntelli_Elite_Premium_Design_Roadmap.md`; the plan and tod
 - [x] L0 Truth. ledger: `docs/loops/L0_TRUTH.md` · needs: none. · budget 12 ticks or $15 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 0 --- Baseline and design audit`
 - [x] L1 Design. ledger: `docs/loops/L1_DESIGN.md` · needs: L0. · budget 20 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 1 --- Design system and shell`
 - [x] L2 Data. ledger: `docs/loops/L2_DATA.md` · needs: L0. · budget 15 ticks or $15 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 2 --- Data boundaries and safe demo mode`
-- [ ] L3 Identity. ledger: `docs/loops/L3_IDENTITY.md` · needs: L2. · budget 20 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 3 --- Identity, authorization and persistence`
+- [x] L3 Identity. ledger: `docs/loops/L3_IDENTITY.md` · needs: L2. · budget 20 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 3 --- Identity, authorization and persistence` · ticked 2026-11-09: delegated signoff, not reviewed by the human
 - [ ] L4 Evidence. ledger: `docs/loops/L4_EVIDENCE.md` · needs: L1, L2. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 4 --- Evidence and source registry`
 - [ ] L5 Flagship. ledger: `docs/loops/L5_FLAGSHIP.md` · needs: L3, L4. · budget 20 ticks or $25 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 5 --- Complete flagship investigation`
 - [ ] L6 Integrations. ledger: `docs/loops/L6_INTEGRATIONS.md` · needs: L5. · budget 15 ticks or $20 · `BankIntelli_Elite_Premium_Design_Roadmap.md#Phase 6 --- Domain integrations`
