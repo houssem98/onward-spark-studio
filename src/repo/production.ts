@@ -130,6 +130,8 @@ export const productionRepo: Repository = {
       );
     },
   },
+  // No table holds report versions yet; storing them is a schema change the human approves.
+  reports: { read: notConfigured, save: notConfigured },
   audit: {
     read: async () =>
       ok(

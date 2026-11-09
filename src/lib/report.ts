@@ -48,6 +48,17 @@ export interface ReportInput {
   signoff?: SignOff;
 }
 
+/** What a saved version keeps: every input the report is built from, so re-rendering it reproduces it. */
+export type ReportSnapshot = Omit<ReportInput, "notice">;
+export interface ReportVersion {
+  report: string;
+  version: number;
+  savedAt: string;
+  savedBy: string;
+  snapshot: ReportSnapshot;
+  synthetic?: true;
+}
+
 export const SYNTHETIC_LINE =
   "Synthetic: built on synthetic demo records of the fictional Northstar Bank; nothing here describes a real bank.";
 

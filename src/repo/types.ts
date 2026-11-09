@@ -5,6 +5,7 @@ import type * as finance from "@/data/finance";
 import type * as investigations from "@/data/investigations";
 import type * as models from "@/data/models";
 import type { Bridge } from "@/lib/calc";
+import type { ReportSnapshot, ReportVersion } from "@/lib/report";
 
 export interface User {
   name: string;
@@ -179,6 +180,12 @@ export interface Repository {
     setStatus(id: string, status: investigations.InvStatus): Promise<void>;
     addAction(a: Omit<investigations.Action, "id">): Promise<void>;
     updateAction(id: string, patch: Partial<investigations.Action>): Promise<void>;
+  };
+  reports: {
+    /** Every saved report version, oldest first; each is immutable. */
+    read(): Promise<{ versions: ReportVersion[] }>;
+    /** Stores a new version; nothing updates or deletes one. */
+    save(id: string, snapshot: ReportSnapshot): Promise<ReportVersion>;
   };
   audit: {
     read(): Promise<AuditEvent[]>;

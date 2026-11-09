@@ -38,6 +38,10 @@ export const explanationsQuery = queryOptions({
   queryFn: () => repo.models.explain(),
   retry: false,
 });
+export const reportsQuery = queryOptions({
+  queryKey: ["reports"],
+  queryFn: () => repo.reports.read(),
+});
 export const investigationsQuery = queryOptions({
   queryKey: ["investigations"],
   queryFn: () => repo.investigations.read(),

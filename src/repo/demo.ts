@@ -10,6 +10,8 @@ import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
 import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
 import { DEMO_DATE } from "@/lib/definitions";
+import { frozenCopy } from "@/lib/frozen";
+import type { ReportVersion } from "@/lib/report";
 import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
@@ -152,6 +154,7 @@ let state: State = {
 };
 
 let seq = 5;
+const versions: ReportVersion[] = [];
 
 async function set(
   fn: (s: State) => Partial<State>,
@@ -409,6 +412,27 @@ export const demoRepo: Repository = {
         action: "Action updated",
         detail: describePatch(patch),
       }),
+  },
+  reports: {
+    read: async () => ({ versions }),
+    save: async (id, snapshot) => {
+      const v = frozenCopy({
+        report: id,
+        version: versions.filter((x) => x.report === id).length + 1,
+        savedAt: now(),
+        savedBy: USER.name,
+        snapshot,
+        synthetic: true as const,
+      });
+      versions.push(v);
+      await set(() => ({}), {
+        module: "Reports",
+        entity: id,
+        action: "Version saved",
+        detail: `Version ${v.version}`,
+      });
+      return v;
+    },
   },
   audit: {
     read: async () => tag(state.audit),
