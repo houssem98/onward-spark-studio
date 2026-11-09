@@ -34,7 +34,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F5 · high · Five links lead to a page that does not exist
-- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`; now served by an honest placeholder (`src/routes/reports.$id.tsx#Report preview not built yet.`) and guarded by `src/test/link-integrity.test.tsx#resolves every in-app link to a route`. All three L0 T7 runs asked to reopen this because the report itself is still not built; not reopened, because the finding was dead links, the human chose the honest placeholder in L0 T2, and the missing report is recorded as absent in `docs/audit/CAPABILITY_MATRIX.md` and owned by L5 T3.
+- Evidence: `src/routes/index.tsx#to="/reports/$id"`, `src/lib/copilot.ts#to: "/reports/RPT-FY25-PERF"`; served by an honest placeholder from L0 T3 until L5 T3 built the report (`src/lib/report.ts#export function buildReport(`) and guarded by `src/test/link-integrity.test.tsx#resolves every in-app link to a route`. All three L0 T7 runs asked to reopen this because the report itself is still not built; not reopened, because the finding was dead links, the human chose the honest placeholder in L0 T2, and the missing report is recorded as absent in `docs/audit/CAPABILITY_MATRIX.md` and owned by L5 T3.
 - Fix: L0 T3
 - Status: fixed in L0 T3
 

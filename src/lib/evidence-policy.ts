@@ -138,6 +138,14 @@ export function assignEvidenceState(a: Assessment): Decision {
       };
 }
 
+// A report: its findings with its open items, and a missing reviewer sign-off as one more, so only a
+// signed-off report whose findings are all verified and nothing open is VERIFIED.
+export const reportState = (findings: EvidenceState[], open: number, signedOff: boolean) =>
+  summarizeStates(findings, open + (signedOff ? 0 : 1));
+export const isVerified = (s: EvidenceState) => s === "VERIFIED";
+export const verifiedLabel = (findings: EvidenceState[], signoff: unknown) =>
+  isVerified(reportState(findings, 0, signoff !== undefined));
+
 // One state for a set of claims; anything still open, or any standing hypothesis, keeps it short of VERIFIED.
 export function summarizeStates(states: EvidenceState[], open: number): EvidenceState {
   if (states.length === 0) return "NOT_AVAILABLE";

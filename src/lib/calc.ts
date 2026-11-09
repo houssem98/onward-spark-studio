@@ -147,7 +147,12 @@ export const exportNotice = () =>
 
 // Every downloaded file states its environment on its first line.
 export function downloadFile(name: string, content: string, type = "text/csv") {
-  const notice = type === "text/markdown" ? `> ${exportNotice()}\n` : exportNotice();
+  const notice =
+    type === "text/markdown"
+      ? `> ${exportNotice()}\n`
+      : type === "text/html"
+        ? `<!-- ${exportNotice()} -->`
+        : exportNotice();
   const blob = new Blob([`${notice}\n${content}`], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
