@@ -20,6 +20,8 @@ Deciding rule, fixed before T1 starts: T0 to T7 are ticked, `npm run gate` exits
 - [ ] T5 Budgets. needs: T3. Bundle-size and accessibility budgets that fail the gate when exceeded. Evidence: the budget script quoted failing on a deliberate overage, then passing.
 - [ ] T6 Security review. needs: T4. A different model, in at least 3 independent runs, reviews the whole app against the attack list; every critical and high finding is fixed with a test. Evidence: `docs/audit/TRUST_FINDINGS.md` (new) shows zero open critical or high, enforced by its test.
 - [ ] T7 Runbooks. needs: T6. Deployment guide, data-source limitations, incident response and the backup drill record in `docs/ops/` (new). Evidence: graph-lint exits 0; the human's incident drill line.
-- [ ] T8 (human) Pilot signoff. needs: T1, T5, T7. Evidence: the signoff line in the Journal.
+- [ ] T8 (human) Pilot signoff. needs: T1, T5, T7, T10. Evidence: the signoff line in the Journal.
+- [ ] T9 (human) Server-side evidence policy. needs: T0. From L4 T6c (C9): production cannot reach VERIFIED, because the policy runs in the client and the database refuses every new VERIFIED (`docs/loops/L4_EVIDENCE.md#so production cannot reach VERIFIED`). Approve where the policy runs on the server, a database function or a service (I7), so that only it can write VERIFIED. Evidence: the decision line in the Journal.
+- [ ] T10 Server-side evidence policy. needs: T9. Build what T9 approves; the trigger lets the server-side policy, and nothing else, write VERIFIED. Evidence: tests against the test project: the policy path reaches VERIFIED through the production adapter; a client write of VERIFIED is still refused; `npm run gate` exits 0.
 
 ## Journal
