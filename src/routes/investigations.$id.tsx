@@ -6,8 +6,10 @@ import { EvidenceBadge, Field, Notice, PageHeader, Panel, StatusBadge } from "@/
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useActions, useStore } from "@/store/app-store";
-import type { InvStatus } from "@/data/investigations";
-import { investigationsQuery } from "@/repo/queries";
+import type { EvidenceState, Finding, InvStatus } from "@/data/investigations";
+import { DEMO_DATE } from "@/lib/definitions";
+import { assignEvidenceState, findingAssessment } from "@/lib/evidence-policy";
+import { investigationsQuery, repo } from "@/repo/queries";
 
 export const Route = createFileRoute("/investigations/$id")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -34,6 +36,45 @@ export const Route = createFileRoute("/investigations/$id")({
 
 const OWNERS = ["A. Haddad", "G. Rossi", "T. Ibrahim", "K. Mensah", "F. Leclerc", "D. Moreau"];
 
+/** What a finding's state rests on: its sources, what each gives, and the policy's reasons. */
+function Evidence({ f, today, hidden }: { f: Finding; today: string; hidden: boolean }) {
+  const a = findingAssessment(f, today);
+  const given = (id: string) => a.values?.find((v) => v.sourceId === id)?.value;
+  return (
+    <div
+      id={`evidence-${f.id}`}
+      role="region"
+      aria-label={`Evidence for ${f.id}`}
+      hidden={hidden}
+      className="space-y-1 rounded-md border bg-muted/30 p-3 text-xs"
+    >
+      <p>Why this state: {assignEvidenceState(a).reasons.join(" ")}</p>
+      {a.claimed !== undefined && <p>Claimed figure: {a.claimed}</p>}
+      {a.sources.length ? (
+        <ul className="list-disc pl-4">
+          {a.sources.map((s) => (
+            <li key={s.id}>
+              {s.name} · {s.authority.replace("_", " ")} · {s.entity} · {s.period} · as of {s.asOf}{" "}
+              · {given(s.id) === undefined ? "gives no value" : `gives ${given(s.id)}`}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No source is linked.</p>
+      )}
+      {a.calculation && (
+        <p>
+          Calculation: states {a.calculation.output}; recomputed{" "}
+          {a.calculation.reproduced ?? "it could not be reproduced"}
+        </p>
+      )}
+      {a.reconciles !== undefined && (
+        <p>Parts reconcile to the total: {a.reconciles ? "yes" : "no"}</p>
+      )}
+    </div>
+  );
+}
+
 function InvDetail() {
   const { id } = Route.useParams();
   const actions = useActions();
@@ -46,7 +87,20 @@ function InvDetail() {
     due: string;
   } | null>(null);
 
+  const [openEv, setOpenEv] = useState<string | null>(null);
+
   if (!inv) return null;
+  const today = repo.environment === "demo" ? DEMO_DATE : new Date().toISOString().slice(0, 10);
+  // A finding's conflict or gap stays on screen, whether or not its evidence is open.
+  const why = (states: EvidenceState[]) =>
+    inv.findings
+      .filter((f) => states.includes(f.state))
+      .map((f) => `${f.id}: ${assignEvidenceState(findingAssessment(f, today)).reasons.join(" ")}`);
+  const contradictions = [...inv.contradictions, ...why(["CONFLICTING_EVIDENCE"])];
+  const limitations = [
+    ...inv.limitations,
+    ...why(["PARTIALLY_VERIFIED", "UNVERIFIED", "NOT_AVAILABLE"]),
+  ];
 
   return (
     <Stagger className="space-y-section">
@@ -106,10 +160,19 @@ function InvDetail() {
                     tone={f.kind === "Measured" ? "info" : "neutral"}
                     icon={false}
                   />
-                  <p className="mt-1 font-medium">{f.claim}</p>
+                  <button
+                    type="button"
+                    aria-expanded={openEv === f.id}
+                    aria-controls={`evidence-${f.id}`}
+                    onClick={() => setOpenEv(openEv === f.id ? null : f.id)}
+                    className="mt-1 block text-left font-medium decoration-dotted underline-offset-4 hover:underline"
+                  >
+                    {f.claim}
+                  </button>
                 </div>
                 <EvidenceBadge state={f.state} />
               </div>
+              <Evidence f={f} today={today} hidden={openEv !== f.id} />
               <dl className="grid gap-3 text-xs md:grid-cols-4">
                 <Field label="Evidence">{f.evidence}</Field>
                 <Field label="Source · period">
@@ -198,9 +261,9 @@ function InvDetail() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Contradictory evidence">
-          {inv.contradictions.length ? (
+          {contradictions.length ? (
             <ul className="list-disc pl-4 text-sm">
-              {inv.contradictions.map((c) => (
+              {contradictions.map((c) => (
                 <li key={c}>{c}</li>
               ))}
             </ul>
@@ -209,9 +272,9 @@ function InvDetail() {
           )}
         </Panel>
         <Panel title="Limitations">
-          {inv.limitations.length ? (
+          {limitations.length ? (
             <ul className="list-disc pl-4 text-sm">
-              {inv.limitations.map((c) => (
+              {limitations.map((c) => (
                 <li key={c}>{c}</li>
               ))}
             </ul>

@@ -94,7 +94,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: fixed in L1 T6
 
 ### F17 · low · The sidebar's synthetic-data notice disappears when the sidebar collapses
-- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), seen on every page in `docs/audit/VISUAL_BASELINE.md`. L1 T2 added an environment banner above every page that does not collapse with the sidebar and is not hidden in print (`src/components/AppShell.tsx#aria-label="Environment"`), checked by `src/test/app-shell.test.tsx#shows the synthetic-data banner on every real route and the 404`.
+- Evidence: `src/components/AppShell.tsx#{!collapsed && (` then `src/components/AppShell.tsx#Proof of concept. All data is synthetic and belongs to the fictional Northstar Bank.`. Lowered from medium in L0 T6: every page header also carries a tag (`src/components/kit.tsx#export function SyntheticTag({`), seen on every page in `docs/audit/VISUAL_BASELINE.md`. L1 T2 added an environment banner above every page that does not collapse with the sidebar and is not hidden in print (`src/components/AppShell.tsx#aria-label="Environment"`), checked by `src/test/app-shell.test.tsx#shows the synthetic-data banner on every real route and the 404`.
 - Fix: L1 T2
 - Status: fixed in L1 T2
 
@@ -225,7 +225,7 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F43 · low · Labels that call the data synthetic or demo are static text
-- Evidence: the environment switch reaches the banner, the KPI tooltip and the first line of each download, but other labels are fixed strings: the page tag (`src/components/kit.tsx#export function SyntheticTag({ label = "Synthetic demo data" }`), the export toast (`src/components/DataTable.tsx#synthetic records`), the Markdown export bodies (`src/routes/crime.$id.tsx#Fictional synthetic data. Customer identifiers are fictional.`), the document title (`src/routes/__root.tsx#Banking Intelligence (demo)`) and the "(demo data)" source caption on every chart. With a production adapter that returned data, these would still call it synthetic. Latent today, because every production read rejects. Found by the L2 T8 council (C11); the source captions belong with the source registry.
+- Evidence: the environment switch reaches the banner, the KPI tooltip and the first line of each download, but other labels are fixed strings: the page tag (`src/components/kit.tsx#export function SyntheticTag({`), the export toast (`src/components/DataTable.tsx#synthetic records`), the Markdown export bodies (`src/routes/crime.$id.tsx#Fictional synthetic data. Customer identifiers are fictional.`), the document title (`src/routes/__root.tsx#Banking Intelligence (demo)`) and the "(demo data)" source caption on every chart. With a production adapter that returned data, these would still call it synthetic. Latent today, because every production read rejects. Found by the L2 T8 council (C11); the source captions belong with the source registry.
 - Fix: L4 T5
 - Status: open
 

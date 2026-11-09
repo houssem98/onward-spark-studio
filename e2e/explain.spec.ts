@@ -118,6 +118,9 @@ test("beeswarm points travel once from zero and rest at their contribution", asy
   expect(off.misplaced, "every point rests at its contribution").toBe(0);
 });
 
+// A row's figures, without the reliability column ChartFrame adds after them (L4 T5).
+const VALUE = "td:not([data-reliability])";
+
 // L11 T8 (council C19): a step not yet revealed shows nothing on hover; a revealed one does.
 test("hovering a step that is not revealed yet shows no value", async ({ page }) => {
   test.setTimeout(120_000);
@@ -133,8 +136,8 @@ test("hovering a step that is not revealed yet shows no value", async ({ page })
   await expect(frame).toHaveAttribute("data-step", "0");
   await frame.scrollIntoViewIfNeeded();
   const cells = frame.locator("table tbody tr");
-  const baseline = (await cells.first().locator("td").last().textContent())!;
-  const output = (await cells.last().locator("td").last().textContent())!;
+  const baseline = (await cells.first().locator(VALUE).last().textContent())!;
+  const output = (await cells.last().locator(VALUE).last().textContent())!;
   const plot = (await frame.locator(".recharts-cartesian-grid").boundingBox())!;
   const ticks = frame.locator(".recharts-xAxis .recharts-cartesian-axis-tick");
   const tooltip = frame.locator(".recharts-tooltip-wrapper");
@@ -217,7 +220,7 @@ test("a case plays to the end and its final label is the output", async ({ page 
   await play.click();
   const line = frame.locator("[data-step-line]");
   await expect(line).toContainText("Output log-odds", { timeout: 30_000 });
-  const output = await frame.locator("table tbody tr").last().locator("td").last().textContent();
+  const output = await frame.locator("table tbody tr").last().locator(VALUE).last().textContent();
   const labels = frame.locator(".recharts-label-list text");
   await expect(labels).toHaveCount(await frame.locator("table tbody tr").count());
   await expect(labels.last()).toHaveText(output!);

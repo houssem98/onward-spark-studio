@@ -274,6 +274,7 @@ function Overview() {
           basis
           def="operating_income"
           value={fmtM(rev, 0)}
+          inputs={departments.map((d) => ({ label: d.name, value: fmtM(d.revenue) }))}
           delta={fmtPct(growth(rev, prior))}
           versus="vs FY2024"
           deltaGood
@@ -282,13 +283,38 @@ function Overview() {
           basis
           def="cost_to_income"
           value={fmtPct(costToIncome(opex, rev))}
+          inputs={[
+            { label: "Operating expenses", value: fmtM(opex) },
+            { label: "Operating income", value: fmtM(rev) },
+          ]}
           delta={fmtFixed(cirChange, 1, "pp")}
           versus="vs FY2024"
           deltaGood={cirChange !== null && cirChange < 0}
         />
-        <Kpi basis def="npl_ratio" value={fmtPct(pct(npl, bal), 2)} />
-        <Kpi basis def="outstanding_balance" value={fmtM(bal, 0)} />
-        <Kpi basis def="dq_dimension_mean" value={fmtFixed(dqAvg)} />
+        <Kpi
+          basis
+          def="npl_ratio"
+          value={fmtPct(pct(npl, bal), 2)}
+          inputs={[
+            { label: "Non-performing balance", value: fmtM(npl) },
+            { label: "Outstanding balance", value: fmtM(bal) },
+          ]}
+        />
+        <Kpi
+          basis
+          def="outstanding_balance"
+          value={fmtM(bal, 0)}
+          inputs={[{ label: `Balances of ${slices.length} portfolio slices`, value: fmtM(bal) }]}
+        />
+        <Kpi
+          basis
+          def="dq_dimension_mean"
+          value={fmtFixed(dqAvg)}
+          inputs={dqDimensions.map((d) => ({
+            label: d.dimension,
+            value: d.score === null ? "not measurable, left out" : String(d.score),
+          }))}
+        />
       </KpiBand>
 
       <div className="grid gap-5 xl:grid-cols-3">

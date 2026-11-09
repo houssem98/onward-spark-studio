@@ -50,6 +50,7 @@ import { financeQuery } from "@/repo/queries";
 import { DEMO_DATE, FINANCE_DATASET } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
+import { describeFigure, peerFigure } from "@/lib/evidence";
 
 export const Route = createFileRoute("/performance")({
   loader: async ({ context: { queryClient } }) => {
@@ -156,21 +157,29 @@ function PerformancePage() {
     .map(shortName)
     .join(", ");
 
-  const peerChart = useMemo(
-    () =>
-      [
-        { name: bank.short, value: round(ns[metric], 2), src: "INTERNAL", period: "FY2025" },
-        ...peers
-          .filter((p) => peerSel.includes(p.id))
-          .map((p) => ({
-            name: shortName(p),
-            value: p[metric],
-            src: p.source,
-            period: p.period,
-          })),
-      ].filter((x) => x.value !== null),
-    [peerSel, metric, peers],
-  );
+  // Every selected bank stays in the table with how reliable its figure is; only figures go in the chart.
+  const peerRows = useMemo(() => {
+    const unit = unitOf(METRICS.find((m) => m.key === metric)!.label);
+    const row = (name: string, p: Parameters<typeof peerFigure>[0], value: number | null) => {
+      const f = peerFigure(p, value, unit);
+      return {
+        name,
+        value: f.reliability === "confirmed" ? f.value : null,
+        src: p.source,
+        period: p.period,
+        reliability: describeFigure(f),
+      };
+    };
+    return [
+      row(
+        bank.short,
+        { name: bank.name, period: "FY2025", source: "INTERNAL" },
+        round(ns[metric], 2),
+      ),
+      ...peers.filter((p) => peerSel.includes(p.id)).map((p) => row(shortName(p), p, p[metric])),
+    ];
+  }, [peerSel, metric, peers]);
+  const peerChart = peerRows.filter((x) => x.value !== null);
 
   // wizard
   const [step, setStep] = useState(0);
@@ -390,11 +399,11 @@ function PerformancePage() {
           <div className="grid gap-4 xl:grid-cols-2">
             <ChartFrame
               title={METRICS.find((m) => m.key === metric)!.label}
-              description="Peers without permitted data are excluded"
+              description="A bank with no reliable figure is listed in the table, not drawn"
               unit={unitOf(METRICS.find((m) => m.key === metric)!.label)}
-              period={[...new Set(peerChart.map((r) => r.period))].join("; ")}
+              period={[...new Set(peerRows.map((r) => r.period))].join("; ")}
               source="Internal figures, peer disclosures and licensed data (synthetic demo data)"
-              rows={peerChart}
+              rows={peerRows}
               columns={[
                 { key: "name", header: "Bank" },
                 { key: "value", header: "Value" },

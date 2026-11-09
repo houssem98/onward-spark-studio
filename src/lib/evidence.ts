@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Dataset } from "@/data/datasets";
+import type { Peer, SourceType } from "@/data/finance";
 import { DEFINITIONS, type DefinitionId } from "@/lib/definitions";
 
 export const EVIDENCE_STATES = [
@@ -137,3 +138,61 @@ export const FigureSchema = z
     path: ["low"],
   });
 export type Figure = z.infer<typeof FigureSchema>;
+
+const day = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+/** A figure's reliability class in plain words, the format the human supplied on 2026-10-28. */
+export function describeFigure(f: Figure): string {
+  switch (f.reliability) {
+    case "confirmed":
+      return `Confirmed: ${f.sourceId}, as of ${day(f.asOf)}`;
+    case "third_party_estimate":
+      return `Estimate by ${f.estimator}: ${f.low} to ${f.high} ${f.unit}, as of ${day(f.asOf)}`;
+    case "not_disclosed":
+      return `Not disclosed. Disclosed instead: ${f.disclosedInstead}. Not the same figure: ${f.whyDifferent}`;
+    case "unavailable":
+      return `No reliable figure: ${f.reason}`;
+  }
+}
+
+const SOURCE_WORDS: Record<SourceType, string> = {
+  PUBLIC_DISCLOSURE: "public disclosure",
+  LICENSED: "licensed data",
+  INTERNAL: "internal figures",
+  NOT_AVAILABLE: "no permitted source",
+};
+
+/** A bank's figure for one metric as a reliability class; a fiscal-year figure is dated at its year end. */
+export function peerFigure(
+  p: Pick<Peer, "name" | "period" | "source" | "warning" | "notDisclosed">,
+  value: number | null,
+  unit: string,
+): Figure {
+  if (p.source === "NOT_AVAILABLE")
+    return { reliability: "unavailable", reason: p.warning ?? "No permitted source." };
+  if (p.notDisclosed)
+    return {
+      reliability: "not_disclosed",
+      disclosedInstead: p.notDisclosed.instead,
+      whyDifferent: p.notDisclosed.why,
+    };
+  const year = /^FY(\d{4})$/.exec(p.period)?.[1];
+  if (value === null || !year)
+    return {
+      reliability: "unavailable",
+      reason: `${p.name}'s ${p.period} ${SOURCE_WORDS[p.source]} does not give it.`,
+    };
+  return {
+    reliability: "confirmed",
+    value,
+    unit,
+    sourceId: `${p.name} ${p.period} ${SOURCE_WORDS[p.source]}`,
+    asOf: `${year}-12-31`,
+  };
+}

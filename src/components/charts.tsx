@@ -17,7 +17,8 @@ import {
 } from "recharts";
 import { Children, cloneElement, isValidElement, useId, useState, type ReactNode } from "react";
 import { stepTooltip, UNAVAILABLE, waterfallRows, type Bridge } from "@/lib/calc";
-import { axisProps, CHART, tooltipStyle, TYPE } from "@/components/kit";
+import { axisProps, CHART, SyntheticTag, tooltipStyle, TYPE } from "@/components/kit";
+import { repo } from "@/repo/queries";
 import { useMotionMs, useReducedMotion } from "@/components/motion";
 import { StateBoundary, type DataState } from "@/components/states";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,12 @@ export function ChartFrame({
   children: ReactNode;
 }) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
-  const cols = columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }));
+  // A row may say how reliable its figure is; otherwise the frame's source does.
+  const cols = (columns ?? Object.keys(rows[0] ?? {}).map((key) => ({ key, header: key }))).filter(
+    (c) => c.key !== "reliability",
+  );
+  const demo = repo.environment === "demo";
+  const reliability = `${demo ? "Synthetic demo figure" : "Not assessed"} · Source: ${source}`;
   const reduced = useReducedMotion();
   const ms = useMotionMs("--duration-data");
   const motion =
@@ -93,6 +99,12 @@ export function ChartFrame({
           {description && <p className="text-xs text-muted-foreground">{description}</p>}
           <p className="text-xs text-muted-foreground">
             {unit} · {period} · Source: {source}
+            {demo && (
+              <>
+                {" "}
+                <SyntheticTag label="Synthetic" />
+              </>
+            )}
           </p>
         </div>
         {actions}
@@ -111,6 +123,9 @@ export function ChartFrame({
                         {c.header}
                       </th>
                     ))}
+                    <th className="px-2 py-1 text-left font-semibold">
+                      How reliable is this figure?
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -125,6 +140,9 @@ export function ChartFrame({
                           {r[c.key] === null ? UNAVAILABLE : (r[c.key] ?? "—")}
                         </td>
                       ))}
+                      <td data-reliability className="px-2 py-1">
+                        {r["reliability"] ?? reliability}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

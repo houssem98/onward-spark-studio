@@ -188,6 +188,8 @@ export interface Peer {
   period: string;
   comparability: "High" | "Medium" | "Low";
   warning?: string;
+  /** The full-year figures are not disclosed: what is, and why it is not the same figure. */
+  notDisclosed?: { instead: string; why: string };
 }
 
 export const PEERS: Peer[] = [
@@ -256,6 +258,10 @@ export const PEERS: Peer[] = [
     period: "FY2025 (9M annualized)",
     comparability: "Low",
     warning: "Only 9-month figures disclosed; annualized values are not directly comparable.",
+    notDisclosed: {
+      instead: "nine-month FY2025 figures",
+      why: "nine months annualized is not a full-year figure",
+    },
   },
   {
     id: "solent",

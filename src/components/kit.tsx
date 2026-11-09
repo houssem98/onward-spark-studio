@@ -11,6 +11,7 @@ import {
   Info,
   XCircle,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatedNumber } from "@/components/motion";
 import { UNAVAILABLE } from "@/lib/calc";
@@ -196,10 +197,20 @@ export function EvidenceBadge({
   );
 }
 
-export function SyntheticTag({ label = "Synthetic demo data" }: { label?: string }) {
+export function SyntheticTag({
+  label = "Synthetic demo data",
+  icon = true,
+}: {
+  label?: string;
+  /** KPI tiles hold no drawing, so their watermark is text only. */
+  icon?: boolean;
+}) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-sm border border-dashed border-cyan/60 bg-cyan/5 px-1.5 py-0.5 text-micro font-medium text-muted-foreground">
-      <FlaskConical className="h-3 w-3 text-cyan" aria-hidden />
+    <span
+      data-synthetic
+      className="inline-flex items-center gap-1 rounded-sm border border-dashed border-cyan/60 bg-cyan/5 px-1.5 py-0.5 text-micro font-medium text-muted-foreground"
+    >
+      {icon && <FlaskConical className="h-3 w-3 text-cyan" aria-hidden />}
       {label}
     </span>
   );
@@ -355,10 +366,13 @@ export function Kpi({
   stateNote,
   size = "md",
   basis = false,
+  inputs,
   className,
 }: {
   def: DefinitionId;
   value: string;
+  /** What the figure is computed from, shown with its definition when the number is clicked. */
+  inputs?: { label: string; value: string }[];
   sub?: string;
   status?: ReactNode;
   state?: DataState;
@@ -375,6 +389,7 @@ export function Kpi({
   )) {
   const flat = useContext(InBand);
   const d: Definition = DEFINITIONS[def];
+  const demo = repo.environment === "demo";
   const caption = sub ?? d.sub;
   const tone =
     delta === undefined || deltaGood === undefined || delta.startsWith(UNAVAILABLE)
@@ -407,7 +422,7 @@ export function Kpi({
             <p className="mt-0.5">Formula: {d.formula}</p>
             <p className="mt-1 opacity-70">
               {d.unit} · Period: {d.period} · Source: {d.source}
-              {repo.environment === "demo" ? " · Synthetic" : ""}
+              {demo ? " · Synthetic" : ""}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -420,7 +435,36 @@ export function Kpi({
             size === "lg" ? "text-3xl" : "text-2xl",
           )}
         >
-          <Figure text={value} />
+          <Popover>
+            <PopoverTrigger className="rounded-sm text-left decoration-dotted underline-offset-4 hover:underline">
+              <Figure text={value} />
+            </PopoverTrigger>
+            <PopoverContent data-number-detail className="w-80 space-y-1 text-xs">
+              <p className="font-medium">
+                {d.label}: {value}
+              </p>
+              <p>{d.definition}</p>
+              <p>Formula: {d.formula}</p>
+              {inputs?.length ? (
+                <>
+                  <p>Inputs:</p>
+                  <ul className="list-disc pl-4">
+                    {inputs.map((i) => (
+                      <li key={i.label}>
+                        {i.label}: {i.value}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>Inputs: the terms the formula names; not itemised for this figure.</p>
+              )}
+              <p className="text-muted-foreground">
+                Source: {d.source} · {d.unit} · {d.period}
+                {demo ? " · Synthetic" : ""}
+              </p>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {delta && (
@@ -442,6 +486,7 @@ export function Kpi({
           )}
           {caption && <span>{caption}</span>}
           {status}
+          {demo && <SyntheticTag label="Synthetic" icon={false} />}
         </div>
       </StateBoundary>
       {basis && (
