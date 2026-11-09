@@ -208,6 +208,7 @@ export const INVESTIGATIONS: InvestigationFixture[] = [
     limitations: [
       "Peer metrics are illustrative and partially comparable.",
       "Funding cost allocation not yet available for credit division.",
+      "Peer funding costs are not available, so the gap to the benchmark is not adjusted for funding.",
     ],
   },
   {

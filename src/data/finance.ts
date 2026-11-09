@@ -342,4 +342,4 @@ export const BRIDGES: Bridge[] = [
 ];
 
 export const PEER_BENCHMARK_NOTE =
-  "Peer benchmark = mean credit revenue of high-comparability peers (Harborline 152, Meridian 146, Cascade 151 → 149.7, rounded to 150 for illustration). Cascade carries a comparability warning.";
+  "Peer benchmark = mean credit revenue of the three peers that report it (Harborline 152, Meridian 146, Cascade 151 → 149.7, rounded to 150 for illustration). Cascade has medium comparability: its credit revenue includes leasing income.";
