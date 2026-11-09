@@ -24,9 +24,9 @@ No finding is critical today only because there is no real data, no backend and 
 - Status: open
 
 ### F3 · high · Any user can set an investigation to Approved
-- Evidence: the status select offers every status, Approved included (`src/routes/investigations.$id.tsx#actions.setInvestigationStatus(id, e.target.value as InvStatus)`).
-- Fix: L3 T6, L5 T5
-- Status: open
+- Evidence: the status select offered every status, Approved included (`src/routes/investigations.$id.tsx#actions.setInvestigationStatus(id, e.target.value as InvStatus)`). Since L3 T8c it offers every status but Approved (`src/routes/investigations.$id.tsx#disabled={s === "Approved"}`), held by `src/test/approved-status.test.tsx#the investigation status control offers every status but Approved`, and the database refuses a client's Approved on an investigation or a report (`supabase/migrations/20261108130000_approved_only_via_approval.sql#only a recorded approval makes work Approved`), held by `src/test/duties.test.ts#is never written by a client into an investigation or a report`. Approved now comes only from a recorded approval, which needs a second person (L3 T6). The demo adapter would still store Approved from a direct call that no route makes (`src/repo/demo.ts#setStatus: (id, status) =>`).
+- Fix: L3 T6, L3 T8c, L5 T5
+- Status: fixed in L3 T8c
 
 ### F4 · high · New investigations inherit another investigation's findings
 - Evidence: the wizard copies INV-2025-014's findings and their evidence states into every new investigation, whatever department is chosen: `src/routes/performance.tsx#findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) }))`. Corrected in L0 T7: with 4 seeded investigations the first new id is INV-2026-014 (maker probe: `INVESTIGATIONS.length` 4 → `INV-2026-014`), so the rename replaces "014" with "014" and the copied findings keep INV-2025-014's ids; actions matched by finding id then appear on both. The button promised a draft report and drafted none; L1 T6 renamed it (`src/routes/performance.tsx#<Button onClick={finish}>Create investigation</Button>`).

@@ -25,6 +25,8 @@ If the rtk hook mangles `npm` output, run the same command through `rtk proxy` a
 
 Two causes turn the gate red with no code fault: a working directory spelled with a lowercase drive letter (Vitest loads twice and every suite dies with "Vitest failed to find the runner"), so never `cd` before the gate; and the machine near its memory limit (workers die with "Zone Allocation failed"), so check free memory and disk and retry once before counting it toward Stall. After a browser check, stop the dev server the tick started, found by its port, and only that one.
 
+The human's rulings of 2026-11-09, given for the unattended overnight run that began that night: before each gate run the loop starts a temporary keep-awake (a hidden process calling `SetThreadExecutionState`, stopped when the run ends; no power setting is changed) and stops Google Chrome and Epic Games Launcher, which hold the memory and CPU the browser sweep's timing checks need. When a gate run fails only on the frame budget in `e2e/motion-budget.spec.ts`, the tick may run the gate up to three times in all before counting Stall; any other failure keeps the one-retry rule, and the check itself is never loosened.
+
 ## Commits
 
 After a task is ticked, stage only the files that task changed, commit locally with the message `loop(L<n>/T<n>): <what changed>`, and put the short hash in the Journal entry. Never push, never amend, never rebase: this repo syncs to Lovable on push (`AGENTS.md#Avoid rewriting`). The human pushes.
