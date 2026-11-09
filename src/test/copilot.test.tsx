@@ -10,7 +10,7 @@ describe("copilot", () => {
     await open("/crime");
     const input = screen.getByRole("textbox", { name: "Ask BankIntelli" });
     fireEvent.change(input, {
-      target: { value: "Why did credit revenue grow more slowly than peers?" },
+      target: { value: "Why did credit revenue grow more slowly than peers this year?" },
     });
     await act(async () => {
       fireEvent.submit(input.closest("form")!);

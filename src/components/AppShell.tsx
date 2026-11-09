@@ -28,6 +28,7 @@ import { useStore } from "@/store/app-store";
 import { answer, metricLabel, SUGGESTIONS, type CopilotAnswer } from "@/lib/copilot";
 import { EvidenceBadge } from "@/components/kit";
 import { copilotBus } from "@/lib/copilot-bus";
+import type { Chosen } from "@/lib/scope";
 import { CommandPalette } from "@/components/CommandPalette";
 import { crimeQuery, datasetsQuery, financeQuery, modelsQuery, repo } from "@/repo/queries";
 import type { Repository } from "@/repo/types";
@@ -193,11 +194,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [palette, setPalette] = useState(false);
   const [q, setQ] = useState("");
-  const [history, setHistory] = useState<{ q: string; a: CopilotAnswer }[]>([]);
+  const [history, setHistory] = useState<
+    { q: string; a: CopilotAnswer; chosen: Chosen; picked: string[] }[]
+  >([]);
   const navigate = useNavigate();
 
   const queryClient = useQueryClient();
-  const ask = async (text: string) => {
+  // `chosen` answers what an earlier answer asked; `picked` is how those choices read on screen.
+  const ask = async (text: string, chosen: Chosen = {}, picked: string[] = []) => {
     if (!text.trim()) return;
     setQ("");
     setOpen(true);
@@ -208,7 +212,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       queryClient.fetchQuery(datasetsQuery),
       queryClient.fetchQuery(crimeQuery),
     ]);
-    setHistory((h) => [{ q: text, a: answer(text, { finance, models, datasets, crime }) }, ...h]);
+    setHistory((h) => [
+      { q: text, a: answer(text, { finance, models, datasets, crime }, chosen), chosen, picked },
+      ...h,
+    ]);
   };
   copilotBus.ask = ask;
 
@@ -400,9 +407,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <div className="mt-4 space-y-4">
-            {history.map(({ q: question, a }, i) => (
+            {history.map(({ q: question, a, chosen, picked }, i) => (
               <div key={i} className="rounded-md border">
-                <div className="border-b bg-muted/50 px-3 py-2 text-sm font-medium">{question}</div>
+                <div className="border-b bg-muted/50 px-3 py-2 text-sm font-medium">
+                  {[question, ...picked].join(" · ")}
+                </div>
                 <div className="space-y-3 p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="eyebrow">{a.intent}</span>
@@ -427,6 +436,32 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <li key={s}>{s}</li>
                     ))}
                   </ul>
+                  {a.asks?.map((x) => (
+                    <div
+                      key={x.field}
+                      role="group"
+                      aria-label={x.question}
+                      className="space-y-1.5 rounded-md border p-2.5"
+                    >
+                      <p className="text-xs">
+                        <b>{x.question}</b> <span className="text-muted-foreground">{x.note}</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {x.choices.map((c) => (
+                          <Button
+                            key={c.value}
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              ask(question, { ...chosen, [x.field]: c.value }, [...picked, c.label])
+                            }
+                          >
+                            {c.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                   {a.missing.length > 0 && (
                     <div className="rounded-md bg-warning/10 p-2 text-xs text-warning">
                       <b>Missing / assumptions:</b> {a.missing.join("; ")}
@@ -440,7 +475,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         variant="outline"
                         onClick={() => {
                           setOpen(false);
-                          navigate({ to: l.to });
+                          navigate({ to: l.to, search: l.search ?? {} });
                         }}
                       >
                         {l.label}

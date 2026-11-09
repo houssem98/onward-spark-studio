@@ -20,6 +20,7 @@ import {
   axisProps,
   CHART,
   EvidenceBadge,
+  Field,
   Kpi,
   Notice,
   PageHeader,
@@ -48,12 +49,16 @@ import {
 } from "@/lib/calc";
 import { revenueGapInvestigation, useActions, useStore } from "@/store/app-store";
 import { financeQuery } from "@/repo/queries";
-import { DEMO_DATE, FINANCE_DATASET } from "@/lib/definitions";
+import { DEFINITIONS, DEMO_DATE, FINANCE_DATASET } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { REGISTER_BOX, REGISTER_TH } from "@/lib/register";
-import { describeFigure, peerFigure } from "@/lib/evidence";
+import { DEMO_ENTITY, describeFigure, peerFigure } from "@/lib/evidence";
+import { catalogOf, readScope, SCOPE_KEYS, type ScopeSearch } from "@/lib/scope";
 
 export const Route = createFileRoute("/performance")({
+  // A question's resolved scope arrives in the URL, so the link reopens the same scope.
+  validateSearch: (s: Record<string, unknown>): ScopeSearch =>
+    Object.fromEntries(SCOPE_KEYS.flatMap((k) => (typeof s[k] === "string" ? [[k, s[k]]] : []))),
   loader: async ({ context: { queryClient } }) => {
     await queryClient.ensureQueryData(financeQuery);
   },
@@ -126,6 +131,10 @@ function PerformancePage() {
   const issues = useStore((s) => s.issues);
   const { bank, bridges, departments, peerBenchmarkNote, peerHistory, peers, scorecard } =
     useSuspenseQuery(financeQuery).data;
+  const linked = readScope(
+    Route.useSearch(),
+    catalogOf({ bank, departments, peers, scorecard }, DEMO_ENTITY),
+  );
   const a = scorecard.FY2025,
     b = scorecard.FY2024;
   const rev = a.nii + a.nonInterest;
@@ -220,7 +229,33 @@ function PerformancePage() {
         title="Enterprise Performance & Competitor Intelligence"
         description={`${bank.name} · FY2025 · ${bank.currency} ${bank.unit} · ${bank.basis}. Peers are fictional institutions with illustrative metrics.`}
       />
-      <Tabs defaultValue="scorecard">
+      {linked &&
+        ("scope" in linked ? (
+          <Panel title="Scope from the question">
+            <dl className="grid grid-cols-2 gap-4 md:grid-cols-3">
+              <Field label="Entity">{linked.scope.entity}</Field>
+              <Field label="Department">
+                {departments.find((d) => d.id === linked.scope.department)!.name}
+              </Field>
+              <Field label="Period">{linked.scope.period}</Field>
+              <Field label="Currency">
+                {linked.scope.currency} {bank.unit}
+              </Field>
+              <Field label="Comparison cohort">
+                {linked.scope.cohort.map((id) => peers.find((p) => p.id === id)!.name).join(", ")}
+              </Field>
+              <Field label="Definitions">
+                {linked.scope.definitions.map((d) => DEFINITIONS[d].label).join(", ")}
+              </Field>
+              <Field label="Left out of the cohort">
+                {linked.left.map((x) => x.reason).join("; ") || "None"}
+              </Field>
+            </dl>
+          </Panel>
+        ) : (
+          <Notice tone="warning">The scope in this link is not supported: {linked.reason}</Notice>
+        ))}
+      <Tabs defaultValue={linked && "scope" in linked ? "bridge" : "scorecard"}>
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>

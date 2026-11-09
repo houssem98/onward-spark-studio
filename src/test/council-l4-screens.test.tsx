@@ -112,7 +112,7 @@ describe("council fixes on screens and in tests (L4 T6b)", () => {
       datasets: await demoRepo.datasets.read(),
       crime: await demoRepo.crime.read(),
     };
-    const a = answer("Why did credit revenue grow more slowly than peers?", data);
+    const a = answer("Why did credit revenue grow more slowly than peers this year?", data);
     expect(a.summary[0]).toContain("volume −$17.0M");
     expect(screen).toBeDefined();
   });

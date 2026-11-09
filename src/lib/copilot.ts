@@ -3,6 +3,7 @@ import { diff, fmtFixed, fmtM, fmtPct, growth, reconcileBridge, pct } from "@/li
 import { DEFINITIONS, DEMO_DATE, type DefinitionId } from "@/lib/definitions";
 import { DEMO_ENTITY, demoSource, sourceOf, type EvidenceState, type Source } from "@/lib/evidence";
 import { assignEvidenceState, summarizeStates, type Assessment } from "@/lib/evidence-policy";
+import { catalogOf, resolveScope, scopeSearch, type Ask, type Chosen } from "@/lib/scope";
 import type { CrimeData, DatasetsData, FinanceData, ModelsData } from "@/repo/types";
 
 // A figure names its definition; a list entry (a dataset, a case) carries its own label.
@@ -21,7 +22,9 @@ export interface CopilotAnswer {
   state: EvidenceState;
   assessments: Assessment[];
   missing: string[];
-  links: { label: string; to: string }[];
+  links: { label: string; to: string; search?: Record<string, string> }[];
+  /** What the question leaves open; nothing is computed until each is answered. */
+  asks?: Ask[];
 }
 
 const decided = (a: Omit<CopilotAnswer, "state">): CopilotAnswer => ({
@@ -56,6 +59,7 @@ const system = (id: string, name: string, authority: Source["authority"], unit: 
 export function answer(
   q: string,
   data: { finance: FinanceData; models: ModelsData; datasets: DatasetsData; crime: CrimeData },
+  chosen: Chosen = {},
 ): CopilotAnswer {
   const { departments, scorecard, bridges } = data.finance;
   const { models } = data.models;
@@ -86,15 +90,40 @@ export function answer(
   };
 
   if (/(credit).*(peer|competitor)|competitor|peer/.test(t)) {
+    const cat = catalogOf(data.finance, DEMO_ENTITY);
+    const res = resolveScope(q, cat, chosen);
+    if (res.kind === "ambiguous")
+      return decided({
+        intent: "Scope needed before an answer",
+        scope: `Not resolved: ${res.asks.map((x) => x.field).join(", ")}`,
+        metrics: [],
+        summary: ["The question leaves its scope open, so nothing is computed until you choose."],
+        assessments: [],
+        missing: [],
+        links: [],
+        asks: res.asks,
+      });
+    if (res.kind === "unsupported")
+      return decided({
+        intent: "Outside the supported scope",
+        scope: "—",
+        metrics: [],
+        summary: [res.reason],
+        assessments: [],
+        missing: [],
+        links: [],
+      });
+    const { scope } = res;
+    const peerName = (id: string) => cat.peers.find((p) => p.id === id)!.name.split(" ")[0];
     const b = bridges.find((x) => x.id === "peer")!;
     const r = reconcileBridge(b);
-    const credit = departments.find((d) => d.id === "credit")!;
+    const credit = departments.find((d) => d.id === scope.department)!;
     const priorVolume = bridges
       .find((x) => x.id === "prior")!
       .steps.find((x) => x.label === "Volume")!.value;
     return decided({
       intent: "Credit performance vs peer group",
-      scope: "Credit division · FY2025 · USD M · peers: Harborline, Meridian, Cascade",
+      scope: `${scope.entity} · ${credit.name} · ${scope.period} · ${scope.currency} M · peers: ${scope.cohort.map(peerName).join(", ")}`,
       metrics: [
         { def: "credit_revenue", period: "FY2025", value: fmtM(credit.revenue) },
         { def: "credit_revenue_growth", value: fmtPct(growth(credit.revenue, credit.prior)) },
@@ -119,10 +148,11 @@ export function answer(
         "Peer funding costs not available",
         "Cascade credit revenue includes leasing (low comparability)",
         "DQ-101 open on curated credit dataset",
+        ...res.left.map((x) => `Left out of the peer cohort: ${x.reason}`),
       ],
       links: [
         { label: "Open INV-2025-014", to: "/investigations/INV-2025-014" },
-        { label: "Revenue bridge", to: "/performance" },
+        { label: "Revenue bridge", to: "/performance", search: scopeSearch(scope) },
       ],
     });
   }

@@ -65,7 +65,10 @@ describe("definitions registry", () => {
       datasets: await demoRepo.datasets.read(),
       crime: await demoRepo.crime.read(),
     };
-    for (const q of ["How does credit compare with peers?", "Why did net interest margin fall?"]) {
+    for (const q of [
+      "How does credit compare with peers this year?",
+      "Why did net interest margin fall?",
+    ]) {
       const { metrics } = answer(q, data);
       expect(metrics.length, q).toBeGreaterThan(0);
       expect(
