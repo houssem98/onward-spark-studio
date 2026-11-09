@@ -65,6 +65,23 @@ describe("persistence", () => {
     expect(read.investigations.find((i) => i.id === inv.id)?.status).toBe("In Progress");
   });
 
+  it("refuses a VERIFIED a client writes into an investigation, its findings or a report", async () => {
+    const db = await fresh();
+    const insert = (suffix: string, extra: object) =>
+      db
+        .from("investigations")
+        .insert({ id: `INV-V-${run}-${suffix}`, title: "By hand", ...extra });
+    expect((await insert("state", { state: "VERIFIED" })).error).not.toBeNull();
+    expect(
+      (await insert("finding", { findings: [{ id: "F", state: "VERIFIED" }] })).error,
+    ).not.toBeNull();
+    expect(
+      (await db.from("reports").insert({ id: `RPT-V-${run}`, title: "By hand", state: "VERIFIED" }))
+        .error,
+    ).not.toBeNull();
+    expect((await insert("draft", { state: "DRAFT" })).error).toBeNull();
+  });
+
   it("an action and its update outlive the client that made them", async () => {
     await as("INVESTIGATOR");
     await productionRepo.investigations.addAction({

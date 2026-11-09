@@ -1,3 +1,4 @@
+import { refuseUnearnedVerified } from "@/lib/evidence-policy";
 import { supabase } from "./supabase";
 import type { Repository } from "./types";
 
@@ -96,7 +97,9 @@ export const productionRepo: Repository = {
       };
     },
     create: async (inv) => {
-      ok(await db().from("investigations").insert(inv));
+      const table = db().from("investigations");
+      refuseUnearnedVerified(inv, new Date().toISOString().slice(0, 10));
+      ok(await table.insert(inv));
     },
     setStatus: async (id, status) => {
       changed(await db().from("investigations").update({ status }).eq("id", id).select("id"));

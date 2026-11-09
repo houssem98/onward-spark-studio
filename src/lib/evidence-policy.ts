@@ -1,4 +1,6 @@
-import type { Claim, EvidenceState, Source } from "@/lib/evidence";
+import type { Finding, Investigation } from "@/data/investigations";
+import { DEMO_DATE } from "@/lib/definitions";
+import { DEMO_ENTITY, type Claim, type EvidenceState, type Source } from "@/lib/evidence";
 
 // The only code that may decide an evidence state. Pure: everything it needs is in the input,
 // the assessment date included, so the same input always gives the same state.
@@ -111,4 +113,26 @@ export function summarizeStates(states: EvidenceState[], open: number): Evidence
   if (measured.some((s) => s === "VERIFIED" || s === "PARTIALLY_VERIFIED"))
     return "PARTIALLY_VERIFIED";
   return measured.every((s) => s === "NOT_AVAILABLE") ? "NOT_AVAILABLE" : "UNVERIFIED";
+}
+
+export const findingAssessment = (
+  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts">,
+  today = DEMO_DATE,
+): Assessment => ({
+  claim: { id: f.id, text: f.claim, kind: f.kind === "Hypothesis" ? "hypothesis" : "measured" },
+  scope: { entity: DEMO_ENTITY, period: f.period },
+  today,
+  ...(f.facts ?? { sources: [] }),
+});
+
+// A record may say VERIFIED only where the policy, on the record's own facts, says so too.
+export function refuseUnearnedVerified(inv: Investigation, today: string): void {
+  const states = inv.findings.map((f) => assignEvidenceState(findingAssessment(f, today)).state);
+  const forged = inv.findings
+    .filter((f, i) => f.state === "VERIFIED" && states[i] !== "VERIFIED")
+    .map((f) => f.id);
+  if (inv.state === "VERIFIED" && summarizeStates(states, inv.outstanding) !== "VERIFIED")
+    forged.push(inv.id);
+  if (forged.length)
+    throw new Error(`Only the evidence policy sets Verified: ${forged.join(", ")}`);
 }

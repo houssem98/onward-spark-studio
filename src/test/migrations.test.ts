@@ -80,6 +80,26 @@ it("refuses a record whose lists are not lists or whose status is unknown", asyn
   await db.close();
 }, 60_000);
 
+it("refuses a VERIFIED written by hand, in a record or its findings, and takes DRAFT and HYPOTHESIS", async () => {
+  const db = await migrated();
+  for (const sql of [
+    `insert into public.investigations (id, org_id, title, state) values ('V-1', '${ALPHA}', 'x', 'VERIFIED')`,
+    `insert into public.investigations (id, org_id, title, findings) values ('V-2', '${ALPHA}', 'x', '[{"id": "F", "state": "VERIFIED"}]')`,
+    `insert into public.reports (id, org_id, title, state) values ('V-3', '${ALPHA}', 'x', 'VERIFIED')`,
+    `update public.investigations set state = 'VERIFIED' where id = 'INV-A1'`,
+  ])
+    await expect(db.exec(sql), sql).rejects.toThrow(/evidence policy/);
+  await db.exec(`
+    insert into public.investigations (id, org_id, title, state) values ('D-1', '${ALPHA}', 'x', 'DRAFT');
+    insert into public.reports (id, org_id, title, state) values ('H-1', '${ALPHA}', 'x', 'HYPOTHESIS');
+  `);
+  const { rows } = await db.query(
+    "select state from public.investigations where id = 'D-1' union all select state from public.reports where id = 'H-1'",
+  );
+  expect(rows).toEqual([{ state: "DRAFT" }, { state: "HYPOTHESIS" }]);
+  await db.close();
+}, 60_000);
+
 it("lets only a recorded approval make a report Approved, in its own org, and nothing an investigation", async () => {
   const db = await migrated();
   await expect(

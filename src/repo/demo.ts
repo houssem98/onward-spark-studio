@@ -9,7 +9,8 @@ import type { Certification, QualityIssue } from "@/data/datasets";
 import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
 import type { Action, Investigation } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
-import { summarizeStates } from "@/lib/evidence-policy";
+import { DEMO_DATE } from "@/lib/definitions";
+import { refuseUnearnedVerified, summarizeStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
   AccessRequest,
@@ -373,13 +374,15 @@ export const demoRepo: Repository = {
       ),
       nextSteps: tag(investigations.NEXT_STEPS),
     }),
-    create: (inv) =>
-      set((s) => ({ investigations: [inv, ...s.investigations] }), {
+    create: async (inv) => {
+      refuseUnearnedVerified(inv, DEMO_DATE);
+      return set((s) => ({ investigations: [inv, ...s.investigations] }), {
         module: "Investigations",
         entity: inv.id,
         action: "Created",
         detail: inv.question,
-      }),
+      });
+    },
     setStatus: (id, status) =>
       set(
         (s) => ({

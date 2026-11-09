@@ -1,15 +1,16 @@
 import { DEMO_DATE } from "@/lib/definitions";
-import { DEMO_ENTITY, demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
+import { demoSource, sourceOf, type EvidenceState } from "@/lib/evidence";
 import {
   assignEvidenceState,
+  findingAssessment,
   summarizeStates,
-  type Assessment,
   type Facts,
 } from "@/lib/evidence-policy";
 import { DATASETS } from "./datasets";
 import { BRIDGES } from "./finance";
 
 export type { EvidenceState };
+export { findingAssessment };
 export type InvStatus = "Draft" | "In Progress" | "Pending Review" | "Approved" | "Closed";
 
 export interface Finding {
@@ -27,15 +28,6 @@ export interface Finding {
   limitations: string;
   next: string;
 }
-
-export const findingAssessment = (
-  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts">,
-): Assessment => ({
-  claim: { id: f.id, text: f.claim, kind: f.kind === "Hypothesis" ? "hypothesis" : "measured" },
-  scope: { entity: DEMO_ENTITY, period: f.period },
-  today: DEMO_DATE,
-  ...(f.facts ?? { sources: [] }),
-});
 
 // A finding cites catalog datasets; `by` gives what each says (null: it gives no value).
 const facts = (
