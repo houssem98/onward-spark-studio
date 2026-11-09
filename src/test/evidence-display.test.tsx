@@ -33,6 +33,7 @@ describe("screens from the human's T6c decisions (L4 T6e)", () => {
     expect(cells.filter((c) => c.startsWith("Synthetic, illustrative")).length).toBeGreaterThan(2);
   });
 
+  // Six route renders in one test: under load in a full run it nears the 5 s default, so it has 30 s.
   it("C18: every KPI tile this app computes lists each term of its formula as an input", async () => {
     const computed = Object.keys(DEFINITIONS).filter((id) => def(id).terms?.length);
     expect(computed.length).toBeGreaterThan(15);
@@ -47,5 +48,5 @@ describe("screens from the human's T6c decisions (L4 T6e)", () => {
       );
       expect(missing, path).toEqual([]);
     }
-  });
+  }, 30_000);
 });
