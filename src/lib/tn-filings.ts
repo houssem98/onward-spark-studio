@@ -62,9 +62,13 @@ export interface Fx {
   source: string;
 }
 
+/** How far before a period end a rate may be dated, when the BCT published none on the day. */
+export const FX_WINDOW_DAYS = 10;
+
 /** Each figure in the registry's unit, with its period and the rate that converted it. */
 export function normalize(ind: ReturnType<typeof parseIndicators>, fx: Fx) {
-  if (fx.date !== ind.periodEnd)
+  const age = (Date.parse(ind.periodEnd) - Date.parse(fx.date)) / 864e5;
+  if (!(age >= 0 && age <= FX_WINDOW_DAYS))
     throw new Error(`The rate is dated ${fx.date}; the statement's period ends ${ind.periodEnd}.`);
   return Object.fromEntries(
     (Object.entries(ind.tnd) as [Indicator, number][]).map(([id, v]) => [

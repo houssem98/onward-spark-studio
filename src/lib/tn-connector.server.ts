@@ -1,7 +1,8 @@
 import { extractText, getDocumentProxy } from "unpdf";
 
+import { readBctRate } from "@/lib/bct-rate";
 import { fetchRetry, type Failure, type FetchOptions } from "@/lib/connector";
-import { listingUrl, parseIndicators, parseListing } from "@/lib/tn-filings";
+import { listingUrl, normalize, parseIndicators, parseListing } from "@/lib/tn-filings";
 
 // Server only: reads a bank's latest quarterly statement from the exchange's public site.
 
@@ -33,4 +34,13 @@ export async function readLatest(company: string, opts: FetchOptions = {}) {
   } catch (e) {
     return malformed(e);
   }
+}
+
+/** The latest quarter in the registry's USD M, at the BCT's rate for its period end. */
+export async function readLatestUsd(company: string, opts: FetchOptions = {}) {
+  const q = await readLatest(company, opts);
+  if (q.state !== "ok") return q;
+  const fx = await readBctRate(q.data.periodEnd, opts);
+  if (fx.state !== "ok") return fx;
+  return { state: "ok" as const, data: normalize(q.data, fx.data), source: q.data.source };
 }

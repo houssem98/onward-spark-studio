@@ -3,7 +3,7 @@
 // A client error other than 429 is not retried: asking again cannot change the answer.
 
 export type Failure = {
-  state: "timeout" | "http_error" | "network_error" | "malformed";
+  state: "timeout" | "http_error" | "network_error" | "malformed" | "unpublished";
   detail: string;
 };
 
@@ -26,13 +26,14 @@ export async function fetchRetry(
     backoffMs = 500,
     timeoutMs = 15_000,
   }: FetchOptions = {},
+  init: RequestInit = {},
 ): Promise<{ state: "ok"; res: Response } | Failure> {
   for (let attempt = 0; ; attempt++) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     let failure: Failure;
     try {
-      const res = await get(url, { signal: ctrl.signal });
+      const res = await get(url, { ...init, signal: ctrl.signal });
       if (res.ok) return { state: "ok", res };
       failure = { state: "http_error", detail: `${url} answered ${res.status}` };
       if (res.status < 500 && res.status !== 429) return failure;
