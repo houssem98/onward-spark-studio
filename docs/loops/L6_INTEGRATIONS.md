@@ -6,13 +6,16 @@ Target: `BankIntelli_Elite_Premium_Design_Roadmap.md#each integration has contra
 
 Deciding rule, fixed before T2 starts: T0 to T6 are ticked, `npm run gate` exits 0, and the human's signoff line (T7) is in the Journal.
 
-## Current state (read 2026-10-28; T0 re-verifies)
+## Current state (read 2026-10-28; T0 re-verified 2026-11-10 after L5)
 
-- No connector exists; every figure comes from `src/data/finance.ts` and its siblings.
+- No connector exists; nothing in `src` names one. The production adapter refuses every finance read (`src/repo/production.ts#finance: { read: notConfigured },`, `src/repo/production.ts#throw new Error("Production data source not configured");`), so every figure still comes from `src/data/finance.ts` and its siblings, which only the demo adapter imports (`src/repo/demo.ts#import * as finance from "@/data/finance";`) and `scripts/bundle-scan.mjs` keeps out of a production build.
+- A dataset becomes an evidence source with a freshness window set by its update frequency (`src/lib/evidence.ts#freshForDays: FRESH_FOR_DAYS[d.frequency] ?? 1,`), and only the policy decides whether a source is fresh (`src/lib/evidence-policy.ts#const isFresh = (s: Source, today: string) => {`). T3 builds on both. The shell has no source-health entry yet: `src/components/AppShell.tsx` names neither health nor a source.
+- L5 T7 left two items to T3 (`docs/audit/TRUST_FINDINGS.md#L6 T3 for K12 and K22`): the policy reads certification from the fixture, not from what the Data page sets, and freshness passes when any one backing source is fresh, which is a ruling for the human.
+- Since L5 T4 a report version freezes a copy of every input (`src/lib/report.ts#export type ReportSnapshot = Omit<ReportInput, "notice">;`), so a connector's figures reach a saved report only through a snapshot; production has no table for versions and refuses to save one (`src/repo/production.ts#save: notConfigured,`), which T4's end-to-end run in production will meet.
 
 ## Tasks
 
-- [ ] T0 Re-verify. needs: none. Run graph-lint and refresh citations L5 changed. Evidence: graph-lint exits 0.
+- [x] T0 Re-verify. needs: none. Run graph-lint and refresh citations L5 changed. Evidence: graph-lint exits 0.
 - [ ] T1 (human) First source. needs: T0. One approved performance or peer source with its licence and terms, the environment it runs in, and where its credentials live. Public regulatory filings are the cheapest to license. Evidence: the decision lines in the Journal.
 - [ ] T2 Connector contract. needs: T1. A server-side connector with contract tests against recorded responses (tests never call the live service), unit and period normalization through the L2 registry, retry with backoff, and explicit failure states. Evidence: tests for success, malformed payload, timeout and retry.
 - [ ] T3 Freshness. needs: T2. Each source records its last success; the shell's source-health entry shows it; stale data downgrades evidence through the L4 policy. Evidence: tests.
@@ -22,3 +25,5 @@ Deciding rule, fixed before T2 starts: T0 to T6 are ticked, `npm run gate` exits
 - [ ] T7 (human) Signoff. needs: T5, T6. Evidence: the signoff line in the Journal.
 
 ## Journal
+- 2026-11-10 · L6/T0 · started T0 · tick 1 of 15 · tree clean at 84d09ad; gate green last tick
+- 2026-11-10 · L6/T0 · passed · gate green on the first run (15:05 to 15:14, Chrome closed): `GATE EXIT 0`, `graph-lint: clean` (658 citations), lint `0 errors, 12 warnings`, `Test Files  83 passed (83)`, `Tests  493 passed (493)`, `bundle-scan: clean` twice, `128 passed (6.1m)`, `gate-guard: clean`; overview median `dropped 4`, credit `dropped 3` · commit see `git log --grep "loop(L6/T0)"` · Re-read the one Current-state claim against the tree: still true, no connector exists, and it now cites why (production refuses every finance read) and where the figures come from (the demo adapter, kept out of a production build). Added what L4 and L5 changed for this loop: the source freshness window and the policy's freshness check T3 builds on, the missing source-health entry T3 adds, F48's K12 and K22 assigned to T3, and the frozen report snapshot a connector's figures must flow through, which production cannot yet save · Direction: goal unchanged; L6 waits on the human's first source (T1) before any connector is written · Next: L6 T1 (human) First source; meanwhile L7 T0 Re-verify.
