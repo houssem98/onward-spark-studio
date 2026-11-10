@@ -15,6 +15,7 @@ import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as ApiAskRouteImport } from './routes/api.ask'
 import { Route as CrimeIndexRouteImport } from './routes/crime.index'
 import { Route as CrimeIdRouteImport } from './routes/crime.$id'
 import { Route as InvestigationsIndexRouteImport } from './routes/investigations.index'
@@ -51,6 +52,11 @@ const PerformanceRoute = PerformanceRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAskRoute = ApiAskRouteImport.update({
+  id: '/api/ask',
+  path: '/api/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrimeIndexRoute = CrimeIndexRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/api/ask': typeof ApiAskRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/api/ask': typeof ApiAskRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/api/ask': typeof ApiAskRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/api/ask'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/api/ask'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/api/ask'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   PerformanceRoute: typeof PerformanceRoute
   SignInRoute: typeof SignInRoute
+  ApiAskRoute: typeof ApiAskRoute
   CrimeIdRoute: typeof CrimeIdRoute
   InvestigationsIdRoute: typeof InvestigationsIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
@@ -241,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ask': {
+      id: '/api/ask'
+      path: '/api/ask'
+      fullPath: '/api/ask'
+      preLoaderRoute: typeof ApiAskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crime/': {
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   PerformanceRoute: PerformanceRoute,
   SignInRoute: SignInRoute,
+  ApiAskRoute: ApiAskRoute,
   CrimeIdRoute: CrimeIdRoute,
   InvestigationsIdRoute: InvestigationsIdRoute,
   ModelsIdRoute: ModelsIdRoute,

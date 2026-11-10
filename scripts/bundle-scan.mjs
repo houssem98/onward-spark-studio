@@ -53,6 +53,17 @@ for (const [file, found] of hits) {
     errs.push(`${file} is missing from the demo build, so the scan cannot see fixture text`);
 }
 
+// The model adapter and its key stay on the server: the server build must hold the adapter, so the
+// scan is seen to find it, and nothing the browser loads may name the provider or carry a key.
+const PROVIDER = "api.deepseek.com";
+const KEY = /sk-[A-Za-z0-9]{16,}/;
+const inClient = (f) => f.startsWith(join(".output", "public"));
+if (!files.some((f, i) => !inClient(f) && texts[i].includes(PROVIDER)))
+  errs.push(`the model adapter (${PROVIDER}) is missing from the server build`);
+for (const [i, f] of files.entries())
+  if (inClient(f) && (texts[i].includes(PROVIDER) || KEY.test(texts[i])))
+    errs.push(`the model provider or a key reached the client build: ${f}`);
+
 console.log(
   `bundle-scan: ${mode} · ${files.length} files · ${hits.map(([f, found]) => `${f} ${found.length}`).join(", ")}`,
 );
