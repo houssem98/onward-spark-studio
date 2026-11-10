@@ -15,7 +15,9 @@ import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as ApiAskRouteImport } from './routes/api.ask'
+import { Route as ApiSourcesRouteImport } from './routes/api.sources'
 import { Route as CrimeIndexRouteImport } from './routes/crime.index'
 import { Route as CrimeIdRouteImport } from './routes/crime.$id'
 import { Route as InvestigationsIndexRouteImport } from './routes/investigations.index'
@@ -54,9 +56,19 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SourcesRoute = SourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAskRoute = ApiAskRouteImport.update({
   id: '/api/ask',
   path: '/api/ask',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSourcesRoute = ApiSourcesRouteImport.update({
+  id: '/api/sources',
+  path: '/api/sources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrimeIndexRoute = CrimeIndexRouteImport.update({
@@ -102,7 +114,9 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/sources': typeof SourcesRoute
   '/api/ask': typeof ApiAskRoute
+  '/api/sources': typeof ApiSourcesRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -118,7 +132,9 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/sources': typeof SourcesRoute
   '/api/ask': typeof ApiAskRoute
+  '/api/sources': typeof ApiSourcesRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -135,7 +151,9 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
+  '/sources': typeof SourcesRoute
   '/api/ask': typeof ApiAskRoute
+  '/api/sources': typeof ApiSourcesRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -153,7 +171,9 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/sources'
     | '/api/ask'
+    | '/api/sources'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -169,7 +189,9 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/sources'
     | '/api/ask'
+    | '/api/sources'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -185,7 +207,9 @@ export interface FileRouteTypes {
     | '/data'
     | '/performance'
     | '/sign-in'
+    | '/sources'
     | '/api/ask'
+    | '/api/sources'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -202,7 +226,9 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   PerformanceRoute: typeof PerformanceRoute
   SignInRoute: typeof SignInRoute
+  SourcesRoute: typeof SourcesRoute
   ApiAskRoute: typeof ApiAskRoute
+  ApiSourcesRoute: typeof ApiSourcesRoute
   CrimeIdRoute: typeof CrimeIdRoute
   InvestigationsIdRoute: typeof InvestigationsIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
@@ -256,11 +282,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ask': {
       id: '/api/ask'
       path: '/api/ask'
       fullPath: '/api/ask'
       preLoaderRoute: typeof ApiAskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sources': {
+      id: '/api/sources'
+      path: '/api/sources'
+      fullPath: '/api/sources'
+      preLoaderRoute: typeof ApiSourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crime/': {
@@ -322,7 +362,9 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   PerformanceRoute: PerformanceRoute,
   SignInRoute: SignInRoute,
+  SourcesRoute: SourcesRoute,
   ApiAskRoute: ApiAskRoute,
+  ApiSourcesRoute: ApiSourcesRoute,
   CrimeIdRoute: CrimeIdRoute,
   InvestigationsIdRoute: InvestigationsIdRoute,
   ModelsIdRoute: ModelsIdRoute,

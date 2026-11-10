@@ -46,7 +46,7 @@ export type Source = z.infer<typeof SourceSchema>;
 export const DEMO_ENTITY = "Northstar Bank (fictional)";
 
 // A source stays fresh for one refresh cycle plus a day's grace.
-const FRESH_FOR_DAYS: Record<string, number> = {
+export const FRESH_FOR_DAYS: Record<string, number> = {
   Hourly: 1,
   "Streaming (batch replica)": 1,
   Daily: 2,

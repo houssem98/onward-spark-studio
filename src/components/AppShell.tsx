@@ -12,6 +12,7 @@ import {
   Database,
   FileSearch,
   FlaskConical,
+  HeartPulse,
   Landmark,
   LayoutDashboard,
   Menu,
@@ -55,7 +56,10 @@ export const NAV_GROUPS = [
   },
   {
     label: "Administration",
-    items: [{ to: "/audit", label: "Audit Trail", icon: Activity }],
+    items: [
+      { to: "/audit", label: "Audit Trail", icon: Activity },
+      { to: "/sources", label: "Source Health", icon: HeartPulse },
+    ],
   },
 ] as const;
 

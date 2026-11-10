@@ -38,6 +38,8 @@ Captured in L0 T6 (2026-10-28) with Playwright (`playwright-core` 1.64.1, run fr
 | `src/routes/audit.tsx` | 390 | 200 | 63 | 0 | Audit Trail & Activity | Sideways scroll. |
 | `src/routes/reports.$id.tsx` | 1440 | 200 | 0 | 0 | FY2025 Full-Year Performance Review | Placeholder from L0 T3 renders with breadcrumb and warning; an unknown id renders "Report NO-SUCH-REPORT" and says no report has that id. |
 | `src/routes/reports.$id.tsx` | 390 | 200 | 53 | 0 | FY2025 Full-Year Performance Review | Sideways scroll. |
+| `src/routes/sources.tsx` | 1440 | 200 | 0 | 0 | Source Health | Captured in L6 T3 (2026-11-10) against `vite dev` with no service key: the page says source health is not tracked. |
+| `src/routes/sources.tsx` | 390 | 200 | 0 | 0 | Source Health | Captured in L6 T3 (2026-11-10): no sideways scroll. |
 | `src/routes/sign-in.tsx` | 1440 | 200 | 0 | 0 | Sign in | Added in L3 T2, not an L0 capture: the demo view, a note in the shell. HTTP, overflow, console errors and the one h1 are what `e2e/routes.spec.ts` asserts on every route. |
 | `src/routes/sign-in.tsx` | 390 | 200 | 0 | 0 | Sign in | As at 1440. |
 

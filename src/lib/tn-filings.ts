@@ -1,4 +1,6 @@
 import { DEFINITIONS } from "@/lib/definitions";
+import { FRESH_FOR_DAYS } from "@/lib/evidence";
+import type { Assessment } from "@/lib/evidence-policy";
 
 // The quarterly activity indicators Tunisian listed banks publish on the exchange's site, read as
 // public documents (L6 T1). Pure: the connector fetches, these read what it fetched.
@@ -81,4 +83,60 @@ export function normalize(ind: ReturnType<typeof parseIndicators>, fx: Fx) {
       },
     ]),
   ) as Record<Indicator, { value: number; unit: string; period: string; fx: Fx }>;
+}
+
+// The banks listed on the exchange and their ids in its publications filter, read from its
+// company publications page on 2026-11-10 (unlisted "Hors Cote" banks left out, L6 T1).
+export const LISTED_BANKS: Record<string, string> = {
+  "3114": "Amen Bank",
+  "3118": "ATB",
+  "3120": "Attijari Bank",
+  "3124": "BH Bank",
+  "3126": "BIAT",
+  "3127": "BNA",
+  "3130": "BTE",
+  "3136": "STB",
+  "3140": "UBCI",
+  "3141": "UIB",
+  "3142": "Wifack International Bank",
+};
+
+/**
+ * A filed figure as the policy assesses it: the bank's own statement, a filing the CMF requires
+ * of every listed bank, is its authoritative source, fresh for a quarter and its grace.
+ */
+export function filingAssessment(
+  company: string,
+  id: Indicator,
+  figure: { value: number; unit: string; period: string },
+  periodEnd: string,
+  url: string,
+  today: string,
+): Assessment {
+  const bank = LISTED_BANKS[company] ?? company;
+  const source = {
+    id: `TN-${company}-${periodEnd}`,
+    name: `${bank} quarterly indicators to ${periodEnd}`,
+    authority: "regulatory" as const,
+    entity: bank,
+    period: figure.period,
+    asOf: periodEnd,
+    freshForDays: FRESH_FOR_DAYS["Quarterly"]!,
+    unit: figure.unit,
+    licence: "Public filing, used for testing and education (L6 T1)",
+    version: url,
+  };
+  return {
+    claim: {
+      id: `${company}-${id}`,
+      text: `${bank} ${DEFINITIONS[id].label}`,
+      kind: "measured",
+      metricId: id,
+    },
+    claimed: figure.value,
+    scope: { entity: bank, period: figure.period },
+    sources: [source],
+    values: [{ sourceId: source.id, value: figure.value }],
+    today,
+  };
 }

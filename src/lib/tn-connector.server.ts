@@ -2,6 +2,7 @@ import { extractText, getDocumentProxy } from "unpdf";
 
 import { readBctRate } from "@/lib/bct-rate";
 import { fetchRetry, type Failure, type FetchOptions } from "@/lib/connector";
+import type { SourceRun } from "@/lib/source-runs.server";
 import { listingUrl, normalize, parseIndicators, parseListing } from "@/lib/tn-filings";
 
 // Server only: reads a bank's latest quarterly statement from the exchange's public site.
@@ -36,11 +37,24 @@ export async function readLatest(company: string, opts: FetchOptions = {}) {
   }
 }
 
-/** The latest quarter in the registry's USD M, at the BCT's rate for its period end. */
-export async function readLatestUsd(company: string, opts: FetchOptions = {}) {
-  const q = await readLatest(company, opts);
+type Tracking = { record?: (run: SourceRun) => Promise<void>; now?: () => Date };
+
+/** The latest quarter in the registry's USD M, at the BCT's rate for its period end; each source's
+ * read is recorded, success or failure, so the shell can show its last success (L6 T3). */
+export async function readLatestUsd(company: string, opts: FetchOptions & Tracking = {}) {
+  const { record, now = () => new Date(), ...fetchOpts } = opts;
+  const track = async (source: string, r: { state: "ok"; data: { source?: string } } | Failure) =>
+    record?.({
+      source,
+      at: now().toISOString(),
+      ok: r.state === "ok",
+      detail: r.state === "ok" ? (r.data.source ?? "") : r.detail,
+    });
+  const q = await readLatest(company, fetchOpts);
+  await track("tn-filings", q);
   if (q.state !== "ok") return q;
-  const fx = await readBctRate(q.data.periodEnd, opts);
+  const fx = await readBctRate(q.data.periodEnd, fetchOpts);
+  await track("bct-usd", fx);
   if (fx.state !== "ok") return fx;
   return { state: "ok" as const, data: normalize(q.data, fx.data), source: q.data.source };
 }
