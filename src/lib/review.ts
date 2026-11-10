@@ -17,14 +17,16 @@ const closed = (r: Review) =>
 
 export function submit(
   reviews: Review[],
-  saved: number[],
+  saved: { version: number; savedBy: string }[],
   s: { report: string; version: number; reviewer: string },
   actor: string,
   at: string,
 ): Review | string {
-  if (!saved.includes(s.version)) return `Version ${s.version} of ${s.report} is not saved.`;
+  const version = saved.find((v) => v.version === s.version);
+  if (!version) return `Version ${s.version} of ${s.report} is not saved.`;
   if (!s.reviewer.trim()) return "Name a reviewer.";
   if (s.reviewer === actor) return "The submitter cannot review their own report.";
+  if (s.reviewer === version.savedBy) return "The person who saved a version cannot review it.";
   const mine = reviews.filter((r) => r.report === s.report);
   if (mine.some((r) => r.version === s.version))
     return `Version ${s.version} is already submitted.`;
@@ -58,11 +60,23 @@ export function decide(
 
 const STATUSES = ["Open", "In Progress", "Done"];
 
+/** The action, or a change to one, itself; an error saying why when it is refused. */
+export function validAction<T extends object>(a: T): T {
+  const p = actionProblem(a);
+  if (p) throw new Error(p);
+  return a;
+}
+
+// A calendar day: 2026-13-45 and 2026-02-30 have the shape but are not days.
+const isDate = (d: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(d) &&
+  !Number.isNaN(Date.parse(d)) &&
+  new Date(d).toISOString().startsWith(d);
+
 /** Why an action, or a change to one, is refused; null when it stands. */
 export function actionProblem(a: { owner?: string; due?: string; status?: string }) {
   if (a.owner !== undefined && !a.owner.trim()) return "An action needs an owner.";
-  if (a.due !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(a.due))
-    return "An action needs a due date.";
+  if (a.due !== undefined && !isDate(a.due)) return "An action needs a due date.";
   if (a.status !== undefined && !STATUSES.includes(a.status))
     return "An action's status is Open, In Progress or Done.";
   return null;

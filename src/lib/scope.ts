@@ -65,8 +65,8 @@ const OTHER_METRIC =
   /\bmargin|\bnim\b|cost[- ]to[- ]income|\bcir\b|\broe\b|\broa\b|return on|deposit|\bassets?\b/;
 const CURRENCIES: [string, RegExp][] = [
   ["USD", /\busd\b|dollar|\$/],
-  ["EUR", /\beur\b|euro|€/],
-  ["GBP", /\bgbp\b|sterling|pound|£/],
+  ["EUR", /\beur\b|\beuros?\b|€/],
+  ["GBP", /\bgbp\b|sterling|\bpounds?\b|£/],
   ["JPY", /\bjpy\b|\byen\b|¥/],
   ["CHF", /\bchf\b|swiss franc/],
 ];

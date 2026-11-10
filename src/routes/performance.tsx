@@ -219,7 +219,7 @@ function PerformancePage() {
   );
   const finish = () => {
     const id = `INV-2026-${String(10 + invs.length).padStart(3, "0")}`;
-    const base = template;
+    const { report: _flagshipReport, ...base } = template;
     void creating.run(id, {
       ...base,
       id,
@@ -229,9 +229,10 @@ function PerformancePage() {
       status: "Draft",
       department: departments.find((d) => d.id === wDept)!.name,
       owner: user.name,
-      findings: base.findings.map((f) => ({ ...f, id: f.id.replace("014", id.slice(-3)) })),
+      findings: base.findings.map((f, i) => ({ ...f, id: `F-${id.slice(4)}-${i + 1}` })),
     });
   };
+  const createdReport = invs.find((i) => i.id === createdId)?.report;
 
   return (
     <Stagger className="space-y-section">
@@ -732,6 +733,12 @@ function PerformancePage() {
                   ))}
                 </select>
               )}
+              {step === 0 && !/peers/.test(wq) && (
+                <Notice tone="warning">
+                  The demo still copies the credit-vs-peer sample findings into an investigation,
+                  whatever the question: only the peer question is investigated here.
+                </Notice>
+              )}
               {step === 1 && (
                 <div className="flex flex-wrap gap-3">
                   <label>
@@ -887,11 +894,11 @@ function PerformancePage() {
                       {createdId}
                     </Link>{" "}
                     created.{" "}
-                    {template.report && (
+                    {createdReport && (
                       <>
                         <Link
                           to="/reports/$id"
-                          params={{ id: template.report }}
+                          params={{ id: createdReport }}
                           className="text-primary underline"
                         >
                           Preview linked report

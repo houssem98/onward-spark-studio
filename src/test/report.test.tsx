@@ -100,7 +100,7 @@ describe("report (L5 T3)", () => {
     expect(section(d, 1)).toContain("a gap of −$30.0M");
     expect(section(d, 1)).toContain("−$2.0M is unexplained");
     expect(section(d, 1)).toContain(
-      "Not labeled Verified: 5 of 5 findings are not verified, 3 open items remain, and no reviewer has signed off.",
+      "Not labeled Verified: 5 of 5 findings are not verified, 6 open items remain, and no reviewer has signed off.",
     );
     expect(section(d, 2)).toContain(
       "Comparison cohort: Harborline Financial, Meridian Trust Bank, Cascade Federal",

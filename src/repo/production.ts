@@ -1,4 +1,5 @@
-import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
+import { refuseUnearnedVerified, reportState, withPolicyStates } from "@/lib/evidence-policy";
+import { validAction } from "@/lib/review";
 
 const today = () => new Date().toISOString().slice(0, 10);
 import { supabase } from "./supabase";
@@ -98,9 +99,11 @@ export const productionRepo: Repository = {
         actions: ok(actions),
         reports: ok(reports).map((r) => ({
           ...r,
-          state: summarizeStates(
+          // No sign-off is read here yet, so no report in this list reads Verified.
+          state: reportState(
             invs.filter((i) => i.id === r.investigation).map((i) => i.state),
             0,
+            false,
           ),
         })),
         nextSteps: [],
@@ -116,11 +119,13 @@ export const productionRepo: Repository = {
     },
     addAction: async (a) => {
       const actions = db().from("actions");
+      validAction(a);
       const { action, ...rest } = a;
       ok(await actions.insert({ ...rest, title: action }));
     },
     updateAction: async (id, p) => {
       const actions = db().from("actions");
+      validAction(p);
       const { action, ...rest } = p;
       changed(
         await actions

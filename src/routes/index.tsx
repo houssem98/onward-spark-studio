@@ -526,8 +526,8 @@ function Overview() {
             </Link>
           ))}
           <p className="text-xs text-muted-foreground">
-            Report states here come from the demo data. No verification workflow or reviewer
-            sign-off exists yet.
+            Report states come from the evidence policy over the demo data. A report reads Verified
+            only after a reviewer approves a saved version.
           </p>
         </Panel>
       </div>

@@ -71,11 +71,16 @@ const word = (s: EvidenceState) => s.toLowerCase().replace(/_/g, " ");
 export function buildReport(i: ReportInput): ReportDoc {
   const { report, inv, finance } = i;
   const states = inv.findings.map((f) => f.state);
-  const items = inv.outstanding + inv.contradictions.length;
+  const assessed = inv.findings.map((f) => ({ f, a: findingAssessment(f) }));
+  const cited = new Set(assessed.flatMap(({ a }) => a.sources.map((s) => s.id)));
+  const issues = i.issues.filter((x) => cited.has(x.dataset) && x.status !== "Resolved");
+  // Open includes the data-quality issues section 10 lists as open on the datasets cited.
+  const items = inv.outstanding + inv.contradictions.length + issues.length;
   const state = reportState(states, items, i.signoff !== undefined);
   const verified = isVerified(state);
   const unverified = states.filter((s) => !isVerified(s)).length;
   const why = [
+    ...(states.length ? [] : ["it has no findings"]),
     ...(unverified ? [`${unverified} of ${states.length} findings are not verified`] : []),
     ...(items ? [`${items} open items remain`] : []),
     ...(i.signoff ? [] : ["no reviewer has signed off"]),
@@ -112,15 +117,27 @@ export function buildReport(i: ReportInput): ReportDoc {
         })()
       : [`No scorecard for ${report.period} in this data.`];
 
-  const assessed = inv.findings.map((f) => ({ f, a: findingAssessment(f) }));
-  const cited = new Set(assessed.flatMap(({ a }) => a.sources.map((s) => s.id)));
-  const issues = i.issues.filter((x) => cited.has(x.dataset) && x.status !== "Resolved");
   const gaps = inv.findings
     .filter((f) => (SHOWN_WITH.gaps as EvidenceState[]).includes(f.state))
     .map((f) => `${f.id}: ${assignEvidenceState(findingAssessment(f)).reasons.join(" ")}`);
   const ids = new Set(inv.findings.map((f) => f.id));
   const acts = i.actions.filter((a) => ids.has(a.finding));
-  const audit = i.audit.filter((e) => e.entity === report.id || e.entity === inv.id);
+  const actionIds = new Set(acts.map((a) => a.id));
+  // The trail of the report and its investigation, its findings' and actions' events, and its
+  // downloads, which are logged under the file name.
+  const audit = i.audit.filter(
+    (e) =>
+      e.entity.startsWith(report.id) ||
+      e.entity === inv.id ||
+      ids.has(e.entity) ||
+      actionIds.has(e.entity),
+  );
+  // Only a sign-off makes a report Approved; a version without one is still under review.
+  const status = i.signoff
+    ? "Approved"
+    : report.status === "Approved"
+      ? "Pending Review"
+      : report.status;
   const measured = bridge
     ? sum(bridge.steps.filter((s) => s.kind === "measured").map((s) => s.value))
     : 0;
@@ -213,6 +230,7 @@ export function buildReport(i: ReportInput): ReportDoc {
             `Steps = ${bridge.steps.map((s) => num(s.value)).join(" + ")} = ${num(rec.explained)}`,
             `Difference = ${rec.difference}: ${rec.reconciles ? "reconciles" : "does not reconcile"}`,
             `Peer benchmark: mean of ${peers.map((p) => p.creditRevenue).join(", ")} = ${round(peerMean, 1)}; the bridge uses ${bridge.base}`,
+            `Unit: every figure above is in ${finance.bank.currency} ${finance.bank.unit}.`,
           ]
         : [none],
     ],
@@ -249,7 +267,7 @@ export function buildReport(i: ReportInput): ReportDoc {
   return {
     title: report.title,
     header: [
-      `${report.id} · ${report.period} · owner ${report.owner} · ${report.status} · updated ${report.updated}`,
+      `${report.id} · ${report.period} · owner ${report.owner} · ${status} · updated ${report.updated}`,
       i.notice,
       ...(report.synthetic ? [SYNTHETIC_LINE] : []),
     ],

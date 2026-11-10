@@ -14,8 +14,12 @@ const ok = <T,>(r: T | string): T => {
   if (typeof r === "string") throw new Error(r);
   return r;
 };
+const SAVED = [
+  { version: 1, savedBy: "M. Maker" },
+  { version: 2, savedBy: "M. Maker" },
+];
 const open1: Review = ok(
-  submit([], [1, 2], { report: ID, version: 1, reviewer: "R. Reviewer" }, "M. Maker", AT),
+  submit([], SAVED, { report: ID, version: 1, reviewer: "R. Reviewer" }, "M. Maker", AT),
 );
 
 describe("review rules (L5 T5)", () => {
@@ -29,7 +33,7 @@ describe("review rules (L5 T5)", () => {
     });
     expect(open1.decision).toBeUndefined();
     const s = (version: number, reviewer: string, reviews: Review[] = []) =>
-      submit(reviews, [1, 2], { report: ID, version, reviewer }, "M. Maker", AT);
+      submit(reviews, SAVED, { report: ID, version, reviewer }, "M. Maker", AT);
     expect(s(3, "R. Reviewer")).toBe("Version 3 of RPT-FY25-PERF is not saved.");
     expect(s(1, "M. Maker")).toBe("The submitter cannot review their own report.");
     expect(s(1, " ")).toBe("Name a reviewer.");
@@ -81,7 +85,7 @@ describe("review rules (L5 T5)", () => {
     const v2 = ok(
       submit(
         [rejected],
-        [1, 2],
+        SAVED,
         { report: ID, version: 2, reviewer: "R. Reviewer" },
         "M. Maker",
         AT,

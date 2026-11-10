@@ -173,6 +173,12 @@
   body {
     background: white;
   }
+  /* A section not yet scrolled to still prints. */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
 }
 
 @utility card-surface {

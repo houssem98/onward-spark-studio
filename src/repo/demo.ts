@@ -13,7 +13,7 @@ import { DEMO_DATE } from "@/lib/definitions";
 import { frozenCopy } from "@/lib/frozen";
 import type { ReportSnapshot, ReportVersion } from "@/lib/report";
 import * as review from "@/lib/review";
-import { refuseUnearnedVerified, summarizeStates, withPolicyStates } from "@/lib/evidence-policy";
+import { refuseUnearnedVerified, reportState, withPolicyStates } from "@/lib/evidence-policy";
 import { globalImportance } from "@/lib/explain";
 import type {
   AccessRequest,
@@ -161,16 +161,15 @@ const refuse = <T>(r: T | string): T => {
   if (typeof r === "string") throw new Error(r);
   return r;
 };
+// A report is Approved once a reviewer has approved one of its versions, as the database sets it.
+const approved = (report: string) =>
+  reviews.some((r) => r.report === report && r.decision?.decision === "Approved");
 const reviewOf = (id: string, version: number) => {
   const i = reviews.findIndex((r) => r.report === id && r.version === version);
   if (i < 0) throw new Error(`Version ${version} of ${id} is not submitted.`);
   return i;
 };
-const valid = <T extends object>(a: T): T => {
-  const p = review.actionProblem(a);
-  if (p) throw new Error(p);
-  return a;
-};
+const valid = review.validAction;
 
 async function set(
   fn: (s: State) => Partial<State>,
@@ -388,9 +387,11 @@ export const demoRepo: Repository = {
         reports: tag(
           investigations.REPORTS.map((r) => ({
             ...r,
-            state: summarizeStates(
+            status: approved(r.id) ? ("Approved" as const) : r.status,
+            state: reportState(
               invs.filter((i) => i.id === r.investigation).map((i) => i.state),
               0,
+              approved(r.id),
             ),
           })),
         ),
@@ -407,13 +408,15 @@ export const demoRepo: Repository = {
         detail: inv.question,
       });
     },
-    setStatus: (id, status) =>
-      set(
+    setStatus: async (id, status) => {
+      if (status === "Approved") throw new Error("Approved is set only by an approval.");
+      await set(
         (s) => ({
           investigations: s.investigations.map((i) => (i.id === id ? { ...i, status } : i)),
         }),
         { module: "Investigations", entity: id, action: "Status changed", detail: status },
-      ),
+      );
+    },
     addAction: (a) =>
       set(
         (s) => ({ actions: [{ ...valid(a), id: `ACT-${101 + s.actions.length}` }, ...s.actions] }),
@@ -438,16 +441,21 @@ export const demoRepo: Repository = {
   reports: {
     read: async () => {
       await seedReview();
-      return { versions, reviews, reviewers: investigations.REVIEWERS };
+      return frozenCopy({ versions, reviews, reviewers: [...investigations.REVIEWERS] });
     },
     save: async (id, snapshot) => {
       await seedReview();
+      if (snapshot.report.id !== id)
+        throw new Error(`The snapshot is of ${snapshot.report.id}, not ${id}.`);
+      refuseUnearnedVerified(snapshot.inv, DEMO_DATE);
+      // A sign-off comes only from an approval, and states only from the policy.
+      const { signoff: _signoff, ...kept } = snapshot;
       const v = frozenCopy({
         report: id,
         version: versions.filter((x) => x.report === id).length + 1,
         savedAt: now(),
         savedBy: USER.name,
-        snapshot,
+        snapshot: { ...kept, inv: withPolicyStates(kept.inv, DEMO_DATE) },
         synthetic: true as const,
       });
       versions.push(v);
@@ -461,7 +469,9 @@ export const demoRepo: Repository = {
     },
     submit: async (id, version, reviewer) => {
       await seedReview();
-      const saved = versions.filter((v) => v.report === id).map((v) => v.version);
+      const saved = versions
+        .filter((v) => v.report === id)
+        .map((v) => ({ version: v.version, savedBy: v.savedBy }));
       const r = refuse(
         review.submit(reviews, saved, { report: id, version, reviewer }, USER.name, now()),
       );
@@ -535,3 +545,6 @@ function seedReview() {
     reviews.push({ ...s, version: 1, comments: [], synthetic: true });
   })());
 }
+// Seeded as the demo opens, not on a first read: version 1 holds what the owner saw then, not the
+// reviewer's later edits.
+void seedReview();

@@ -52,7 +52,8 @@ function ReportPage() {
   const saving = useStep(
     (snapshot: ReportSnapshot) => repo.reports.save(id, snapshot),
     async (saved) => {
-      await queryClient.invalidateQueries({ queryKey: reportsQuery.queryKey });
+      // The save is audited, and the next version freezes that trail, so every read refreshes.
+      await queryClient.invalidateQueries();
       toast.success(`Version ${saved.version} saved`);
       void navigate({ search: { v: saved.version } });
     },
@@ -118,7 +119,14 @@ function ReportPage() {
                 </Button>
               </span>
             )}
-            <Button size="sm" variant="outline" onClick={() => window.print()}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void repo.audit.log("Reports", file, "Printed", `${file} printed`);
+                window.print();
+              }}
+            >
               <Printer className="h-3.5 w-3.5" /> Print
             </Button>
             <Button
@@ -178,7 +186,13 @@ function ReportPage() {
         </Panel>
       ))}
       {version && (
-        <ReviewPanel id={id} version={version.version} review={review} reviewers={all.reviewers} />
+        <ReviewPanel
+          key={version.version}
+          id={id}
+          version={version.version}
+          review={review}
+          reviewers={all.reviewers}
+        />
       )}
       <Panel title="Saved versions" className="no-print">
         {versions.length ? (

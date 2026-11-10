@@ -70,6 +70,7 @@ export function answer(
     issues: data.datasets.issues,
     cases: data.crime.cases,
   };
+  const dq101 = s.issues.some((i) => i.id === "DQ-101" && i.status !== "Resolved");
   const ds = (id: string, period: string, unit: string) =>
     sourceOf(
       datasets.find((d) => d.id === id)!,
@@ -146,8 +147,16 @@ export function answer(
       assessments: [peerGap()],
       missing: [
         "Peer funding costs not available",
-        "Cascade credit revenue includes leasing (low comparability)",
-        "DQ-101 open on curated credit dataset",
+        // A peer record holds one period, so a peer's growth cannot be computed.
+        "Peer credit revenue growth not available: peers report one year, so this compares levels, not growth",
+        ...scope.cohort
+          .map((id) => cat.peers.find((p) => p.id === id)!)
+          .filter((p) => p.comparability !== "High")
+          .map(
+            (p) =>
+              `${peerName(p.id)} credit revenue has ${p.comparability.toLowerCase()} comparability${p.warning ? `: ${p.warning}` : ""}`,
+          ),
+        ...(dq101 ? ["DQ-101 open on curated credit dataset"] : []),
         ...res.left.map((x) => `Left out of the peer cohort: ${x.reason}`),
       ],
       links: [
@@ -263,9 +272,8 @@ export function answer(
           "Open data-quality issues on credit datasets",
           AS_OF,
           iss.length,
-          [system("DQ-RULES", "Data-quality rules (simulated)", "internal", "issues")],
+          [system("DQ-RULES", "Data-quality rules (simulated)", "synthetic", "issues")],
           "DQ-RULES",
-          "open_dq_issues",
         ),
       ],
       missing: [],
@@ -287,7 +295,7 @@ export function answer(
           "Models overdue for review",
           AS_OF,
           overdue.length,
-          [system("INVENTORY", "Model inventory (simulated)", "internal", "models")],
+          [system("INVENTORY", "Model inventory (simulated)", "synthetic", "models")],
           "INVENTORY",
           "overdue_reviews",
         ),
@@ -330,10 +338,10 @@ export function answer(
       scope: "FY2025 · all departments",
       metrics: [{ label: "Linked report", value: "RPT-FY25-PERF" }],
       summary: [
-        "A draft can be generated, but it cannot be labeled Verified: DQ-101 and peer comparability limitations remain open.",
+        `A draft can be generated, but it cannot be labeled Verified: ${dq101 ? "DQ-101 and " : ""}peer comparability limitations remain open.`,
       ],
       assessments: [peerGap()],
-      missing: ["Reviewer sign-off", "DQ-101 resolution"],
+      missing: ["Reviewer sign-off", ...(dq101 ? ["DQ-101 resolution"] : [])],
       links: [{ label: "Open report", to: "/reports/RPT-FY25-PERF" }],
     });
   }
