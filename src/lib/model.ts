@@ -15,11 +15,47 @@ export interface ToolCall {
   name: string;
   args: Record<string, unknown>;
 }
+/** Input tokens served from the provider's cache, input tokens not, and output tokens. */
+export interface Usage {
+  cacheHit: number;
+  cacheMiss: number;
+  output: number;
+}
 export type ModelClient = (req: {
   system: string;
   question: string;
   tools: ToolSpec[];
-}) => Promise<{ text: string; calls: ToolCall[] }>;
+}) => Promise<{ text: string; calls: ToolCall[]; usage?: Usage }>;
+
+// US dollars per million tokens at peak, read from api-docs.deepseek.com/quick_start/pricing on
+// 2026-11-10; the provider may change them, so the date travels with every cost.
+export const PRICE = {
+  model: "deepseek-flash",
+  hit: 0.006,
+  miss: 0.3,
+  output: 1.2,
+  asOf: "2026-11-10",
+} as const;
+
+// Peak is 01:00 to 04:00 and 06:00 to 10:00 UTC on weekdays, off-peak half price. Chinese public
+// holidays are off-peak too; pricing them at peak can only overstate the spend.
+const peak = (at: Date) => {
+  const d = at.getUTCDay();
+  const h = at.getUTCHours();
+  return d > 0 && d < 6 && ((h >= 1 && h < 4) || (h >= 6 && h < 10));
+};
+
+export const costOf = (u: Usage, at: Date) =>
+  ((u.cacheHit * PRICE.hit + u.cacheMiss * PRICE.miss + u.output * PRICE.output) / 1e6) *
+  (peak(at) ? 1 : 0.5);
+
+export const SPEND_ALERT_USD = 5;
+
+/** The alert admins see once the month's spend passes the human's threshold; calls are never blocked. */
+export const spendAlert = (monthUsd: number) =>
+  monthUsd > SPEND_ALERT_USD
+    ? `Model spend this month is $${monthUsd.toFixed(2)}, above the $${SPEND_ALERT_USD} alert. Calls are not blocked.`
+    : null;
 
 interface Tool extends ToolSpec {
   /** Roles that may use it; absent means any signed-in role. */
@@ -133,5 +169,5 @@ export async function ask(
   });
   const results = [];
   for (const c of turn.calls) results.push(await callTool(c, { ...ctx, domain: input.domain }));
-  return { text: turn.text, results };
+  return { text: turn.text, results, usage: turn.usage };
 }

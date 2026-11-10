@@ -56,7 +56,7 @@ for (const [file, found] of hits) {
 // The model adapter and its key stay on the server: the server build must hold the adapter, so the
 // scan is seen to find it, and nothing the browser loads may name the provider or carry a key.
 const PROVIDER = "api.deepseek.com";
-const KEY = /sk-[A-Za-z0-9]{16,}/;
+const KEY = /sk-[A-Za-z0-9]{16,}|DEEPSEEK_API_KEY|SUPABASE_SERVICE_ROLE_KEY/;
 const inClient = (f) => f.startsWith(join(".output", "public"));
 if (!files.some((f, i) => !inClient(f) && texts[i].includes(PROVIDER)))
   errs.push(`the model adapter (${PROVIDER}) is missing from the server build`);

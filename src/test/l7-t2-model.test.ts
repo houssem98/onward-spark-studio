@@ -125,7 +125,7 @@ describe("the DeepSeek adapter (L7 T2), against a stub, never the live service",
     expect(url).toBe("https://api.deepseek.com/chat/completions");
     expect(new Headers(init!.headers).get("authorization")).toBe("Bearer sk-test-key");
     expect(JSON.parse(init!.body as string)).toMatchObject({
-      model: "deepseek-chat",
+      model: "deepseek-flash",
       tools: [{ type: "function", function: { name: "finance_answer" } }],
     });
   });

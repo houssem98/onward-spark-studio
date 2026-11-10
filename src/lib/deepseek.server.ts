@@ -1,4 +1,4 @@
-import type { ModelClient, ToolCall } from "@/lib/model";
+import { PRICE, type ModelClient, type ToolCall } from "@/lib/model";
 
 // Server only: the `.server` suffix makes the build refuse this module in the browser bundle.
 const ENDPOINT = "https://api.deepseek.com/chat/completions";
@@ -10,6 +10,11 @@ interface Reply {
       tool_calls?: { function: { name: string; arguments: string } }[];
     };
   }[];
+  usage?: {
+    prompt_cache_hit_tokens?: number;
+    prompt_cache_miss_tokens?: number;
+    completion_tokens?: number;
+  };
 }
 
 const args = (raw: string): ToolCall["args"] => {
@@ -27,7 +32,9 @@ export const deepseek =
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: PRICE.model,
+        // Choosing a tool and drafting need no reasoning trace; thinking costs more and is slower.
+        thinking: { type: "disabled" },
         messages: [
           { role: "system", content: system },
           { role: "user", content: question },
@@ -36,13 +43,22 @@ export const deepseek =
       }),
     });
     if (!res.ok) throw new Error(`The model service answered ${res.status}.`);
-    const m = ((await res.json()) as Reply).choices?.[0]?.message;
+    const reply = (await res.json()) as Reply;
+    const m = reply.choices?.[0]?.message;
     if (!m) throw new Error("The model service sent no answer.");
+    const u = reply.usage;
     return {
       text: m.content ?? "",
       calls: (m.tool_calls ?? []).map((c) => ({
         name: c.function.name,
         args: args(c.function.arguments),
       })),
+      ...(u && {
+        usage: {
+          cacheHit: u.prompt_cache_hit_tokens ?? 0,
+          cacheMiss: u.prompt_cache_miss_tokens ?? 0,
+          output: u.completion_tokens ?? 0,
+        },
+      }),
     };
   };
