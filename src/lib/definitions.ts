@@ -24,6 +24,7 @@ const ALERTS = "Alert queue";
 const CATALOG = "Data catalog";
 const INVENTORY = "Model inventory";
 const VALIDATION = "Model validation results";
+const TN_FILINGS = "Bourse de Tunis, quarterly activity indicators";
 
 export const DEFINITIONS = {
   operating_income: {
@@ -513,6 +514,44 @@ export const DEFINITIONS = {
     unit: "LGD, fraction of exposure (0 to 1)",
     period: "Validation sample",
     source: VALIDATION,
+  },
+  net_banking_income: {
+    label: "Net banking income",
+    definition:
+      "A Tunisian listed bank's produit net bancaire as filed: banking operating income less banking operating charges.",
+    formula: "As filed, in dinars, converted at the BCT reference rate of the period end",
+    unit: "USD M",
+    currency: "USD",
+    period: "Year to the latest quarter filed",
+    source: TN_FILINGS,
+  },
+  net_loans: {
+    label: "Net loans",
+    definition:
+      "A Tunisian listed bank's encours des crédits nets as filed: loans net of provisions.",
+    formula: "As filed, in dinars, converted at the BCT reference rate of the period end",
+    unit: "USD M",
+    currency: "USD",
+    period: "At the latest quarter end filed",
+    source: TN_FILINGS,
+  },
+  customer_deposits: {
+    label: "Customer deposits",
+    definition: "A Tunisian listed bank's encours des dépôts as filed.",
+    formula: "As filed, in dinars, converted at the BCT reference rate of the period end",
+    unit: "USD M",
+    currency: "USD",
+    period: "At the latest quarter end filed",
+    source: TN_FILINGS,
+  },
+  bank_equity: {
+    label: "Equity",
+    definition: "A Tunisian listed bank's capitaux propres as filed.",
+    formula: "As filed, in dinars, converted at the BCT reference rate of the period end",
+    unit: "USD M",
+    currency: "USD",
+    period: "At the latest quarter end filed",
+    source: TN_FILINGS,
   },
 } satisfies Record<string, Definition>;
 
