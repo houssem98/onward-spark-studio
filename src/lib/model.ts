@@ -150,7 +150,7 @@ export function screen(question: string): string | null {
 }
 
 const SYSTEM =
-  "You help a bank analyst. Choose the tool that answers the question and summarise what it returns. Never state a figure or an evidence state that a tool did not return.";
+  "You help a bank analyst. Choose the tool that answers the question and summarise what it returns in plain words. Repeat only figures a tool returned, written as the tool wrote them, and never name an evidence state: the application shows it.";
 
 export async function ask(
   input: { question: string; domain: Domain },
@@ -169,5 +169,28 @@ export async function ask(
   });
   const results = [];
   for (const c of turn.calls) results.push(await callTool(c, { ...ctx, domain: input.domain }));
-  return { text: turn.text, results, usage: turn.usage };
+  const withheld = vetDraft(turn.text, input.question, results);
+  return withheld
+    ? { text: "", withheld, results, usage: turn.usage }
+    : { text: turn.text, results, usage: turn.usage };
+}
+
+// Only the policy sets an evidence state, and only calc gives a figure (L7 T3): a draft that names a
+// state, or states a number neither the question nor any tool result holds, is withheld whole.
+const STATE =
+  /\b(?:partially[ _]verified|unverified|verified|conflicting[ _]evidence|not[ _]available)\b/i;
+const NUMBER = /\d+(?:[.,]\d+)*/g;
+
+export function vetDraft(text: string, question: string, results: unknown): string | null {
+  const state = STATE.exec(text);
+  if (state)
+    return `The model's draft was withheld: it names an evidence state ("${state[0]}"), which only the evidence policy sets.`;
+  const known = new Set([
+    ...(question.match(NUMBER) ?? []),
+    ...(JSON.stringify(results).match(NUMBER) ?? []),
+  ]);
+  const invented = (text.match(NUMBER) ?? []).filter((n) => !known.has(n));
+  return invented.length
+    ? `The model's draft was withheld: it states ${invented.join(", ")}, which no tool returned.`
+    : null;
 }
