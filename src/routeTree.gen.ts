@@ -16,8 +16,10 @@ import { Route as DataRouteImport } from './routes/data'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as TnBanksRouteImport } from './routes/tn-banks'
 import { Route as ApiAskRouteImport } from './routes/api.ask'
 import { Route as ApiSourcesRouteImport } from './routes/api.sources'
+import { Route as ApiTnBanksRouteImport } from './routes/api.tn-banks'
 import { Route as CrimeIndexRouteImport } from './routes/crime.index'
 import { Route as CrimeIdRouteImport } from './routes/crime.$id'
 import { Route as InvestigationsIndexRouteImport } from './routes/investigations.index'
@@ -61,6 +63,11 @@ const SourcesRoute = SourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TnBanksRoute = TnBanksRouteImport.update({
+  id: '/tn-banks',
+  path: '/tn-banks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAskRoute = ApiAskRouteImport.update({
   id: '/api/ask',
   path: '/api/ask',
@@ -69,6 +76,11 @@ const ApiAskRoute = ApiAskRouteImport.update({
 const ApiSourcesRoute = ApiSourcesRouteImport.update({
   id: '/api/sources',
   path: '/api/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTnBanksRoute = ApiTnBanksRouteImport.update({
+  id: '/api/tn-banks',
+  path: '/api/tn-banks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrimeIndexRoute = CrimeIndexRouteImport.update({
@@ -115,8 +127,10 @@ export interface FileRoutesByFullPath {
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
   '/sources': typeof SourcesRoute
+  '/tn-banks': typeof TnBanksRoute
   '/api/ask': typeof ApiAskRoute
   '/api/sources': typeof ApiSourcesRoute
+  '/api/tn-banks': typeof ApiTnBanksRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -133,8 +147,10 @@ export interface FileRoutesByTo {
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
   '/sources': typeof SourcesRoute
+  '/tn-banks': typeof TnBanksRoute
   '/api/ask': typeof ApiAskRoute
   '/api/sources': typeof ApiSourcesRoute
+  '/api/tn-banks': typeof ApiTnBanksRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -152,8 +168,10 @@ export interface FileRoutesById {
   '/performance': typeof PerformanceRoute
   '/sign-in': typeof SignInRoute
   '/sources': typeof SourcesRoute
+  '/tn-banks': typeof TnBanksRoute
   '/api/ask': typeof ApiAskRoute
   '/api/sources': typeof ApiSourcesRoute
+  '/api/tn-banks': typeof ApiTnBanksRoute
   '/crime/$id': typeof CrimeIdRoute
   '/investigations/$id': typeof InvestigationsIdRoute
   '/models/$id': typeof ModelsIdRoute
@@ -172,8 +190,10 @@ export interface FileRouteTypes {
     | '/performance'
     | '/sign-in'
     | '/sources'
+    | '/tn-banks'
     | '/api/ask'
     | '/api/sources'
+    | '/api/tn-banks'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -190,8 +210,10 @@ export interface FileRouteTypes {
     | '/performance'
     | '/sign-in'
     | '/sources'
+    | '/tn-banks'
     | '/api/ask'
     | '/api/sources'
+    | '/api/tn-banks'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -208,8 +230,10 @@ export interface FileRouteTypes {
     | '/performance'
     | '/sign-in'
     | '/sources'
+    | '/tn-banks'
     | '/api/ask'
     | '/api/sources'
+    | '/api/tn-banks'
     | '/crime/$id'
     | '/investigations/$id'
     | '/models/$id'
@@ -227,8 +251,10 @@ export interface RootRouteChildren {
   PerformanceRoute: typeof PerformanceRoute
   SignInRoute: typeof SignInRoute
   SourcesRoute: typeof SourcesRoute
+  TnBanksRoute: typeof TnBanksRoute
   ApiAskRoute: typeof ApiAskRoute
   ApiSourcesRoute: typeof ApiSourcesRoute
+  ApiTnBanksRoute: typeof ApiTnBanksRoute
   CrimeIdRoute: typeof CrimeIdRoute
   InvestigationsIdRoute: typeof InvestigationsIdRoute
   ModelsIdRoute: typeof ModelsIdRoute
@@ -289,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tn-banks': {
+      id: '/tn-banks'
+      path: '/tn-banks'
+      fullPath: '/tn-banks'
+      preLoaderRoute: typeof TnBanksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ask': {
       id: '/api/ask'
       path: '/api/ask'
@@ -301,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/api/sources'
       fullPath: '/api/sources'
       preLoaderRoute: typeof ApiSourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tn-banks': {
+      id: '/api/tn-banks'
+      path: '/api/tn-banks'
+      fullPath: '/api/tn-banks'
+      preLoaderRoute: typeof ApiTnBanksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crime/': {
@@ -363,8 +403,10 @@ const rootRouteChildren: RootRouteChildren = {
   PerformanceRoute: PerformanceRoute,
   SignInRoute: SignInRoute,
   SourcesRoute: SourcesRoute,
+  TnBanksRoute: TnBanksRoute,
   ApiAskRoute: ApiAskRoute,
   ApiSourcesRoute: ApiSourcesRoute,
+  ApiTnBanksRoute: ApiTnBanksRoute,
   CrimeIdRoute: CrimeIdRoute,
   InvestigationsIdRoute: InvestigationsIdRoute,
   ModelsIdRoute: ModelsIdRoute,

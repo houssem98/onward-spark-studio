@@ -2,8 +2,17 @@ import { extractText, getDocumentProxy } from "unpdf";
 
 import { readBctRate } from "@/lib/bct-rate";
 import { fetchRetry, type Failure, type FetchOptions } from "@/lib/connector";
+import { assignEvidenceState, type Decision } from "@/lib/evidence-policy";
 import type { SourceRun } from "@/lib/source-runs.server";
-import { listingUrl, normalize, parseIndicators, parseListing } from "@/lib/tn-filings";
+import {
+  LISTED_BANKS,
+  filingAssessment,
+  listingUrl,
+  normalize,
+  parseIndicators,
+  parseListing,
+  type Indicator,
+} from "@/lib/tn-filings";
 
 // Server only: reads a bank's latest quarterly statement from the exchange's public site.
 
@@ -56,5 +65,28 @@ export async function readLatestUsd(company: string, opts: FetchOptions & Tracki
   const fx = await readBctRate(q.data.periodEnd, fetchOpts);
   await track("bct-usd", fx);
   if (fx.state !== "ok") return fx;
-  return { state: "ok" as const, data: normalize(q.data, fx.data), source: q.data.source };
+  return {
+    state: "ok" as const,
+    data: normalize(q.data, fx.data),
+    source: q.data.source,
+    periodEnd: q.data.periodEnd,
+  };
+}
+
+/** Every listed bank's latest quarter, each figure with the state the L4 policy sets (L6 T3b). */
+export async function readSector(opts: FetchOptions & Tracking = {}) {
+  const today = (opts.now?.() ?? new Date()).toISOString().slice(0, 10);
+  return Promise.all(
+    Object.entries(LISTED_BANKS).map(async ([company, bank]) => {
+      const r = await readLatestUsd(company, opts);
+      if (r.state !== "ok") return { company, bank, state: r.state, detail: r.detail };
+      const figures = Object.fromEntries(
+        (Object.entries(r.data) as [Indicator, (typeof r.data)[Indicator]][]).map(([id, f]) => {
+          const a = filingAssessment(company, id, f, r.periodEnd, r.source, today);
+          return [id, { ...f, ...assignEvidenceState(a) }];
+        }),
+      ) as Record<Indicator, (typeof r.data)[Indicator] & Decision>;
+      return { company, bank, state: r.state, periodEnd: r.periodEnd, source: r.source, figures };
+    }),
+  );
 }

@@ -40,6 +40,8 @@ Captured in L0 T6 (2026-10-28) with Playwright (`playwright-core` 1.64.1, run fr
 | `src/routes/reports.$id.tsx` | 390 | 200 | 53 | 0 | FY2025 Full-Year Performance Review | Sideways scroll. |
 | `src/routes/sources.tsx` | 1440 | 200 | 0 | 0 | Source Health | Captured in L6 T3 (2026-11-10) against `vite dev` with no service key: the page says source health is not tracked. |
 | `src/routes/sources.tsx` | 390 | 200 | 0 | 0 | Source Health | Captured in L6 T3 (2026-11-10): no sideways scroll. |
+| `src/routes/tn-banks.tsx` | 1440 | 200 | 0 | 0 | Tunisian Banks | Captured in L6 T3b (2026-11-11) against `vite dev`: nothing is read until "Read the latest filings"; one live read showed BIAT's quarter to 2026-09-30 and named why each of the ten other banks was not read, still with no sideways scroll and no console error. |
+| `src/routes/tn-banks.tsx` | 390 | 200 | 0 | 0 | Tunisian Banks | Captured in L6 T3b (2026-11-11): no sideways scroll before a read. |
 | `src/routes/sign-in.tsx` | 1440 | 200 | 0 | 0 | Sign in | Added in L3 T2, not an L0 capture: the demo view, a note in the shell. HTTP, overflow, console errors and the one h1 are what `e2e/routes.spec.ts` asserts on every route. |
 | `src/routes/sign-in.tsx` | 390 | 200 | 0 | 0 | Sign in | As at 1440. |
 

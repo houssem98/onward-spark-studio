@@ -26,6 +26,9 @@ const PATHS = readdirSync("src/routes")
         .join("/"),
   );
 
+// A page of real figures carries its own tag line instead of the synthetic one (L6 T3b).
+const REAL: Record<string, string> = { "/tn-banks": "Real public filings · testing and education" };
+
 describe("module pages share the overview's rhythm", () => {
   it("covers every page route", () => {
     expect(PATHS.length).toBeGreaterThanOrEqual(12);
@@ -41,7 +44,9 @@ describe("module pages share the overview's rhythm", () => {
       const header = h1s[0]?.closest("[data-page-header]");
       const tag =
         header &&
-        [...header.querySelectorAll("span")].find((s) => s.textContent === "Synthetic demo data");
+        [...header.querySelectorAll("span")].find(
+          (s) => s.textContent === (REAL[path] ?? "Synthetic demo data"),
+        );
       if (h1s.length !== 1) off.push(`${path}: ${h1s.length} h1`);
       else if (!header) off.push(`${path}: h1 outside the page header`);
       else if (!tag || !(tag.compareDocumentPosition(h1s[0]!) & Node.DOCUMENT_POSITION_FOLLOWING))

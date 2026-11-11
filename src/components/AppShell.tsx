@@ -44,6 +44,7 @@ export const NAV_GROUPS = [
     label: "Intelligence",
     items: [
       { to: "/performance", label: "Performance & Peers", icon: TrendingUp },
+      { to: "/tn-banks", label: "Tunisian Banks", icon: Building2 },
       { to: "/credit", label: "Credit Intelligence", icon: Landmark },
       { to: "/crime", label: "Fraud, AML & Fin. Crime", icon: ShieldAlert },
       { to: "/data", label: "Data Governance", icon: Database },
@@ -74,7 +75,8 @@ export function EnvironmentBanner({ environment }: { environment: Repository["en
         <>
           <FlaskConical className="h-3.5 w-3.5 shrink-0" />
           <span>
-            <b>Demo · synthetic data</b> — every figure belongs to the fictional Northstar Bank.
+            <b>Demo · synthetic data</b> — every figure belongs to the fictional Northstar Bank,
+            except on Tunisian Banks, which reads real public filings.
           </span>
         </>
       ) : (
