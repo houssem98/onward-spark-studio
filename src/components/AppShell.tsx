@@ -32,6 +32,7 @@ import { copilotBus } from "@/lib/copilot-bus";
 import type { Chosen } from "@/lib/scope";
 import { useStep } from "@/hooks/use-step";
 import { CommandPalette } from "@/components/CommandPalette";
+import { ModelSpend } from "@/components/ModelSpend";
 import { crimeQuery, datasetsQuery, financeQuery, modelsQuery, repo } from "@/repo/queries";
 import type { Repository } from "@/repo/types";
 
@@ -395,6 +396,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               Demo: predefined answers over synthetic data; no AI provider is connected. Some
               figures are computed from the demo data, other answer text is fixed.
             </p>
+            <ModelSpend role={user.role} />
           </SheetHeader>
           <form
             className="mt-4 flex gap-2"

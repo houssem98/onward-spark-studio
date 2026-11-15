@@ -50,6 +50,8 @@ export const costOf = (u: Usage, at: Date) =>
   (peak(at) ? 1 : 0.5);
 
 export const SPEND_ALERT_USD = 5;
+/** Who sees model spend; `GET /api/ask` refuses every other role. */
+export const SPEND_ROLES = ["Admin", "Chief Risk Officer"];
 
 /** The alert admins see once the month's spend passes the human's threshold; calls are never blocked. */
 export const spendAlert = (monthUsd: number) =>

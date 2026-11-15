@@ -1,5 +1,13 @@
 import { deepseek } from "@/lib/deepseek.server";
-import { PRICE, ask, costOf, spendAlert, type Domain, type ModelClient } from "@/lib/model";
+import {
+  PRICE,
+  SPEND_ROLES,
+  ask,
+  costOf,
+  spendAlert,
+  type Domain,
+  type ModelClient,
+} from "@/lib/model";
 import type { SpendStore } from "@/lib/spend.server";
 import type { Repository } from "@/repo/types";
 
@@ -7,7 +15,6 @@ import type { Repository } from "@/repo/types";
 // the request body; spend is recorded and alerted on, and never blocks a call (L7 T1).
 
 const DOMAINS: Domain[] = ["performance", "models", "data"];
-const SPEND_ROLES = ["Admin", "Chief Risk Officer"];
 const UNTRACKED =
   "Model spend is not tracked: the model_calls table or the server's service key is not configured.";
 
