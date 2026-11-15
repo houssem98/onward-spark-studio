@@ -29,32 +29,148 @@ export function parseListing(html: string) {
 
 export type Indicator = "net_banking_income" | "net_loans" | "customer_deposits" | "bank_equity";
 
-// The numbered rows of the standard statement. Each row's figures run: this quarter, the same
-// quarter last year, year to date, the same last year, last year end; a balance has no quarter
-// figures. So the current period end is always the third figure from the end.
-const ROWS: Record<Indicator, string> = {
-  net_banking_income: "Produit net bancaire",
-  net_loans: "Encours des crédits nets",
-  customer_deposits: "Encours des dépôts",
-  bank_equity: "Capitaux propres",
-};
-const FIGURE = /\d{1,3}(?: \d{3})*,\d+/g;
+/** A run of text where the PDF draws it: x and y of its baseline start, its width, its page. */
+export interface TextItem {
+  s: string;
+  x: number;
+  y: number;
+  w: number;
+  page: number;
+}
+type Cell = { s: string; x0: number; x1: number };
 
-/** The statement's figures for its period end, in dinars as filed. */
-export function parseIndicators(raw: string) {
-  const text = raw.replace(/\s+/g, " ");
-  const tnd = {} as Record<Indicator, number>;
-  for (const [id, label] of Object.entries(ROWS) as [Indicator, string][]) {
-    const at = text.indexOf(label);
-    const row = at < 0 ? "" : text.slice(at + label.length).split(/·|\b\d{1,2}- |FAITS/)[0]!;
-    const figures = row.match(FIGURE) ?? [];
-    if (figures.length < 3)
-      throw new Error(`The statement's "${label}" row is missing or unreadable.`);
-    tnd[id] = Number(figures[figures.length - 3]!.replace(/ /g, "").replace(",", "."));
+// Items on one baseline (within 2 pt) form a line; items under 4 pt apart form one cell, since a
+// figure is sometimes drawn in pieces ("288 53" then "2"). A column's gap is never under 8 pt.
+function lines(items: TextItem[]) {
+  const out: TextItem[][] = [];
+  for (const it of items.filter((i) => i.s.trim()).sort((a, b) => a.page - b.page || b.y - a.y)) {
+    const l = out.at(-1);
+    if (l && l[0]!.page === it.page && l[0]!.y - it.y <= 2) l.push(it);
+    else out.push([it]);
   }
-  const end = /AU (\d{2})\/(\d{2})\/(\d{4})/.exec(text);
+  return out.map((l) =>
+    l
+      .sort((a, b) => a.x - b.x)
+      .reduce<Cell[]>((cells, it) => {
+        const c = cells.at(-1);
+        const gap = c ? it.x - c.x1 : Infinity;
+        if (c && gap < 4) {
+          c.s += (gap > 1 ? " " : "") + it.s.trim();
+          c.x1 = Math.max(c.x1, it.x + it.w);
+        } else cells.push({ s: it.s.trim(), x0: it.x, x1: it.x + it.w });
+        return cells;
+      }, []),
+  );
+}
+
+const FIGURE = /^\d{1,3}(?: ?\d{3})*(?:,\d+)?$/;
+const flat = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\p{M}\s]/gu, "")
+    .toLowerCase();
+
+// The rows every statement has, matched with accents and spaces removed (STB's PDF splits words:
+// "Pr oduit net bancair e"). Labels differ by bank: Amen files "créances", Wifack "financements".
+const ROWS: Record<Indicator, [string, RegExp]> = {
+  net_banking_income: ["Produit net bancaire", /produitnet/],
+  net_loans: ["Encours des crédits", /encours(nets?)?(des|de)(credits|creances|financements)/],
+  customer_deposits: ["Encours des dépôts", /encours(des|de)depots?/],
+  bank_equity: ["Capitaux propres", /capitauxpropres/],
+};
+
+// Case matters for "mD" (thousands, BH) against "MD" (millions, in notes).
+const UNITS: [RegExp, number][] = [
+  [/milliers? de dinars/i, 1000],
+  [/\b1000 DT\b|\bKTND\b|\bmD\b/, 1000],
+  [/\ben dinars\b/i, 1],
+];
+
+// BNA's and UIB's tables state no unit; their notes restate a table figure in millions
+// ("6 517,3 MTND" for 6 517 326), which fixes the unit, read from the statement itself.
+function unitFromNotes(text: string, filed: number[]) {
+  const millions = [
+    ...text.matchAll(/(\d[\d .]*)(?:,(\d+))?\s*(?:MTND|millions? de dinars)/gi),
+  ].map(([, int, dec = ""]) => ({
+    v: Number(`${int!.replace(/[ .]/g, "")}.${dec}`),
+    d: dec.length,
+  }));
+  return [1000, 1].find((u) =>
+    filed.some((f) => millions.some((m) => Math.abs(m.v - (f * u) / 1e6) <= 0.5 * 10 ** -m.d)),
+  );
+}
+
+const MONTHS: Record<string, string> = { mars: "03", juin: "06", septembre: "09", decembre: "12" };
+
+/** The latest quarter end the statement names, as 30/09/2026, 30/09/26 or 30 septembre 2026. */
+function periodEnd(text: string) {
+  const t = text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  return [
+    ...[...t.matchAll(/\b(\d{2})[/.-](\d{2})[/.-](\d{4}|\d{2})\b/g)].map(
+      ([, d, m, y]) => `${y!.length === 2 ? `20${y}` : y}-${m}-${d}`,
+    ),
+    ...[...t.matchAll(/\b(\d{2}) (mars|juin|septembre|decembre) (\d{4})\b/g)].map(
+      ([, d, m, y]) => `${y}-${MONTHS[m!]}-${d}`,
+    ),
+  ]
+    .filter((d) => /-(03-31|06-30|09-30|12-31)$/.test(d))
+    .sort()
+    .at(-1);
+}
+
+/**
+ * The statement's figures for its period end, in dinars. Each figure is taken by its column: net
+ * banking income's row runs this quarter, the same quarter last year, then the year to date, so its
+ * third figure marks the period-end column, and each balance is the figure drawn in that column.
+ */
+export function parseIndicators(items: TextItem[]) {
+  const ls = lines(items);
+  let label = "";
+  const table = ls.flatMap((cells, i) => {
+    const figures = cells.filter((c) => FIGURE.test(c.s));
+    label += cells
+      .filter((c) => !FIGURE.test(c.s))
+      .map((c) => c.s)
+      .join("");
+    if (!figures.length) return [];
+    const row = { i, label: flat(label), figures };
+    label = "";
+    return [row];
+  });
+  const row = (id: Indicator) => {
+    const [name, match] = ROWS[id];
+    const r = table.find((t) => match.test(t.label));
+    if (!r) throw new Error(`The statement's "${name}" row is missing or unreadable.`);
+    return r;
+  };
+  const nbi = row("net_banking_income");
+  const col = nbi.figures[2];
+  if (!col) throw new Error(`The statement's "Produit net bancaire" row is missing or unreadable.`);
+  const filed = {} as Record<Indicator, number>;
+  for (const id of Object.keys(ROWS) as Indicator[]) {
+    const f = row(id).figures.find((c) => c.x0 < col.x1 && c.x1 > col.x0);
+    if (!f)
+      throw new Error(
+        `The statement's "${ROWS[id][0]}" row has no figure in its period-end column.`,
+      );
+    filed[id] = Number(f.s.replace(/ /g, "").replace(",", "."));
+  }
+  const text = (from: number, to?: number) =>
+    ls
+      .slice(from, to)
+      .map((l) => l.map((c) => c.s).join(" "))
+      .join("\n");
+  const unit =
+    UNITS.find(([re]) => re.test(text(0, nbi.i)))?.[1] ??
+    unitFromNotes(text(0), Object.values(filed));
+  if (!unit) throw new Error("The statement names no unit, in its table or its notes.");
+  const end = periodEnd(text(0));
   if (!end) throw new Error("The statement names no period end.");
-  return { periodEnd: `${end[3]}-${end[2]}-${end[1]}`, tnd };
+  const tnd = Object.fromEntries(Object.entries(filed).map(([id, v]) => [id, v * unit])) as Record<
+    Indicator,
+    number
+  >;
+  return { periodEnd: end, tnd };
 }
 
 export interface Fx {

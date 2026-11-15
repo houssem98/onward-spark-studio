@@ -1,4 +1,4 @@
-import { extractText, getDocumentProxy } from "unpdf";
+import { getDocumentProxy } from "unpdf";
 
 import { readBctRate } from "@/lib/bct-rate";
 import { fetchRetry, type Failure, type FetchOptions } from "@/lib/connector";
@@ -12,14 +12,21 @@ import {
   parseIndicators,
   parseListing,
   type Indicator,
+  type TextItem,
 } from "@/lib/tn-filings";
 
 // Server only: reads a bank's latest quarterly statement from the exchange's public site.
 
-export async function pdfText(bytes: Uint8Array) {
+/** Every run of text in the PDF with where it is drawn, so figures can be read by column. */
+export async function pdfItems(bytes: Uint8Array) {
   // PDF.js takes over the buffer it is given and leaves the caller's empty, so it gets a copy.
-  const { text } = await extractText(await getDocumentProxy(bytes.slice()), { mergePages: true });
-  return text;
+  const doc = await getDocumentProxy(bytes.slice());
+  const out: TextItem[] = [];
+  for (let page = 1; page <= doc.numPages; page++)
+    for (const it of (await (await doc.getPage(page)).getTextContent()).items)
+      if ("str" in it)
+        out.push({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width, page });
+  return out;
 }
 
 const malformed = (e: unknown): Failure => ({
@@ -39,7 +46,7 @@ export async function readLatest(company: string, opts: FetchOptions = {}) {
   const doc = await fetchRetry(latest.pdf, opts);
   if (doc.state !== "ok") return doc;
   try {
-    const data = parseIndicators(await pdfText(new Uint8Array(await doc.res.arrayBuffer())));
+    const data = parseIndicators(await pdfItems(new Uint8Array(await doc.res.arrayBuffer())));
     return { state: "ok" as const, data: { ...data, source: latest.pdf } };
   } catch (e) {
     return malformed(e);

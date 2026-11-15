@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fetchRetry } from "@/lib/connector";
 import { DEFINITIONS } from "@/lib/definitions";
 import { listingUrl, normalize, parseIndicators, parseListing } from "@/lib/tn-filings";
-import { pdfText, readLatest } from "@/lib/tn-connector.server";
+import { pdfItems, readLatest } from "@/lib/tn-connector.server";
 
 // Recorded on 2026-11-10 from tunis-stockexchange.com; tests never call the live site.
 const LISTING = readFileSync("src/test/recorded/tn/biat-listing.html", "utf8");
@@ -28,7 +28,7 @@ describe("Tunisian bank filings: the recorded listing and statement (L6 T2)", ()
   });
 
   it("reads the year-to-date figures, in dinars, from the statement", async () => {
-    const r = parseIndicators(await pdfText(PDF));
+    const r = parseIndicators(await pdfItems(PDF));
     expect(r).toEqual({
       periodEnd: "2026-09-30",
       tnd: {
@@ -63,9 +63,8 @@ describe("Tunisian bank filings: the recorded listing and statement (L6 T2)", ()
   });
 
   it("refuses a statement or a listing it cannot read, saying why", () => {
-    expect(() => parseIndicators("INDICATEURS D'ACTIVITE\n3- Produit net bancaire\n")).toThrow(
-      /Produit net bancaire/,
-    );
+    const row = { s: "3- Produit net bancaire", x: 40, y: 500, w: 100, page: 1 };
+    expect(() => parseIndicators([row])).toThrow(/Produit net bancaire/);
     expect(() => parseListing("<html><body>nothing here</body></html>")).toThrow(/no quarterly/);
   });
 });
