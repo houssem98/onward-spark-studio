@@ -11,6 +11,8 @@ import type { Review } from "@/lib/review";
 export interface User {
   name: string;
   role: string;
+  /** The user's organisation, where there are several (production); the demo has one. */
+  org?: string;
 }
 
 export interface AuditEvent {

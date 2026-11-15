@@ -1,5 +1,6 @@
 import { deepseek } from "@/lib/deepseek.server";
 import {
+  BilledError,
   PRICE,
   SPEND_ROLES,
   ask,
@@ -56,6 +57,19 @@ export async function handleAsk(
       { user, repo: deps.repo, model: deps.model ?? deepseek(deps.key) },
     );
   } catch (e) {
+    // A call the provider billed is recorded even though its answer failed (L7 T6e).
+    if (e instanceof BilledError && e.usage && deps.store) {
+      const at = deps.now();
+      await deps.store
+        .record({
+          at: at.toISOString(),
+          actor: user.name,
+          model: PRICE.model,
+          usd: costOf(e.usage, at),
+          org_id: user.org ?? null,
+        })
+        .catch(() => {});
+    }
     return refuse(e instanceof Error ? e.message : "The model failed.", 502);
   }
   if ("refused" in out) return Response.json(out);
@@ -66,9 +80,15 @@ export async function handleAsk(
   const usd = costOf(usage, at);
   if (!deps.store) return Response.json({ ...answer, spend: { usd, untracked: UNTRACKED } });
   try {
-    await deps.store.record({ at: at.toISOString(), actor: user.name, model: PRICE.model, usd });
+    await deps.store.record({
+      at: at.toISOString(),
+      actor: user.name,
+      model: PRICE.model,
+      usd,
+      org_id: user.org ?? null,
+    });
     if (!SPEND_ROLES.includes(user.role)) return Response.json({ ...answer, spend: { usd } });
-    const monthUsd = await deps.store.month(at);
+    const monthUsd = await deps.store.month(at, user.org);
     return Response.json({ ...answer, spend: { usd, monthUsd, alert: spendAlert(monthUsd) } });
   } catch (e) {
     const why = e instanceof Error ? e.message : "unknown error";
@@ -85,6 +105,6 @@ export async function handleSpend(
   if (!user) return refuse("Not signed in.", 401);
   if (!SPEND_ROLES.includes(user.role)) return refuse("Only an admin sees model spend.", 403);
   if (!deps.store) return Response.json({ untracked: UNTRACKED });
-  const monthUsd = await deps.store.month(deps.now());
+  const monthUsd = await deps.store.month(deps.now(), user.org);
   return Response.json({ monthUsd, alert: spendAlert(monthUsd) });
 }

@@ -1,4 +1,4 @@
-import { PRICE, type ModelClient, type ToolCall } from "@/lib/model";
+import { BilledError, PRICE, type ModelClient, type ToolCall } from "@/lib/model";
 
 // Server only: the `.server` suffix makes the build refuse this module in the browser bundle.
 const ENDPOINT = "https://api.deepseek.com/chat/completions";
@@ -17,11 +17,11 @@ interface Reply {
   };
 }
 
-const args = (raw: string): ToolCall["args"] => {
+const args = (raw: string): ToolCall["args"] | undefined => {
   try {
     return JSON.parse(raw) as ToolCall["args"];
   } catch {
-    throw new Error("The model sent tool arguments that are not JSON.");
+    return undefined;
   }
 };
 
@@ -47,18 +47,21 @@ export const deepseek =
     const m = reply.choices?.[0]?.message;
     if (!m) throw new Error("The model service sent no answer.");
     const u = reply.usage;
+    const usage = u && {
+      cacheHit: u.prompt_cache_hit_tokens ?? 0,
+      cacheMiss: u.prompt_cache_miss_tokens ?? 0,
+      output: u.completion_tokens ?? 0,
+    };
+    const calls = (m.tool_calls ?? []).map((c) => ({
+      name: c.function.name,
+      args: args(c.function.arguments),
+    }));
+    // The call is billed whatever its reply holds, so a failure here still carries the usage.
+    if (calls.some((c) => !c.args))
+      throw new BilledError("The model sent tool arguments that are not JSON.", usage);
     return {
       text: m.content ?? "",
-      calls: (m.tool_calls ?? []).map((c) => ({
-        name: c.function.name,
-        args: args(c.function.arguments),
-      })),
-      ...(u && {
-        usage: {
-          cacheHit: u.prompt_cache_hit_tokens ?? 0,
-          cacheMiss: u.prompt_cache_miss_tokens ?? 0,
-          output: u.completion_tokens ?? 0,
-        },
-      }),
+      calls: calls as ToolCall[],
+      ...(usage && { usage }),
     };
   };

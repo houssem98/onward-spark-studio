@@ -118,7 +118,8 @@ describe("the Supabase spend store (L7 T2b)", () => {
       data: from === 0 ? [{ usd: 2 }, { usd: 3.5 }] : [],
       error: null,
     });
-    const gte = vi.fn(() => ({ order: () => ({ range }) }));
+    const page = { order: () => ({ range }) };
+    const gte = vi.fn(() => ({ eq: () => page, is: () => page }));
     const client = { from: vi.fn(() => ({ insert, select: () => ({ gte }) })) };
     const s = supabaseSpend(client);
     await s.record({ at: NOW.toISOString(), actor: "a", model: "deepseek-flash", usd: 1 });

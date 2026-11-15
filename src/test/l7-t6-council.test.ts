@@ -19,7 +19,12 @@ describe("the council's findings (L7 T6)", () => {
     const client = {
       from: () => ({
         insert: async () => ({ error: null }),
-        select: () => ({ gte: () => ({ order: () => ({ range }) }) }),
+        select: () => ({
+          gte: () => ({
+            eq: () => ({ order: () => ({ range }) }),
+            is: () => ({ order: () => ({ range }) }),
+          }),
+        }),
       }),
     };
     const usd = await supabaseSpend(client).month(NOW);

@@ -34,6 +34,7 @@ describe("identity", () => {
     expect((await productionRepo.session.read()).user).toEqual({
       name: "Test Analyst",
       role: "Credit analyst",
+      org: expect.any(String),
     });
   });
 

@@ -182,6 +182,17 @@ export function screen(question: string): string | null {
   return hit ? `The question contains ${hit[1]}; it was not sent to the model.` : null;
 }
 
+/** A failure after the provider has billed the call, carrying its usage so the cost is still
+ * recorded (L7 T6e). */
+export class BilledError extends Error {
+  constructor(
+    message: string,
+    readonly usage?: Usage,
+  ) {
+    super(message);
+  }
+}
+
 const SYSTEM =
   "You help a bank analyst. Choose the tool that answers the question and summarise what it returns in plain words. Repeat only figures a tool returned, written as the tool wrote them, and never name an evidence state: the application shows it.";
 
@@ -201,7 +212,11 @@ export async function ask(
     })),
   });
   const results = [];
-  for (const c of turn.calls) results.push(await callTool(c, { ...ctx, domain: input.domain }));
+  try {
+    for (const c of turn.calls) results.push(await callTool(c, { ...ctx, domain: input.domain }));
+  } catch (e) {
+    throw new BilledError(e instanceof Error ? e.message : String(e), turn.usage);
+  }
   const withheld = vetDraft(turn.text, input.question, results);
   return withheld
     ? { text: "", withheld, results, usage: turn.usage }

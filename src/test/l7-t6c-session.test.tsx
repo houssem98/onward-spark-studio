@@ -10,9 +10,9 @@ import { productionRepo } from "@/repo/production";
 // the request, and a chief risk officer has a role there. Supabase is a fake; nothing leaves the test.
 const fake = vi.hoisted(() => ({
   users: {
-    "admin-token": { id: "u1", profile: { name: "A. Admin", role: "admin" } },
+    "admin-token": { id: "u1", profile: { name: "A. Admin", role: "admin", org_id: "org-1" } },
     "cro-token": { id: "u2", profile: { name: "S. Mitchell", role: "chief_risk_officer" } },
-  } as Record<string, { id: string; profile: { name: string; role: string } }>,
+  } as Record<string, { id: string; profile: { name: string; role: string; org_id?: string } }>,
   browserToken: "admin-token",
 }));
 
@@ -64,6 +64,9 @@ describe("the server reads the caller's own session in production (L7 T6c)", () 
     });
     expect(ok.status).toBe(200);
     expect(await ok.json()).toMatchObject({ monthUsd: 3 });
+    expect(await productionRepo.session.read(get("admin-token"))).toEqual({
+      user: { name: "A. Admin", role: "Admin", org: "org-1" },
+    });
     const anon = await handleSpend(get(), { repo: productionRepo, store, now: () => NOW });
     expect(anon.status).toBe(401);
     const forged = await handleSpend(get("forged"), {

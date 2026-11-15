@@ -49,11 +49,17 @@ export const productionRepo: Repository = {
       if (!user) throw new Error("Not signed in");
       const { data } = await client
         .from("profiles")
-        .select("name, role")
+        .select("name, role, org_id")
         .eq("id", user.id)
         .maybeSingle();
       if (!data) throw new Error("No role assigned");
-      return { user: { name: data.name as string, role: ROLE[data.role as string] ?? "" } };
+      return {
+        user: {
+          name: data.name as string,
+          role: ROLE[data.role as string] ?? "",
+          ...(data.org_id ? { org: data.org_id as string } : {}),
+        },
+      };
     },
   },
   finance: { read: notConfigured },
