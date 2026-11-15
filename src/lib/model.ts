@@ -209,17 +209,46 @@ const STATE = new RegExp(
     .join("|")})\\b`,
   "i",
 );
-const NUMBER = /\d+(?:[.,]\d+)*/g;
+// Figures are read whole (L7 T6b): an id (MDL-002) or a date (2025-11-03) is one token, so its
+// digits are never a figure; a figure keeps its sign, currency and unit (−$30.0M, 5.3%, 14bp).
+const ATOM = /\b[A-Z]{2,}-\d+\b|\b\d{4}-\d{2}-\d{2}\b/g;
+const FIGURE = /(?<![\w.$+−-])([+−-]?)(\$?)(\d+(?:[.,]\d+)*)(%|bp|pp|bn|[MBk])?(?!\w)/g;
+const DIGITS = /\d+(?:[.,]\d+)*/g;
+const IN_WORDS =
+  /\b(?:hundred|thousand|million|billion|trillion|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/i;
+
+const figuresOf = (s: string) =>
+  [...s.replace(ATOM, " ").matchAll(FIGURE)].map(([raw, sign, cur, num, unit = ""]) => ({
+    raw,
+    num: num!,
+    body: `${cur}${num}${unit}`,
+    signed: sign !== "",
+    negative: sign === "-" || sign === "−",
+    bare: !sign && !cur && !unit,
+  }));
 
 export function vetDraft(text: string, question: string, results: unknown): string | null {
   const state = STATE.exec(text);
   if (state)
     return `The model's draft was withheld: it names an evidence state ("${state[0]}"), which only the evidence policy sets.`;
-  const known = new Set([
-    ...(question.match(NUMBER) ?? []),
-    ...(JSON.stringify(results).match(NUMBER) ?? []),
-  ]);
-  const invented = (text.match(NUMBER) ?? []).filter((n) => !known.has(n));
+  const words = IN_WORDS.exec(text);
+  if (words)
+    return `The model's draft was withheld: it states a figure in words ("${words[0]}"), which no tool returned.`;
+  const source = `${question}\n${JSON.stringify(results)}`;
+  const atoms = new Set(source.match(ATOM));
+  const figures = figuresOf(source);
+  const digits = new Set(source.replace(ATOM, " ").match(DIGITS));
+  // An unsigned figure may restate a signed one's size ("a gap of $30.0M"); a sign must match.
+  const known = (f: ReturnType<typeof figuresOf>[number]) =>
+    f.bare
+      ? digits.has(f.num)
+      : figures.some((k) => k.body === f.body && (!f.signed || k.negative === f.negative));
+  const invented = [
+    ...(text.match(ATOM) ?? []).filter((a) => !atoms.has(a)),
+    ...figuresOf(text)
+      .filter((f) => !known(f))
+      .map((f) => f.raw),
+  ];
   return invented.length
     ? `The model's draft was withheld: it states ${invented.join(", ")}, which no tool returned.`
     : null;
