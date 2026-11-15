@@ -1,11 +1,10 @@
-import { answer } from "@/lib/copilot";
 import type { EvidenceState } from "@/lib/evidence";
 import { isVerified } from "@/lib/evidence-policy";
 import { ask, costOf, vetDraft, type Domain, type ModelClient } from "@/lib/model";
 import type { Repository, User } from "@/repo/types";
 
-// The golden evaluation (L7 T5): the pre-registered questions in `evals/golden-v1.json` run through
-// `ask`, scored against values written from the fixtures, never against the code's own output.
+// The golden evaluation (L7 T5, v2 in T6d): pre-registered questions in `evals/` run through `ask`,
+// scored against values written from the fixtures, never against the code's own output.
 
 export interface GoldenQuestion {
   id: string;
@@ -14,13 +13,16 @@ export interface GoldenQuestion {
   question: string;
   tool: string;
   values: string[];
+  /** Values a correct answer must not hold (v2). */
+  absent?: string[];
   state: EvidenceState | null;
 }
 
-const verified = (s: EvidenceState | null) => s !== null && isVerified(s);
+const verified = (s: EvidenceState | null | undefined) => !!s && isVerified(s);
 
-type Asked = { refused: string } | { text: string; results: { name: string; result?: unknown }[] };
-type Cites = { cited: number; precise: number };
+type Result = { name: string; result?: unknown; refused?: string };
+type Asked = { refused: string } | { text: string; withheld?: string; results: Result[] };
+type Citation = { claimed: number; value: number | null };
 
 /** The system with no language model: the domain's one tool, asked the question as written. */
 export const routing: ModelClient = async ({ question, tools }) => ({
@@ -28,62 +30,56 @@ export const routing: ModelClient = async ({ question, tools }) => ({
   calls: tools.slice(0, 1).map((t) => ({ name: t.name, args: { question } })),
 });
 
-export function score(q: GoldenQuestion, out: Asked, cites: Cites, ms: number, usd: number) {
+/** One answer scored; every tool result is read, and citations are the ones the tools returned. */
+export function score(q: GoldenQuestion, out: Asked, ms: number, usd: number, draft = "") {
   const results = "refused" in out ? [] : out.results;
-  const first = results[0];
   const json = JSON.stringify(results);
-  const found = q.values.filter((v) => json.includes(v)).length;
-  const state = (first?.result as { state?: EvidenceState } | undefined)?.state ?? null;
+  const has = (v: string) => json.includes(v);
+  const found = q.values.filter(has).length;
+  const states = results.map((r) => (r.result as { state?: EvidenceState } | undefined)?.state);
   const shownFails =
     "text" in out && !!out.text && vetDraft(out.text, q.question, results) !== null;
+  const citations = results.flatMap(
+    (r) => (r.result as { citations?: Citation[] } | undefined)?.citations ?? [],
+  );
   return {
     id: q.id,
     split: q.split,
-    toolOk: first?.name === q.tool,
+    toolOk: results.some((r) => r.name === q.tool && "result" in r),
     found,
     expected: q.values.length,
-    state,
-    unsupported: (verified(state) && (!verified(q.state) || found < q.values.length)) || shownFails,
-    ...cites,
+    wrong: (q.absent ?? []).filter(has).length,
+    unsupported:
+      (states.some(verified) && (!verified(q.state) || found < q.values.length)) || shownFails,
+    cited: citations.length,
+    precise: citations.filter((c) => c.value === c.claimed).length,
+    draft,
+    withheld: "withheld" in out && !!out.withheld,
     ms,
     usd,
   };
 }
 export type GoldenRow = ReturnType<typeof score> & { run: number };
 
-type Data = Parameters<typeof answer>[1];
-
-// A citation is precise when the cited source gives the claim's own value. Read from the finance
-// answer to the question as written.
-function cites(q: GoldenQuestion, data: Data): Cites {
-  const out = { cited: 0, precise: 0 };
-  if (q.tool !== "finance_answer") return out;
-  for (const a of answer(q.question, data).assessments)
-    for (const s of a.sources) {
-      out.cited++;
-      if (a.values?.some((v) => v.sourceId === s.id && v.value === a.claimed)) out.precise++;
-    }
-  return out;
-}
-
 export async function runGolden(
   qs: GoldenQuestion[],
   ctx: { runs: number; model: ModelClient; repo: Repository; user: User; now?: () => Date },
 ) {
-  const data = {
-    finance: await ctx.repo.finance.read(),
-    models: await ctx.repo.models.read(),
-    datasets: await ctx.repo.datasets.read(),
-    crime: await ctx.repo.crime.read(),
-  };
   const rows: GoldenRow[] = [];
   for (let run = 1; run <= ctx.runs; run++)
     for (const q of qs) {
+      // The draft as the model wrote it, before the draft check can withhold it.
+      let draft = "";
+      const model: ModelClient = async (req) => {
+        const turn = await ctx.model(req);
+        draft = turn.text;
+        return turn;
+      };
       const t0 = performance.now();
-      const out = await ask({ question: q.question, domain: q.domain }, ctx);
+      const out = await ask({ question: q.question, domain: q.domain }, { ...ctx, model });
       const ms = performance.now() - t0;
       const usd = "usage" in out && out.usage ? costOf(out.usage, ctx.now?.() ?? new Date()) : 0;
-      rows.push({ run, ...score(q, out, cites(q, data), ms, usd) });
+      rows.push({ run, ...score(q, out, ms, usd, draft) });
     }
   return rows;
 }
@@ -111,12 +107,18 @@ export function summarize(rows: GoldenRow[]) {
       sum((r) => r.expected),
       qOf((r) => r.expected),
     ),
+    exactness: prop(
+      sum((r) => +(r.wrong === 0)),
+      rows.length,
+      qOf(() => 1),
+    ),
     citationPrecision: prop(
       sum((r) => r.precise),
       sum((r) => r.cited),
       qOf((r) => r.cited),
     ),
     unsupportedVerified: sum((r) => +r.unsupported),
+    drafts: { written: sum((r) => +!!r.draft), withheld: sum((r) => +r.withheld) },
     medianMs: ms[Math.floor(ms.length / 2)] ?? NaN,
     usd: sum((r) => r.usd),
   };
@@ -125,11 +127,12 @@ export function summarize(rows: GoldenRow[]) {
 const pct = (x: { p: number; q: number; se: number }) =>
   Number.isNaN(x.p) ? "n/a" : `${(x.p * 100).toFixed(1)}% ± ${(x.se * 100).toFixed(1)} (q=${x.q})`;
 
-export function report(rows: GoldenRow[]) {
-  return (["improvement", "holdout"] as const)
+/** The improvement split's metrics; the holdout's only when asked, so tuning never reads them. */
+export function report(rows: GoldenRow[], { holdout = false } = {}) {
+  return (holdout ? (["improvement", "holdout"] as const) : (["improvement"] as const))
     .map((split) => {
       const s = summarize(rows.filter((r) => r.split === split));
-      return `${split}: q=${s.q} n=${s.n} · tool ${pct(s.toolAccuracy)} · calculation ${pct(s.calcAccuracy)} · citation precision ${pct(s.citationPrecision)} · unsupported verified ${s.unsupportedVerified} · median ${s.medianMs.toFixed(1)} ms · cost $${s.usd.toFixed(6)}`;
+      return `${split}: q=${s.q} n=${s.n} · tool ${pct(s.toolAccuracy)} · calculation ${pct(s.calcAccuracy)} · exactness ${pct(s.exactness)} · citation precision ${pct(s.citationPrecision)} · unsupported verified ${s.unsupportedVerified} · drafts ${s.drafts.written} written, ${s.drafts.withheld} withheld · median ${s.medianMs.toFixed(1)} ms · cost $${s.usd.toFixed(6)}`;
     })
     .join("\n");
 }

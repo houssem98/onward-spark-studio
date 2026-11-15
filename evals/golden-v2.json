@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "frozen": "2026-11-15",
+  "about": "L7 T6d golden set, written before any v2 run; v1 (evals/golden-v1.json) stays frozen as it was. Same 14 questions and split as v1, each now also listing values its answer must not hold, so an answer that returns everything can fail. Expected and absent values are written from the synthetic fixtures (src/data/finance.ts, models, datasets), never copied from the code under test. Tuning may read improvement results only; holdout metrics are printed only on request.",
+  "split": "As v1: stratified by domain; improvement holds the copilot's own suggestions and their siblings, holdout holds paraphrases and questions not yet asked of the system.",
+  "changes_from_v1": [
+    "absent: values a correct answer must not contain; exactness is the share of answers holding none of them",
+    "every tool result is read, not only the first; the expected tool must have returned a result",
+    "citations are read from what the finance tool returned, not by answering the question again",
+    "the draft the model wrote is kept beside the answer, with whether the draft check withheld it, for the judge (T5b)",
+    "holdout metrics are printed only when asked (GOLDEN_HOLDOUT=1), never by the gate"
+  ],
+  "metrics": {
+    "tool_accuracy": "Share of answers holding a result from the expected tool.",
+    "calculation_accuracy": "Share of expected values found verbatim in the tool results.",
+    "exactness": "Share of answers whose tool results hold none of the absent values.",
+    "unsupported_verified_claims": "Count of answers where any tool result is VERIFIED while the expected state is not VERIFIED or an expected value is missing, plus drafts shown to the analyst that the draft check would withhold. The pass rule needs 0 in the holdout.",
+    "citation_precision": "Over the citations the finance tool returned: those whose source gives the claim's own value, over all of them.",
+    "drafts": "Drafts the model wrote, and how many the draft check withheld; the drafts themselves are kept for the judge.",
+    "latency_ms": "Wall time of one ask, median.",
+    "cost_usd": "Sum of each call's cost at the dated prices in src/lib/model.ts; 0 when no model is called.",
+    "n_and_se": "n counts answers, q counts questions. Each standard error uses the q questions that contribute to its metric, sqrt(p(1-p)/q)."
+  },
+  "pass": "The holdout shows 0 unsupported verified claims; the script exits non-zero otherwise. For the loop's deciding rule the holdout is run at least 3 times through the live model and its kept drafts are judged by a model other than the maker's (T5b).",
+  "questions": [
+    {
+      "id": "P1",
+      "split": "improvement",
+      "domain": "performance",
+      "question": "Why did our credit division revenue grow more slowly than our competitors this year?",
+      "tool": "finance_answer",
+      "values": ["$120.0M", "5.3%", "$150.0M", "−$30.0M"],
+      "absent": [],
+      "state": "NOT_AVAILABLE"
+    },
+    {
+      "id": "P2",
+      "split": "improvement",
+      "domain": "performance",
+      "question": "Which business units missed their revenue targets?",
+      "tool": "finance_answer",
+      "values": [
+        "$412.0M vs $430.0M",
+        "$120.0M vs $138.0M",
+        "$66.0M vs $72.0M",
+        "$38.0M vs $40.0M"
+      ],
+      "absent": ["$286.0M", "$98.0M", "$74.0M"],
+      "state": "PARTIALLY_VERIFIED"
+    },
+    {
+      "id": "P3",
+      "split": "improvement",
+      "domain": "performance",
+      "question": "Why did our net interest margin fall?",
+      "tool": "finance_answer",
+      "values": ["3.07%", "3.09%", "5.1%"],
+      "absent": [],
+      "state": "PARTIALLY_VERIFIED"
+    },
+    {
+      "id": "P4",
+      "split": "holdout",
+      "domain": "performance",
+      "question": "Which departments missed target this year?",
+      "tool": "finance_answer",
+      "values": [
+        "$412.0M vs $430.0M",
+        "$120.0M vs $138.0M",
+        "$66.0M vs $72.0M",
+        "$38.0M vs $40.0M"
+      ],
+      "absent": ["$286.0M", "$98.0M", "$74.0M"],
+      "state": "PARTIALLY_VERIFIED"
+    },
+    {
+      "id": "P5",
+      "split": "holdout",
+      "domain": "performance",
+      "question": "What happened to our NIM?",
+      "tool": "finance_answer",
+      "values": ["3.07%", "3.09%", "5.1%"],
+      "absent": [],
+      "state": "PARTIALLY_VERIFIED"
+    },
+    {
+      "id": "P6",
+      "split": "holdout",
+      "domain": "performance",
+      "question": "How does our credit revenue compare with the peer group?",
+      "tool": "finance_answer",
+      "values": [],
+      "absent": ["$120.0M", "$150.0M"],
+      "state": "NOT_AVAILABLE"
+    },
+    {
+      "id": "M1",
+      "split": "improvement",
+      "domain": "models",
+      "question": "Which models are in the inventory?",
+      "tool": "model_inventory",
+      "values": ["MDL-001", "MDL-002", "MDL-003", "MDL-004", "MDL-005", "MDL-006", "MDL-007"],
+      "absent": [],
+      "state": null
+    },
+    {
+      "id": "M2",
+      "split": "improvement",
+      "domain": "models",
+      "question": "What is the health of the SME Credit Risk Model?",
+      "tool": "model_inventory",
+      "values": ["SME Credit Risk Model", "Alert"],
+      "absent": ["Retail PD Scorecard", "Card Fraud Detection"],
+      "state": null
+    },
+    {
+      "id": "M3",
+      "split": "holdout",
+      "domain": "models",
+      "question": "When is the Retail PD Scorecard next reviewed?",
+      "tool": "model_inventory",
+      "values": ["Retail PD Scorecard", "2026-06-12"],
+      "absent": ["SME Credit Risk Model", "2025-11-03"],
+      "state": null
+    },
+    {
+      "id": "M4",
+      "split": "holdout",
+      "domain": "models",
+      "question": "Which models are on watch?",
+      "tool": "model_inventory",
+      "values": ["Card Fraud Detection", "Watch"],
+      "absent": ["Retail PD Scorecard", "SME Credit Risk Model"],
+      "state": null
+    },
+    {
+      "id": "D1",
+      "split": "improvement",
+      "domain": "data",
+      "question": "Which datasets are certified?",
+      "tool": "dataset_catalog",
+      "values": ["DS-001", "DS-003", "DS-009", "Certified"],
+      "absent": ["DS-002", "DS-008", "DS-010", "DS-011"],
+      "state": null
+    },
+    {
+      "id": "D2",
+      "split": "improvement",
+      "domain": "data",
+      "question": "Is the loan portfolio dataset certified?",
+      "tool": "dataset_catalog",
+      "values": ["Loan portfolio", "Pending"],
+      "absent": ["General ledger"],
+      "state": null
+    },
+    {
+      "id": "D3",
+      "split": "holdout",
+      "domain": "data",
+      "question": "What is the certification of the competitor financial metrics?",
+      "tool": "dataset_catalog",
+      "values": ["Competitor financial metrics", "Not certified"],
+      "absent": ["General ledger"],
+      "state": null
+    },
+    {
+      "id": "D4",
+      "split": "holdout",
+      "domain": "data",
+      "question": "Which datasets are pending certification?",
+      "tool": "dataset_catalog",
+      "values": ["DS-002", "DS-008", "DS-010", "Pending"],
+      "absent": ["DS-001", "DS-011"],
+      "state": null
+    }
+  ]
+}

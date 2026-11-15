@@ -109,6 +109,15 @@ const TOOLS: Tool[] = [
         metrics: r.metrics,
         state: r.state,
         missing: r.missing,
+        // Each source the answer cites, with the value it gives for the claim, or null when none.
+        citations: r.assessments.flatMap((a) =>
+          a.sources.map((s) => ({
+            claim: a.claim.id,
+            claimed: a.claimed,
+            source: s.id,
+            value: a.values?.find((v) => v.sourceId === s.id)?.value ?? null,
+          })),
+        ),
       };
     },
   },

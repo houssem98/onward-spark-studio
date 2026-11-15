@@ -13,7 +13,6 @@ const SET = JSON.parse(readFileSync("evals/golden-v1.json", "utf8")) as {
 };
 const CRO = { name: "Sarah Mitchell", role: "Chief Risk Officer" };
 const RUNS = 3;
-const NONE = { cited: 0, precise: 0 };
 
 describe("golden evaluation (L7 T5)", () => {
   it("holds a versioned set split by domain before any run", () => {
@@ -33,11 +32,13 @@ describe("golden evaluation (L7 T5)", () => {
       text,
       results: [{ name: "finance_answer", result: { state, metrics: [] } }],
     });
-    expect(score(q, answer("VERIFIED"), NONE, 0, 0).unsupported).toBe(true);
-    expect(
-      score(q, answer("PARTIALLY_VERIFIED", "Revenue was $999.0M."), NONE, 0, 0).unsupported,
-    ).toBe(true);
-    expect(score(q, answer("PARTIALLY_VERIFIED"), NONE, 0, 0).unsupported).toBe(false);
+    expect(score(q, answer("VERIFIED"), 0, 0).unsupported).toBe(true);
+    expect(score(q, answer("PARTIALLY_VERIFIED", "Revenue was $999.0M."), 0, 0).unsupported).toBe(
+      true,
+    );
+    expect(score(q, answer("PARTIALLY_VERIFIED"), 0, 0).unsupported).toBe(false);
+    const supported = { ...q, state: "VERIFIED" as const, values: [] };
+    expect(score(supported, answer("VERIFIED"), 0, 0).unsupported).toBe(false);
   });
 
   it(`shows no unsupported verified claim in the holdout over ${RUNS} runs, with no language model`, async () => {
