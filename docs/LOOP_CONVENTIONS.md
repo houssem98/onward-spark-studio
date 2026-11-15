@@ -79,6 +79,8 @@ Every independent-check task runs as a council, after karpathy/llm-council (firs
 
 The Journal records the member and chairman models, the item counts after each stage, and every rejected item with its reason. A council costs about seven agent runs, which count against the loop's budget.
 
+The human's ruling of 2026-11-15: "for the counil reveiwer , iwant all agetn opsus 5.5". Every council seat, the three members and the chairman, runs on Opus 5.5, replacing the mix in step 1 and the "other than the maker" in steps 1 and 3; Fable is not used. When the maker is also Opus 5.5, the seats share the maker's model, so each council's Journal entry says so as reduced independence. What independence remains comes from fresh agents with no shared context, the anonymous shuffled peer review, and step 4: a finding counts only as a reproducible failing test or a corrected row.
+
 ## Reporting
 
 A failed gate is a real result. If a claim cannot be made true at reasonable cost, delete or label it and say so. If every remaining task is blocked, say the work is finished for now and recommend stopping.
