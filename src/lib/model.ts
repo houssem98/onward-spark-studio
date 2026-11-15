@@ -1,4 +1,5 @@
 import { answer } from "@/lib/copilot";
+import { EVIDENCE_STATES } from "@/lib/evidence";
 import type { Repository, User } from "@/repo/types";
 
 // What the model may do: propose a tool and draft text. The tools it is offered depend on the
@@ -66,6 +67,18 @@ interface Tool extends ToolSpec {
   run(repo: Repository, args: Record<string, unknown>): Promise<unknown>;
 }
 
+// The copilot routes questions of every domain; this tool hands back only its performance answers,
+// so a question the model rewrites cannot reach models, data or cases through it (L7 T6, F3).
+const PERFORMANCE_INTENTS = new Set([
+  "Credit performance vs peer group",
+  "Business units vs revenue target",
+  "Net interest margin change",
+  "Generate year-end department review",
+  "Scope needed before an answer",
+  "Outside the supported scope",
+  "Unrecognized question",
+]);
+
 const TOOLS: Tool[] = [
   {
     name: "finance_answer",
@@ -85,6 +98,11 @@ const TOOLS: Tool[] = [
         datasets: await repo.datasets.read(),
         crime: await repo.crime.read(),
       });
+      if (!PERFORMANCE_INTENTS.has(r.intent))
+        return {
+          intent: r.intent,
+          refused: "finance_answer answers performance questions only.",
+        };
       return {
         intent: r.intent,
         scope: r.scope,
@@ -142,7 +160,11 @@ export async function callTool(
 const SENSITIVE: [RegExp, string][] = [
   [/[^\s@]+@[^\s@]+\.[^\s@]+/, "an email address"],
   [/\d{8,}/, "a long number that may identify an account, a card or a person"],
-  [/\b[A-Z]{2}\d{2}(?: ?\d{4}){4,}/i, "an account number (IBAN)"],
+  // Card numbers as written: blocks of four, or Amex's 4-6-5, split by spaces or dashes.
+  [/\b\d{4}(?:[ -]\d{4}){2,}\b|\b\d{4}[ -]\d{6}[ -]\d{5}\b/, "a card number"],
+  [/\b[A-Z]{2}\d{2}(?:[ -]?\d{4}){4,}/i, "an account number (IBAN)"],
+  // An IBAN whose bank code holds letters (GB82 WEST …); upper case only, so FY2025 stays a year.
+  [/\b[A-Z]{2}\d{2}(?:[ -]?[A-Z0-9]{4}){3,7}(?:[ -]?[A-Z0-9]{1,3})?\b/, "an account number (IBAN)"],
 ];
 
 /** Why a question may not be sent to the model; null when it may. */
@@ -179,8 +201,14 @@ export async function ask(
 
 // Only the policy sets an evidence state, and only calc gives a figure (L7 T3): a draft that names a
 // state, or states a number neither the question nor any tool result holds, is withheld whole.
-const STATE =
-  /\b(?:partially[ _]verified|unverified|verified|conflicting[ _]evidence|not[ _]available)\b/i;
+// Every state the schema knows, longest first, written with spaces, underscores or hyphens.
+const STATE = new RegExp(
+  `\\b(?:${[...EVIDENCE_STATES]
+    .sort((a, b) => b.length - a.length)
+    .map((s) => s.replace(/_/g, "[ _-]"))
+    .join("|")})\\b`,
+  "i",
+);
 const NUMBER = /\d+(?:[.,]\d+)*/g;
 
 export function vetDraft(text: string, question: string, results: unknown): string | null {

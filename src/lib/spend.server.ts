@@ -19,7 +19,14 @@ interface Client {
       gte(
         column: "at",
         value: string,
-      ): PromiseLike<{ data: { usd: number }[] | null; error: unknown }>;
+      ): {
+        order(column: "id"): {
+          range(
+            from: number,
+            to: number,
+          ): PromiseLike<{ data: { usd: number }[] | null; error: unknown }>;
+        };
+      };
     };
   };
 }
@@ -32,12 +39,21 @@ export const supabaseSpend = (client: Client): SpendStore => ({
     const { error } = await client.from("model_calls").insert(call);
     if (error) throw error;
   },
+  // The server caps each read (1,000 rows by default), so the month is read page by page until a
+  // page comes back empty; a page shorter than asked does not prove the end.
   month: async (now) => {
-    const { data, error } = await client
-      .from("model_calls")
-      .select("usd")
-      .gte("at", monthStart(now));
-    if (error) throw error;
-    return (data ?? []).reduce((t, r) => t + Number(r.usd), 0);
+    let total = 0;
+    for (let from = 0; ;) {
+      const { data, error } = await client
+        .from("model_calls")
+        .select("usd")
+        .gte("at", monthStart(now))
+        .order("id")
+        .range(from, from + 999);
+      if (error) throw error;
+      if (!data?.length) return total;
+      total += data.reduce((t, r) => t + Number(r.usd), 0);
+      from += data.length;
+    }
   },
 });

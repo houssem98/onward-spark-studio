@@ -47,7 +47,7 @@ const store = (month: number): SpendStore & { record: ReturnType<typeof vi.fn> }
   month: vi.fn(async () => month),
 });
 const model: ModelClient = async () => ({
-  text: "draft",
+  text: "A summary in plain words.",
   calls: [],
   usage: { cacheHit: 0, cacheMiss: 1_000_000, output: 1_000_000 },
 });
@@ -83,7 +83,7 @@ describe("the ask route records spend and alerts, never blocking (L7 T2b)", () =
       now: () => NOW,
     });
     const body = await res.json();
-    expect(body.text).toBe("draft");
+    expect(body.text).toBe("A summary in plain words.");
     expect(body.spend.untracked).toMatch(/not tracked/);
   });
 
@@ -114,7 +114,11 @@ describe("the ask route records spend and alerts, never blocking (L7 T2b)", () =
 describe("the Supabase spend store (L7 T2b)", () => {
   it("inserts a call and sums the month's calls", async () => {
     const insert = vi.fn(async () => ({ error: null }));
-    const gte = vi.fn(async () => ({ data: [{ usd: 2 }, { usd: 3.5 }], error: null }));
+    const range = async (from: number) => ({
+      data: from === 0 ? [{ usd: 2 }, { usd: 3.5 }] : [],
+      error: null,
+    });
+    const gte = vi.fn(() => ({ order: () => ({ range }) }));
     const client = { from: vi.fn(() => ({ insert, select: () => ({ gte }) })) };
     const s = supabaseSpend(client);
     await s.record({ at: NOW.toISOString(), actor: "a", model: "deepseek-flash", usd: 1 });

@@ -67,6 +67,7 @@ export async function handleAsk(
   if (!deps.store) return Response.json({ ...answer, spend: { usd, untracked: UNTRACKED } });
   try {
     await deps.store.record({ at: at.toISOString(), actor: user.name, model: PRICE.model, usd });
+    if (!SPEND_ROLES.includes(user.role)) return Response.json({ ...answer, spend: { usd } });
     const monthUsd = await deps.store.month(at);
     return Response.json({ ...answer, spend: { usd, monthUsd, alert: spendAlert(monthUsd) } });
   } catch (e) {
