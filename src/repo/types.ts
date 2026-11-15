@@ -150,7 +150,8 @@ export interface InvestigationsData {
 
 export interface Repository {
   environment: "demo" | "production";
-  session: { read(): Promise<{ user: User }> };
+  /** With a request (on the server), the session is the caller's, read from the request. */
+  session: { read(request?: Request): Promise<{ user: User }> };
   finance: { read(): Promise<FinanceData> };
   credit: { read(): Promise<CreditData> };
   crime: {

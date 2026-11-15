@@ -23,8 +23,8 @@ const crossSite = (r: Request) => {
   const origin = r.headers.get("origin");
   return origin !== null && origin !== new URL(r.url).origin;
 };
-const userOf = (repo: Repository) =>
-  repo.session.read().then(
+const userOf = (repo: Repository, request: Request) =>
+  repo.session.read(request).then(
     (s) => s.user,
     () => null,
   );
@@ -47,7 +47,7 @@ export async function handleAsk(
   if (typeof body?.question !== "string" || !DOMAINS.includes(body.domain as Domain))
     return refuse("Send a question and a domain.", 400);
   if (!deps.key) return refuse("The model is not configured.", 503);
-  const user = await userOf(deps.repo);
+  const user = await userOf(deps.repo, request);
   if (!user) return refuse("Not signed in.", 401);
   let out;
   try {
@@ -81,7 +81,7 @@ export async function handleSpend(
   deps: { repo: Repository; store: SpendStore | null; now: () => Date },
 ) {
   if (crossSite(request)) return refuse("Cross-site request.", 403);
-  const user = await userOf(deps.repo);
+  const user = await userOf(deps.repo, request);
   if (!user) return refuse("Not signed in.", 401);
   if (!SPEND_ROLES.includes(user.role)) return refuse("Only an admin sees model spend.", 403);
   if (!deps.store) return Response.json({ untracked: UNTRACKED });

@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { SPEND_ROLES } from "@/lib/model";
+import { repo } from "@/repo/queries";
+import { authHeaders } from "@/repo/supabase";
 
 type Spend = { monthUsd?: number; alert?: string | null; untracked?: string; refused?: string };
 
@@ -11,7 +13,11 @@ export function ModelSpend({ role }: { role: string }) {
   const allowed = SPEND_ROLES.includes(role);
   const spend = useQuery({
     queryKey: ["model-spend"],
-    queryFn: async (): Promise<Spend> => (await fetch("/api/ask")).json(),
+    // In production the server knows the caller only by the session token sent with the request.
+    queryFn: async (): Promise<Spend> => {
+      const headers = repo.environment === "production" ? await authHeaders() : {};
+      return (await fetch("/api/ask", { headers })).json();
+    },
     enabled: allowed,
     retry: false,
   });

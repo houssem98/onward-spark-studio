@@ -2,7 +2,7 @@ import { refuseUnearnedVerified, reportState, withPolicyStates } from "@/lib/evi
 import { validAction } from "@/lib/review";
 
 const today = () => new Date().toISOString().slice(0, 10);
-import { supabase } from "./supabase";
+import { supabase, supabaseAs } from "./supabase";
 import type { Repository } from "./types";
 
 const notConfigured = async (): Promise<never> => {
@@ -16,6 +16,7 @@ const ROLE: Record<string, string> = {
   reviewer: "Reviewer",
   model_validator: "Model validator",
   admin: "Admin",
+  chief_risk_officer: "Chief Risk Officer",
 };
 
 const db = () => supabase();
@@ -36,13 +37,17 @@ function changed({ data, error }: { data: unknown[] | null; error: unknown }) {
 export const productionRepo: Repository = {
   environment: "production",
   session: {
-    // The role is read from the server's profile row, never from the session's user metadata.
-    read: async () => {
+    // The role is read from the server's profile row, never from the session's user metadata. On
+    // the server the caller is whoever's token came with the request; no token is no session.
+    read: async (request?: Request) => {
+      const token = request?.headers.get("authorization")?.match(/^Bearer (.+)$/i)?.[1];
+      if (request && !token) throw new Error("Not signed in");
+      const client = token ? supabaseAs(token) : supabase();
       const {
         data: { user },
-      } = await supabase().auth.getUser();
+      } = await client.auth.getUser(token);
       if (!user) throw new Error("Not signed in");
-      const { data } = await supabase()
+      const { data } = await client
         .from("profiles")
         .select("name, role")
         .eq("id", user.id)
