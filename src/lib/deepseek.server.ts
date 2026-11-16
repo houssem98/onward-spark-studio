@@ -7,7 +7,7 @@ interface Reply {
   choices?: {
     message?: {
       content?: string | null;
-      tool_calls?: { function: { name: string; arguments: string } }[];
+      tool_calls?: { id?: string; function: { name: string; arguments: string } }[];
     };
   }[];
   usage?: {
@@ -27,7 +27,27 @@ const args = (raw: string): ToolCall["args"] | undefined => {
 
 export const deepseek =
   (key: string, fetchImpl: typeof fetch = fetch): ModelClient =>
-  async ({ system, question, tools }) => {
+  async ({ system, question, tools, read }) => {
+    const id = (c: ToolCall, i: number) => c.id ?? `call_${i}`;
+    // The second turn (L7 T8): the first turn's calls, then each result as a tool message.
+    const reading = read
+      ? [
+          {
+            role: "assistant",
+            content: null,
+            tool_calls: read.calls.map((c, i) => ({
+              id: id(c, i),
+              type: "function",
+              function: { name: c.name, arguments: JSON.stringify(c.args) },
+            })),
+          },
+          ...read.calls.map((c, i) => ({
+            role: "tool",
+            tool_call_id: id(c, i),
+            content: JSON.stringify(read.results[i] ?? null),
+          })),
+        ]
+      : [];
     const res = await fetchImpl(ENDPOINT, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
@@ -38,8 +58,10 @@ export const deepseek =
         messages: [
           { role: "system", content: system },
           { role: "user", content: question },
+          ...reading,
         ],
         ...(tools.length ? { tools: tools.map((t) => ({ type: "function", function: t })) } : {}),
+        ...(read ? { tool_choice: "none" } : {}),
       }),
     });
     if (!res.ok) throw new Error(`The model service answered ${res.status}.`);
@@ -53,6 +75,7 @@ export const deepseek =
       output: u.completion_tokens ?? 0,
     };
     const calls = (m.tool_calls ?? []).map((c) => ({
+      ...(c.id ? { id: c.id } : {}),
       name: c.function.name,
       args: args(c.function.arguments),
     }));
