@@ -10,6 +10,8 @@ import {
   type ModelClient,
 } from "@/lib/model";
 import type { SpendStore } from "@/lib/spend.server";
+import { readSector } from "@/lib/tn-connector.server";
+import type { SectorBank } from "@/lib/tn-investigation";
 import type { Repository } from "@/repo/types";
 
 // The model's one door, behind /api/ask. The user and role come from the server's session, never
@@ -38,6 +40,8 @@ export async function handleAsk(
     store: SpendStore | null;
     now: () => Date;
     model?: ModelClient;
+    /** The filings reader the sector tool uses (L7 T9); tests give a recorded one. */
+    sector?: () => Promise<SectorBank[]>;
   },
 ) {
   if (crossSite(request)) return refuse("Cross-site request.", 403);
@@ -54,7 +58,12 @@ export async function handleAsk(
   try {
     out = await ask(
       { question: body.question, domain: body.domain as Domain },
-      { user, repo: deps.repo, model: deps.model ?? deepseek(deps.key) },
+      {
+        user,
+        repo: deps.repo,
+        model: deps.model ?? deepseek(deps.key),
+        sector: deps.sector ?? (() => readSector()),
+      },
     );
   } catch (e) {
     // A call the provider billed is recorded even though its answer failed (L7 T6e).

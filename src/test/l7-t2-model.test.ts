@@ -13,10 +13,11 @@ describe("tools the model may call (L7 T2)", () => {
   it("offers a user only the tools their role and the task's domain allow", () => {
     const names = (u: typeof CRO, d: Parameters<typeof toolsFor>[1]) =>
       toolsFor(u, d).map((t) => t.name);
-    expect(names(ANALYST, "performance")).toEqual(["finance_answer"]);
+    // Since L7 T9 every role may read the public Tunisian filings for a performance question.
+    expect(names(ANALYST, "performance")).toEqual(["finance_answer", "tn_sector"]);
     expect(names(ANALYST, "models")).toEqual([]);
     expect(names(VALIDATOR, "models")).toEqual(["model_inventory"]);
-    expect(names(VALIDATOR, "performance")).toEqual([]);
+    expect(names(VALIDATOR, "performance")).toEqual(["tn_sector"]);
   });
 
   it("refuses a tool outside the task's domain or the user's role, and runs one inside both", async () => {
@@ -91,7 +92,10 @@ describe("the ask pipeline (L7 T2)", () => {
       { question: "Why did our credit revenue lag our peers this year?", domain: "performance" },
       { user: ANALYST, repo: demoRepo, model },
     );
-    expect(model.mock.calls[0]![0].tools.map((t) => t.name)).toEqual(["finance_answer"]);
+    expect(model.mock.calls[0]![0].tools.map((t) => t.name)).toEqual([
+      "finance_answer",
+      "tn_sector",
+    ]);
     expect(r.results?.[0]?.refused).toMatch(/not available/);
   });
 });

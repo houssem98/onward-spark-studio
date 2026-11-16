@@ -1,5 +1,7 @@
 import { answer } from "@/lib/copilot";
+import { DEFINITIONS } from "@/lib/definitions";
 import { EVIDENCE_STATES } from "@/lib/evidence";
+import type { SectorBank } from "@/lib/tn-investigation";
 import type { Repository, User } from "@/repo/types";
 
 // What the model may do: propose a tool and draft text. The tools it is offered depend on the
@@ -68,7 +70,14 @@ interface Tool extends ToolSpec {
   /** Roles that may use it; absent means any signed-in role. */
   roles?: string[];
   domains: Domain[];
-  run(repo: Repository, args: Record<string, unknown>): Promise<unknown>;
+  /** Public data, which may reach the model in any environment (the human's decision, 2026-11-16). */
+  public?: true;
+  run(repo: Repository, args: Record<string, unknown>, extra: Extra): Promise<unknown>;
+}
+
+/** What only the server can give a tool: the filings reader lives in a `.server` module (L7 T9). */
+export interface Extra {
+  sector?: () => Promise<SectorBank[]>;
 }
 
 // The copilot routes questions of every domain; this tool hands back only its performance answers,
@@ -149,6 +158,33 @@ const TOOLS: Tool[] = [
       return d.datasets.map(({ id, name }) => ({ id, name, certification: d.certification[id] }));
     },
   },
+  {
+    name: "tn_sector",
+    description:
+      "The latest quarter filed by each bank listed on the Bourse de Tunis: net banking income, net loans, customer deposits and equity in US dollars at the BCT's dollar rate for the period end, each figure with its filing and the state the evidence policy sets.",
+    parameters: { type: "object", properties: {} },
+    domains: ["performance"],
+    public: true,
+    run: async (_repo, _args, { sector }) => {
+      if (!sector) return { refused: "The filings reader runs only on the server." };
+      // Figures as the Tunisian Banks page shows them, so a draft can restate them exactly.
+      return (await sector()).map((b) =>
+        b.state === "ok"
+          ? {
+              bank: b.bank,
+              periodEnd: b.periodEnd,
+              filing: b.source,
+              rate: `${b.figures.net_banking_income.fx.tndPerUsd} TND per USD on ${b.figures.net_banking_income.fx.date}`,
+              figures: (Object.keys(b.figures) as (keyof typeof b.figures)[]).map((id) => ({
+                label: DEFINITIONS[id].label,
+                usd: `$${b.figures[id].value.toFixed(1)}M`,
+                state: b.figures[id].state,
+              })),
+            }
+          : { bank: b.bank, notRead: b.detail },
+      );
+    },
+  },
 ];
 
 export const toolsFor = (user: User, domain: Domain): Tool[] =>
@@ -156,7 +192,7 @@ export const toolsFor = (user: User, domain: Domain): Tool[] =>
 
 export async function callTool(
   call: ToolCall,
-  ctx: { user: User; domain: Domain; repo: Repository },
+  ctx: { user: User; domain: Domain; repo: Repository } & Extra,
 ): Promise<{ name: string; result?: unknown; refused?: string }> {
   const tool = toolsFor(ctx.user, ctx.domain).find((t) => t.name === call.name);
   if (!tool)
@@ -164,10 +200,11 @@ export async function callTool(
       name: call.name,
       refused: `${call.name} is not available to ${ctx.user.role} for ${ctx.domain} questions.`,
     };
-  // The human's rule (L7 T1): only the question and synthetic data leave the bank.
-  if (ctx.repo.environment !== "demo")
+  // The human's rules: only the question and synthetic data leave the bank (L7 T1), and public
+  // filings too (2026-11-16).
+  if (ctx.repo.environment !== "demo" && !tool.public)
     return { name: call.name, refused: "Only synthetic data may be sent to the model." };
-  return { name: call.name, result: await tool.run(ctx.repo, call.args) };
+  return { name: call.name, result: await tool.run(ctx.repo, call.args, ctx) };
 }
 
 const SENSITIVE: [RegExp, string][] = [
@@ -204,7 +241,7 @@ const READ =
 
 export async function ask(
   input: { question: string; domain: Domain },
-  ctx: { user: User; repo: Repository; model: ModelClient },
+  ctx: { user: User; repo: Repository; model: ModelClient } & Extra,
 ) {
   const refused = screen(input.question);
   if (refused) return { refused };
