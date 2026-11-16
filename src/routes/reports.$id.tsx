@@ -1,4 +1,4 @@
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useStep } from "@/hooks/use-step";
 import { Stagger } from "@/components/motion";
@@ -24,7 +24,8 @@ export const Route = createFileRoute("/reports/$id")({
   loader: async ({ params, context: { queryClient } }) => {
     const [{ reports }] = await Promise.all([
       queryClient.ensureQueryData(investigationsQuery),
-      queryClient.ensureQueryData(financeQuery),
+      // Production has no bank finance data; a report then renders from its investigation alone.
+      queryClient.ensureQueryData(financeQuery).catch(() => undefined),
       queryClient.ensureQueryData(reportsQuery),
     ]);
     if (!reports.some((r) => r.id === params.id)) throw notFound();
@@ -41,7 +42,7 @@ function ReportPage() {
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const report = useSuspenseQuery(investigationsQuery).data.reports.find((r) => r.id === id)!;
-  const finance = useSuspenseQuery(financeQuery).data;
+  const finance = useQuery({ ...financeQuery, retry: false }).data;
   const all = useSuspenseQuery(reportsQuery).data;
   const versions = all.versions.filter((x) => x.report === id);
   const inv = useStore((s) => s.investigations.find((i) => i.id === report.investigation));
@@ -80,7 +81,7 @@ function ReportPage() {
       </Stagger>
     );
 
-  const live: ReportSnapshot = { report, inv, finance, issues, actions, audit };
+  const live: ReportSnapshot = { report, inv, ...(finance && { finance }), issues, actions, audit };
   const review =
     version && all.reviews.find((r) => r.report === id && r.version === version.version);
   // A version's approval is its sign-off; the live report is never signed off.

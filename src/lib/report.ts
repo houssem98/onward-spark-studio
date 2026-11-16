@@ -20,7 +20,7 @@ import {
   reportState,
   verifiedLabel,
 } from "@/lib/evidence-policy";
-import { catalogOf, resolveScope } from "@/lib/scope";
+import { catalogOf, resolveScope, type Resolution } from "@/lib/scope";
 import type { AuditEvent, FinanceData } from "@/repo/types";
 
 // The report as plain lines, built once: the page, the HTML and the Markdown all render this, so
@@ -39,7 +39,8 @@ export interface ReportDoc {
 export interface ReportInput {
   report: Report & { synthetic?: true };
   inv: Investigation;
-  finance: FinanceData;
+  /** The bank's own finance data; absent where this environment has none (production, L6 T4b). */
+  finance?: FinanceData;
   issues: QualityIssue[];
   actions: Action[];
   audit: AuditEvent[];
@@ -68,6 +69,8 @@ export { verifiedLabel };
 const num = (v: number) => (v < 0 ? `−${-v}` : String(v));
 const word = (s: EvidenceState) => s.toLowerCase().replace(/_/g, " ");
 
+const NO_FINANCE = "No bank finance data in this environment.";
+
 export function buildReport(i: ReportInput): ReportDoc {
   const { report, inv, finance } = i;
   const states = inv.findings.map((f) => f.state);
@@ -89,18 +92,20 @@ export function buildReport(i: ReportInput): ReportDoc {
     ? "Verified: every finding is verified, nothing is open and a reviewer signed off."
     : `Not labeled Verified: ${why.length > 1 ? `${why.slice(0, -1).join(", ")}, and ${why.at(-1)}` : why[0]}.`;
 
-  const cat = catalogOf(finance, DEMO_ENTITY);
-  const r = resolveScope(inv.question, cat);
+  const cat = finance && catalogOf(finance, DEMO_ENTITY);
+  const r: Resolution = cat
+    ? resolveScope(inv.question, cat)
+    : { kind: "unsupported", reason: NO_FINANCE.toLowerCase() };
   const scope = r.kind === "resolved" ? r : null;
   const none = `None in scope: ${r.kind === "unsupported" ? r.reason : "the question leaves its scope open."}`;
-  const bridge = scope ? finance.bridges.find((b) => b.id === "peer") : undefined;
+  const bridge = scope ? finance!.bridges.find((b) => b.id === "peer") : undefined;
   const rec = bridge && reconcileBridge(bridge);
-  const peers = scope ? scope.scope.cohort.map((id) => cat.peers.find((p) => p.id === id)!) : [];
-  const dept = scope && finance.departments.find((d) => d.id === scope.scope.department)!;
+  const peers = scope ? scope.scope.cohort.map((id) => cat!.peers.find((p) => p.id === id)!) : [];
+  const dept = scope && finance!.departments.find((d) => d.id === scope.scope.department)!;
 
-  const card = finance.scorecard[report.period as keyof typeof finance.scorecard];
+  const card = finance?.scorecard[report.period as keyof FinanceData["scorecard"]];
   const kpis =
-    typeof card === "object"
+    finance && typeof card === "object"
       ? (() => {
           const income = card.nii + card.nonInterest;
           const opex = sum(
@@ -115,7 +120,7 @@ export function buildReport(i: ReportInput): ReportDoc {
             `${DEFINITIONS.roe.label} ${report.period}: ${fmtPct(pct(card.netIncome, card.avgEquity))}`,
           ];
         })()
-      : [`No scorecard for ${report.period} in this data.`];
+      : [finance ? `No scorecard for ${report.period} in this data.` : NO_FINANCE];
 
   const gaps = inv.findings
     .filter((f) => (SHOWN_WITH.gaps as EvidenceState[]).includes(f.state))
@@ -165,7 +170,7 @@ export function buildReport(i: ReportInput): ReportDoc {
       scope
         ? [
             `Entity: ${scope.scope.entity}`,
-            `Department: ${dept!.name} · Period: ${scope.scope.period} · Currency: ${scope.scope.currency} ${finance.bank.unit}`,
+            `Department: ${dept!.name} · Period: ${scope.scope.period} · Currency: ${scope.scope.currency} ${finance!.bank.unit}`,
             `Comparison cohort: ${peers.map((p) => p.name).join(", ")}`,
             `Definitions: ${scope.scope.definitions.map((d) => DEFINITIONS[d].label).join(", ")}`,
             "Method: deterministic arithmetic over the data; no language model sets a value or a state.",
@@ -180,7 +185,7 @@ export function buildReport(i: ReportInput): ReportDoc {
     [
       "Peer group and comparability",
       scope
-        ? cat.peers.map((p) => {
+        ? cat!.peers.map((p) => {
             const left = scope.left.find((x) => x.id === p.id);
             return `${p.name}: ${p.source.replace(/_/g, " ").toLowerCase()}, ${p.period}, comparability ${p.comparability}${p.warning ? ` (${p.warning})` : ""} · ${left ? `left out: ${left.reason}` : "in the cohort"}`;
           })
@@ -230,7 +235,7 @@ export function buildReport(i: ReportInput): ReportDoc {
             `Steps = ${bridge.steps.map((s) => num(s.value)).join(" + ")} = ${num(rec.explained)}`,
             `Difference = ${rec.difference}: ${rec.reconciles ? "reconciles" : "does not reconcile"}`,
             `Peer benchmark: mean of ${peers.map((p) => p.creditRevenue).join(", ")} = ${round(peerMean, 1)}; the bridge uses ${bridge.base}`,
-            `Unit: every figure above is in ${finance.bank.currency} ${finance.bank.unit}.`,
+            `Unit: every figure above is in ${finance!.bank.currency} ${finance!.bank.unit}.`,
           ]
         : [none],
     ],

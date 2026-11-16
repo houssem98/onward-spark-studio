@@ -1,30 +1,41 @@
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 
 import { repo } from "@/repo/queries";
+import type { Repository } from "@/repo/types";
 
-async function readState() {
+// A domain with no source in this environment reads as empty and is named; any other failure fails.
+const connected = <T>(read: Promise<T>) =>
+  read.catch((e: unknown) => {
+    if (e instanceof Error && /not configured/.test(e.message)) return undefined;
+    throw e;
+  });
+
+export async function readState(r: Repository = repo) {
   const [session, crime, datasets, models, investigations, audit] = await Promise.all([
-    repo.session.read(),
-    repo.crime.read(),
-    repo.datasets.read(),
-    repo.models.read(),
-    repo.investigations.read(),
-    repo.audit.read(),
+    r.session.read(),
+    connected(r.crime.read()),
+    connected(r.datasets.read()),
+    connected(r.models.read()),
+    r.investigations.read(),
+    r.audit.read(),
   ]);
   return {
     user: session.user,
-    models: models.models,
-    modelLifecycle: models.lifecycle,
-    modelDecisions: models.decisions,
-    modelVersion: models.selectedVersion,
-    findingStatus: models.findingStatus,
-    driftAlerts: models.driftAlerts,
-    datasets: datasets.datasets,
-    certification: datasets.certification,
-    issues: datasets.issues,
-    accessRequests: datasets.accessRequests,
-    alerts: crime.alerts,
-    cases: crime.cases,
+    unconnected: Object.entries({ crime, datasets, models })
+      .filter(([, d]) => !d)
+      .map(([name]) => name),
+    models: models?.models ?? [],
+    modelLifecycle: models?.lifecycle ?? {},
+    modelDecisions: models?.decisions ?? [],
+    modelVersion: models?.selectedVersion ?? {},
+    findingStatus: models?.findingStatus ?? {},
+    driftAlerts: models?.driftAlerts ?? [],
+    datasets: datasets?.datasets ?? [],
+    certification: datasets?.certification ?? {},
+    issues: datasets?.issues ?? [],
+    accessRequests: datasets?.accessRequests ?? [],
+    alerts: crime?.alerts ?? [],
+    cases: crime?.cases ?? [],
     investigations: investigations.investigations,
     actions: investigations.actions,
     audit,
@@ -33,7 +44,7 @@ async function readState() {
 
 export type State = Awaited<ReturnType<typeof readState>>;
 
-export const storeQuery = queryOptions({ queryKey: ["store"], queryFn: readState });
+export const storeQuery = queryOptions({ queryKey: ["store"], queryFn: () => readState() });
 
 // The credit revenue-gap investigation: the earliest Performance one, which the wizard copies.
 export const revenueGapInvestigation = (s: State) =>

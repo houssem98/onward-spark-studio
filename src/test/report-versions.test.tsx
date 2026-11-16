@@ -90,7 +90,7 @@ describe("report versions (L5 T4)", () => {
       (v.snapshot.inv as { title: string }).title = "Edited";
     }).toThrow(TypeError);
     expect(() => {
-      (v.snapshot.finance.bridges[0]!.steps[0] as { value: number }).value = 0;
+      (v.snapshot.finance!.bridges[0]!.steps[0] as { value: number }).value = 0;
     }).toThrow(TypeError);
     expect(Object.isFrozen(v)).toBe(true);
   });
