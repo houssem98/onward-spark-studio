@@ -1,4 +1,5 @@
 import { refuseUnearnedVerified, reportState, withPolicyStates } from "@/lib/evidence-policy";
+import type { ReportSnapshot, ReportVersion } from "@/lib/report";
 import { validAction } from "@/lib/review";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -20,6 +21,21 @@ const ROLE: Record<string, string> = {
 };
 
 const db = () => supabase();
+
+const VERSION = "report, version, saved_at, saved_by, snapshot";
+const toVersion = (v: {
+  report: string;
+  version: number;
+  saved_at: string;
+  saved_by: string;
+  snapshot: unknown;
+}): ReportVersion => ({
+  report: v.report,
+  version: v.version,
+  savedAt: v.saved_at,
+  savedBy: v.saved_by,
+  snapshot: v.snapshot as ReportSnapshot,
+});
 
 function ok<T>({ data, error }: { data: T | null; error: unknown }): T {
   if (error) throw error;
@@ -146,10 +162,28 @@ export const productionRepo: Repository = {
       );
     },
   },
-  // No table holds report versions yet; storing them is a schema change the human approves.
+  // Versions are stored (L6 T4a); reviews are not yet, so submit, comment and decide still refuse.
   reports: {
-    read: notConfigured,
-    save: notConfigured,
+    read: async () => ({
+      versions: ok(await db().from("report_versions").select(VERSION).order("version")).map(
+        toVersion,
+      ),
+      reviews: [],
+      reviewers: [],
+    }),
+    save: async (id, snapshot) => {
+      const versions = db().from("report_versions");
+      if (snapshot.report.id !== id)
+        throw new Error(`The snapshot is of ${snapshot.report.id}, not ${id}.`);
+      refuseUnearnedVerified(snapshot.inv, today());
+      // A sign-off comes only from an approval, and states only from the policy.
+      const { signoff: _signoff, ...kept } = snapshot;
+      const row = await versions
+        .insert({ report: id, snapshot: { ...kept, inv: withPolicyStates(kept.inv, today()) } })
+        .select(VERSION)
+        .single();
+      return toVersion(ok(row));
+    },
     submit: notConfigured,
     comment: notConfigured,
     decide: notConfigured,
