@@ -59,7 +59,7 @@ export function score(q: GoldenQuestion, out: Asked, ms: number, usd: number, dr
     usd,
   };
 }
-export type GoldenRow = ReturnType<typeof score> & { run: number };
+export type GoldenRow = ReturnType<typeof score> & { run: number; results: Result[] };
 
 export async function runGolden(
   qs: GoldenQuestion[],
@@ -79,7 +79,12 @@ export async function runGolden(
       const out = await ask({ question: q.question, domain: q.domain }, { ...ctx, model });
       const ms = performance.now() - t0;
       const usd = "usage" in out && out.usage ? costOf(out.usage, ctx.now?.() ?? new Date()) : 0;
-      rows.push({ run, ...score(q, out, ms, usd, draft) });
+      // The tool results stay beside the draft: the judge (T5b) reads one against the other.
+      rows.push({
+        run,
+        ...score(q, out, ms, usd, draft),
+        results: "refused" in out ? [] : out.results,
+      });
     }
   return rows;
 }
