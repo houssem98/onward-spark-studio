@@ -54,7 +54,8 @@ describe("the copilot panel asks the model (L7 T10)", () => {
     expect(draft.compareDocumentPosition(routed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const post = f.mock.calls.find(([, init]) => init?.method === "POST")!;
     expect(JSON.parse(String(post[1]!.body))).toEqual({ question: Q, domain: "performance" });
-  });
+    // It renders the whole app, which under the full suite's load takes longer than 5 s.
+  }, 30_000);
 
   it("says when no model is connected, so the routing's answer stands alone", async () => {
     serve({ status: 503, body: { refused: "The model is not configured." } });

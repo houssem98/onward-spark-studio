@@ -1,6 +1,7 @@
 import { answer } from "@/lib/copilot";
 import { DEFINITIONS } from "@/lib/definitions";
 import { EVIDENCE_STATES } from "@/lib/evidence";
+import { LISTED_BANKS } from "@/lib/tn-filings";
 import type { SectorBank } from "@/lib/tn-investigation";
 import type { Repository, User } from "@/repo/types";
 
@@ -96,7 +97,7 @@ const TOOLS: Tool[] = [
   {
     name: "finance_answer",
     description:
-      "Figures, evidence state and limits computed from the bank's finance data for a performance question.",
+      "Figures, evidence state and limits computed from the bank's own finance data (Northstar Bank, the bank this application serves) for a question about its own performance; it holds nothing on other banks.",
     parameters: {
       type: "object",
       properties: { question: { type: "string" } },
@@ -160,8 +161,8 @@ const TOOLS: Tool[] = [
   },
   {
     name: "tn_sector",
-    description:
-      "The latest quarter filed by each bank listed on the Bourse de Tunis: net banking income, net loans, customer deposits and equity in US dollars at the BCT's dollar rate for the period end, each figure with its filing and the state the evidence policy sets.",
+    // The model chooses by description alone, so it names the banks it covers (L7 T10b).
+    description: `For any question about a bank listed on the Bourse de Tunis (${Object.values(LISTED_BANKS).join(", ")}) or about Tunisian banks: the latest quarter each filed, with its revenue (net banking income), net loans, customer deposits and equity in US dollars at the BCT's dollar rate for the period end, each figure with its filing and the state the evidence policy sets.`,
     parameters: { type: "object", properties: {} },
     domains: ["performance"],
     public: true,

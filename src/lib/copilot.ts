@@ -353,7 +353,8 @@ export function answer(
       "This demo workflow supports a fixed set of analytical intents. Try one of the suggested questions.",
     ],
     assessments: [],
-    missing: ["No live AI provider connected"],
+    // Since L7 T10 a connected model answers above the routing, so this says only what it missed.
+    missing: ["Not one of the routing's fixed questions"],
     links: [],
   });
 }
