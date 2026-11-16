@@ -60,7 +60,9 @@ function TnBanksPage() {
   const opening = useStep(
     () => openSectorInvestigation(repo, banks, owner),
     async (id) => {
-      await queryClient.invalidateQueries();
+      // The report page reads the investigations list from the cache, which this page does not
+      // keep active, so every query is fetched again before opening it.
+      await queryClient.invalidateQueries({ refetchType: "all" });
       void navigate({ to: "/reports/$id", params: { id } });
     },
   );
