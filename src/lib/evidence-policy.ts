@@ -161,7 +161,7 @@ export function summarizeStates(states: EvidenceState[], open: number): Evidence
 
 // The record's own claim, scope and date come last, so nothing in its facts can replace them.
 export const findingAssessment = (
-  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts" | "metricId">,
+  f: Pick<Finding, "id" | "claim" | "kind" | "period" | "facts" | "metricId" | "entity">,
   today = DEMO_DATE,
 ): Assessment => ({
   ...(f.facts ?? { sources: [] }),
@@ -171,7 +171,7 @@ export const findingAssessment = (
     kind: f.kind === "Hypothesis" ? "hypothesis" : "measured",
     ...(f.metricId ? { metricId: f.metricId } : {}),
   },
-  scope: { entity: DEMO_ENTITY, period: f.period },
+  scope: { entity: f.entity ?? DEMO_ENTITY, period: f.period },
   today,
 });
 
@@ -194,6 +194,11 @@ export function withPolicyStates(i: Unassessed, today = DEMO_DATE): Investigatio
     ),
   };
 }
+
+// The state a record is stored with in production (L6 T4c): the database refuses a new VERIFIED
+// until this policy runs there (migration 20261109010000), so a VERIFIED is stored as DRAFT, and
+// every read sets each state from the record's facts again.
+export const storedState = (s: EvidenceState): EvidenceState => (s === "VERIFIED" ? "DRAFT" : s);
 
 // A record may say VERIFIED only where the policy, on the record's own facts, says so too.
 export function refuseUnearnedVerified(inv: Investigation, today: string): void {

@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { DataTable, type Column } from "@/components/DataTable";
 import { Notice, PageHeader } from "@/components/kit";
 import { Stagger } from "@/components/motion";
 import { Button } from "@/components/ui/button";
+import { useStep } from "@/hooks/use-step";
 import type { readSector } from "@/lib/tn-connector.server";
 import type { Indicator } from "@/lib/tn-filings";
+import { openSectorInvestigation } from "@/lib/tn-investigation";
+import { repo } from "@/repo/queries";
+import { useStore } from "@/store/app-store";
 
 export const Route = createFileRoute("/tn-banks")({
   head: () => ({
@@ -48,6 +52,19 @@ function TnBanksPage() {
   });
   const banks = q.data?.banks ?? [];
   const read = banks.filter((b): b is Read => b.state === "ok");
+  const owner = useStore((s) => s.user.name);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  // Real filings become a stored investigation only in production: the demo labels every record it
+  // keeps synthetic, which these are not.
+  const opening = useStep(
+    () => openSectorInvestigation(repo, banks, owner),
+    async (id) => {
+      await queryClient.invalidateQueries();
+      void navigate({ to: "/reports/$id", params: { id } });
+    },
+  );
+  const canOpen = repo.environment === "production" && read.length > 0;
   const failed = banks.filter((b): b is Exclude<Bank, Read> => b.state !== "ok");
   const fx = (b: Read) => b.figures.net_banking_income.fx;
   const cols: Column<Read>[] = [
@@ -88,14 +105,30 @@ function TnBanksPage() {
         tag={false}
         description="The latest quarter each bank listed on the Bourse de Tunis has filed, converted to USD at the BCT's dollar rate for its period end. The evidence policy sets each figure's state from the filing and its date."
         actions={
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={q.isFetching}
-            onClick={() => void q.refetch()}
-          >
-            {q.isFetching ? "Reading…" : "Read the latest filings"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={q.isFetching}
+              onClick={() => void q.refetch()}
+            >
+              {q.isFetching ? "Reading…" : "Read the latest filings"}
+            </Button>
+            {canOpen && (
+              <Button
+                size="sm"
+                disabled={opening.status === "running"}
+                onClick={() => void opening.run()}
+              >
+                {opening.status === "running" ? "Opening…" : "Open as an investigation"}
+              </Button>
+            )}
+            {opening.status === "error" && (
+              <span role="alert" className="text-xs text-warning">
+                Not opened: {opening.error}
+              </span>
+            )}
+          </div>
         }
       />
       {q.isFetching ? (

@@ -188,6 +188,8 @@ export interface Repository {
   reports: {
     /** Every saved report version, oldest first, each immutable; their reviews; who may review. */
     read(): Promise<{ versions: ReportVersion[]; reviews: Review[]; reviewers: string[] }>;
+    /** Opens a report on an investigation (L6 T4c). */
+    create(report: investigations.Report): Promise<void>;
     /** Stores a new version; nothing updates or deletes one. */
     save(id: string, snapshot: ReportSnapshot): Promise<ReportVersion>;
     /** Each refuses, with its reason, what separation of duties forbids (`src/lib/review.ts`). */

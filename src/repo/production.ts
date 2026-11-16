@@ -1,4 +1,10 @@
-import { refuseUnearnedVerified, reportState, withPolicyStates } from "@/lib/evidence-policy";
+import {
+  refuseUnearnedVerified,
+  reportState,
+  storedState,
+  withPolicyStates,
+} from "@/lib/evidence-policy";
+import type { Investigation } from "@/data/investigations";
 import type { ReportSnapshot, ReportVersion } from "@/lib/report";
 import { validAction } from "@/lib/review";
 
@@ -22,6 +28,12 @@ const ROLE: Record<string, string> = {
 
 const db = () => supabase();
 
+const stored = (i: Investigation): Investigation => ({
+  ...i,
+  state: storedState(i.state),
+  findings: i.findings.map((f) => ({ ...f, state: storedState(f.state) })),
+});
+
 const VERSION = "report, version, saved_at, saved_by, snapshot";
 const toVersion = (v: {
   report: string;
@@ -40,6 +52,20 @@ const toVersion = (v: {
 function ok<T>({ data, error }: { data: T | null; error: unknown }): T {
   if (error) throw error;
   return data as T;
+}
+
+// The server returns at most 1,000 rows a request, so every list is read page by page in a stable
+// order; one unpaged read silently drops whatever lies past the cap.
+const PAGE = 1000;
+async function every<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const got = ok(await page(from, from + PAGE - 1));
+    rows.push(...got);
+    if (got.length < PAGE) return rows;
+  }
 }
 
 /** An update that row-level security refuses matches no row and reports no error; say so. */
@@ -107,24 +133,36 @@ export const productionRepo: Repository = {
   investigations: {
     read: async () => {
       const [investigations, actions, reports] = await Promise.all([
-        db()
-          .from("investigations")
-          .select(
-            "id, title, question, module, department, owner, created, period, priority, status, state, report, outstanding, findings, contradictions, limitations",
-          ),
-        db()
-          .from("actions")
-          .select("id, action:title, finding, owner, due, priority, status, outcome, evidence"),
-        db()
-          .from("reports")
-          .select("id, title, owner, period, investigation, state, status, updated"),
+        every((a, b) =>
+          db()
+            .from("investigations")
+            .select(
+              "id, title, question, module, department, owner, created, period, priority, status, state, report, outstanding, findings, contradictions, limitations",
+            )
+            .order("id")
+            .range(a, b),
+        ),
+        every((a, b) =>
+          db()
+            .from("actions")
+            .select("id, action:title, finding, owner, due, priority, status, outcome, evidence")
+            .order("id")
+            .range(a, b),
+        ),
+        every((a, b) =>
+          db()
+            .from("reports")
+            .select("id, title, owner, period, investigation, state, status, updated")
+            .order("id")
+            .range(a, b),
+        ),
       ]);
       // Stored states are not trusted: the policy sets every one from the record's facts.
-      const invs = ok(investigations).map((i) => withPolicyStates(i, today()));
+      const invs = investigations.map((i) => withPolicyStates(i, today()));
       return {
         investigations: invs,
-        actions: ok(actions),
-        reports: ok(reports).map((r) => ({
+        actions,
+        reports: reports.map((r) => ({
           ...r,
           // No sign-off is read here yet, so no report in this list reads Verified.
           state: reportState(
@@ -139,7 +177,7 @@ export const productionRepo: Repository = {
     create: async (inv) => {
       const table = db().from("investigations");
       refuseUnearnedVerified(inv, today());
-      ok(await table.insert(withPolicyStates(inv, today())));
+      ok(await table.insert(stored(withPolicyStates(inv, today()))));
     },
     setStatus: async (id, status) => {
       changed(await db().from("investigations").update({ status }).eq("id", id).select("id"));
@@ -164,10 +202,16 @@ export const productionRepo: Repository = {
   },
   // Versions are stored (L6 T4a); reviews are not yet, so submit, comment and decide still refuse.
   reports: {
+    create: async (r) => {
+      const table = db().from("reports");
+      ok(await table.insert({ ...r, state: storedState(r.state) }));
+    },
     read: async () => ({
-      versions: ok(await db().from("report_versions").select(VERSION).order("version")).map(
-        toVersion,
-      ),
+      versions: (
+        await every((a, b) =>
+          db().from("report_versions").select(VERSION).order("report").order("version").range(a, b),
+        )
+      ).map(toVersion),
       reviews: [],
       reviewers: [],
     }),
@@ -190,11 +234,13 @@ export const productionRepo: Repository = {
   },
   audit: {
     read: async () =>
-      ok(
-        await db()
+      every((a, b) =>
+        db()
           .from("audit_events")
           .select("id, at, actor, module, entity, action, detail")
-          .order("at", { ascending: false }),
+          .order("at", { ascending: false })
+          .order("id")
+          .range(a, b),
       ),
     log: async (module, entity, action, detail) => {
       ok(await db().from("audit_events").insert({ module, entity, action, detail }));

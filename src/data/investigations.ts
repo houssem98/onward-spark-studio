@@ -22,6 +22,8 @@ export interface Finding {
   /** The registry metric a measured finding states; without one it stops short of Verified. */
   metricId?: DefinitionId;
   kind: "Measured" | "Hypothesis";
+  /** The entity the finding is about, where it is not the bank itself (a listed peer, L6 T4c). */
+  entity?: string;
   limitations: string;
   next: string;
 }

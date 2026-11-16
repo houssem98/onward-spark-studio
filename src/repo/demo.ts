@@ -7,7 +7,7 @@ import * as investigations from "@/data/investigations";
 import * as models from "@/data/models";
 import type { Certification, QualityIssue } from "@/data/datasets";
 import type { AlertStatus, CaseRecord, CrimeAlert } from "@/data/crime";
-import type { Action, Investigation } from "@/data/investigations";
+import type { Action, Investigation, Report } from "@/data/investigations";
 import type { Lifecycle } from "@/data/models";
 import { DEMO_DATE } from "@/lib/definitions";
 import { frozenCopy } from "@/lib/frozen";
@@ -38,6 +38,7 @@ interface State {
   alerts: CrimeAlert[];
   cases: CaseRecord[];
   investigations: Investigation[];
+  reports: Omit<Report, "state">[];
   actions: Action[];
   audit: AuditEvent[];
 }
@@ -113,6 +114,7 @@ let state: State = {
     timeline: [...c.timeline],
   })),
   investigations: investigations.INVESTIGATIONS.map(investigations.assessInvestigation),
+  reports: [...investigations.REPORTS],
   actions: investigations.ACTIONS.map((a) => ({ ...a })),
   audit: [
     {
@@ -385,7 +387,7 @@ export const demoRepo: Repository = {
         investigations: tag(invs),
         actions: tag(state.actions),
         reports: tag(
-          investigations.REPORTS.map((r) => ({
+          state.reports.map((r) => ({
             ...r,
             status: approved(r.id) ? ("Approved" as const) : r.status,
             state: reportState(
@@ -439,6 +441,13 @@ export const demoRepo: Repository = {
       ),
   },
   reports: {
+    create: async (r) =>
+      set((s) => ({ reports: [...s.reports, r] }), {
+        module: "Reports",
+        entity: r.id,
+        action: "Created",
+        detail: r.title,
+      }),
     read: async () => {
       await seedReview();
       return frozenCopy({ versions, reviews, reviewers: [...investigations.REVIEWERS] });
