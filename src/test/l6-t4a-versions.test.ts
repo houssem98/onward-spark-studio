@@ -34,7 +34,8 @@ async function snapshotOfB1() {
   return { report, inv, finance: { run } as never, issues: [], actions: [], audit: [] };
 }
 
-describe("report versions in production (L6 T4a)", () => {
+// Each test signs in and makes several round trips to the project, more than 5 s under load.
+describe("report versions in production (L6 T4a)", { timeout: 20_000 }, () => {
   afterEach(() => signOut());
 
   it("stores each version, numbered and named by the server, and reads it back", async () => {

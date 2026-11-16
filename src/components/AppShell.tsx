@@ -33,6 +33,8 @@ import type { Chosen } from "@/lib/scope";
 import { useStep } from "@/hooks/use-step";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ModelSpend } from "@/components/ModelSpend";
+import { ModelDraft } from "@/components/ModelDraft";
+import { askModel, type ModelReply } from "@/lib/ask-client";
 import { crimeQuery, datasetsQuery, financeQuery, modelsQuery, repo } from "@/repo/queries";
 import type { Repository } from "@/repo/types";
 
@@ -203,7 +205,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [palette, setPalette] = useState(false);
   const [q, setQ] = useState("");
   const [history, setHistory] = useState<
-    { q: string; a: CopilotAnswer; chosen: Chosen; picked: string[] }[]
+    { q: string; a: CopilotAnswer; model?: ModelReply; chosen: Chosen; picked: string[] }[]
   >([]);
   const navigate = useNavigate();
 
@@ -212,6 +214,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   // The question stays in the box until its answer arrives, so a failure or a cancel loses nothing.
   const answering = useStep(
     async (text: string, chosen: Chosen, picked: string[]) => {
+      // A new question also goes to the model (L7 T10); a choice answering the routing's own
+      // question stays with the routing.
+      const model = picked.length ? undefined : askModel(text);
       // fetchQuery refetches what a write has made stale; ensureQueryData would not.
       const [finance, models, datasets, crime] = await Promise.all([
         queryClient.fetchQuery(financeQuery),
@@ -222,6 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       return {
         q: text,
         a: answer(text, { finance, models, datasets, crime }, chosen),
+        ...(model ? { model: await model } : {}),
         chosen,
         picked,
       };
@@ -393,8 +399,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Bot className="h-4 w-4 text-primary" /> BankIntelli Copilot
             </SheetTitle>
             <p className="text-xs text-muted-foreground">
-              Demo: predefined answers over synthetic data; no AI provider is connected. Some
-              figures are computed from the demo data, other answer text is fixed.
+              Figures and states are computed from the data. Where a model is connected, its draft
+              comes first, and is withheld if it names a state or a figure no tool returned.
             </p>
             <ModelSpend role={user.role} />
           </SheetHeader>
@@ -453,12 +459,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <div className="mt-4 space-y-4">
-            {history.map(({ q: question, a, chosen, picked }, i) => (
+            {history.map(({ q: question, a, model, chosen, picked }, i) => (
               <div key={i} className="rounded-md border">
                 <div className="border-b bg-muted/50 px-3 py-2 text-sm font-medium">
                   {[question, ...picked].join(" · ")}
                 </div>
                 <div className="space-y-3 p-3 text-sm">
+                  {model && <ModelDraft reply={model} />}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="eyebrow">{a.intent}</span>
                     <EvidenceBadge state={a.state} />
